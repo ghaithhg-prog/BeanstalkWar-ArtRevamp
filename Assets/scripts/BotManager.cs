@@ -26,6 +26,11 @@ public class BotManager : MonoBehaviour
 
     private bool offlineBotsCreated = false;
 
+    public void ResetBotManagerState()
+    {
+        offlineBotsCreated = false;
+    }
+
     void Awake()
     {
         _instance = this;

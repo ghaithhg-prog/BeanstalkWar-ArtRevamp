@@ -46,6 +46,27 @@ public class LevelBossManager : MonoBehaviour
         }
     }
 
+    public static void ClearStaticEvents()
+    {
+        OnSingleBossDefeated = null;
+        OnAllThreeBossesDefeated = null;
+    }
+
+    public void ResetBossManagerState()
+    {
+        defeatedBossLevels.Clear();
+        allThreeBossesTriggered = false;
+        bossesSpawned = false;
+        if (tierSpawned != null)
+        {
+            System.Array.Clear(tierSpawned, 0, tierSpawned.Length);
+        }
+        if (configuredBossInstanceIDs != null)
+        {
+            configuredBossInstanceIDs.Clear();
+        }
+    }
+
     void Awake()
     {
         Instance = this;

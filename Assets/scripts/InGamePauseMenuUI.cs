@@ -328,11 +328,7 @@ public class InGamePauseMenuUI : MonoBehaviour
         if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 44f), leaveBtnText, new Color(0.95f, 0.65f, 0.25f), 12))
         {
             ClosePauseMenu();
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-            {
-                NetworkManager.Singleton.Shutdown();
-            }
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            MatchEndStatsUI.ExecuteCleanGameRestart();
         }
 
         contentY += 54f;

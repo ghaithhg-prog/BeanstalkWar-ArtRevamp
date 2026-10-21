@@ -149,97 +149,6 @@ public class EnchantedForestDecorator : MonoBehaviour
         {
             GameStateManager.Instance.ResetStateForNewMatch();
         }
-
-        // 9. إذا كانت المباراة في وضع إعادة اللعب التلقائي (BATTLE AGAIN)
-        if (MatchEndStatsUI.isAutoRestartingMatch && dec != null)
-        {
-            dec.StartCoroutine(dec.AutoRestartMatchRoutine());
-        }
-    }
-
-    private System.Collections.IEnumerator AutoRestartMatchRoutine()
-    {
-        yield return null;
-
-        Debug.Log("🌿 [EnchantedForestDecorator] Executing clean Auto-Restart for match replay...");
-
-        // 1. بدء تشغيل المضيف الأوفلاين فوراً
-        if (PlayModeUI.Instance != null)
-        {
-            PlayModeUI.Instance.StartOffline();
-        }
-        else if (Unity.Netcode.NetworkManager.Singleton != null && !Unity.Netcode.NetworkManager.Singleton.IsListening)
-        {
-            Unity.Netcode.NetworkManager.Singleton.StartHost();
-        }
-
-        // 2. الانتظار حتى ظهور وتفريخ اللاعب المحلي
-        PlayerMovement localPlayer = null;
-        float timeout = 4.5f;
-        while (timeout > 0f)
-        {
-            localPlayer = PlayerMovement.LocalPlayer ?? FindAnyObjectByType<PlayerMovement>();
-            if (localPlayer != null && localPlayer.IsSpawned) break;
-            timeout -= Time.deltaTime;
-            yield return null;
-        }
-
-        if (localPlayer != null)
-        {
-            // 3. الانتظار حتى اكتمال بناء وتجهيز شبكة الملاحة والسلالم الحلزونية (NavMesh) بالكامل
-            while (Time.timeSinceLevelLoad < 0.95f)
-            {
-                yield return null;
-            }
-
-            // تأكيد بناء شبكة الملاحة لضمان جاهزية جميع المنصات والسلالم للبوتات
-            if (LevelBossManager.Instance != null)
-            {
-                LevelBossManager.Instance.Invoke("RebuildNavigationMesh", 0.05f);
-                yield return new WaitForSeconds(0.1f);
-            }
-
-            // تطبيق الفريق المحفوظ
-            localPlayer.RequestTeam(MatchEndStatsUI.savedTeam);
-            localPlayer.team = MatchEndStatsUI.savedTeam;
-
-            // تحديد موقع تفريخ اللاعب البشري بدقة في النقطة 0 لمنع التداخل مع أي بوت
-            if (SpawnManager.Instance != null)
-            {
-                Vector3 spawnPos = SpawnManager.Instance.GetSpawnPosition(MatchEndStatsUI.savedTeam, 0);
-                localPlayer.transform.position = spawnPos + Vector3.up * 0.5f;
-                Transform sp = SpawnManager.Instance.GetSpawnPoint(MatchEndStatsUI.savedTeam);
-                if (sp != null) localPlayer.transform.rotation = sp.rotation;
-                Rigidbody prb = localPlayer.GetComponent<Rigidbody>();
-                if (prb != null)
-                {
-                    prb.linearVelocity = Vector3.zero;
-                    prb.angularVelocity = Vector3.zero;
-                }
-            }
-
-            // تطبيق الشخصية المحفوظة (مع السكن المحفوظ تلقائياً)
-            localPlayer.RequestCharacter(MatchEndStatsUI.savedCharacterID);
-            localPlayer.ApplyCharacter(MatchEndStatsUI.savedCharacterID);
-
-            // تصفير حالة المباراة أولاً قبل بدء تفريخ البوتات
-            if (GameStateManager.Instance != null)
-            {
-                GameStateManager.Instance.ResetStateForNewMatch();
-            }
-
-            // إنشاء فرق البوتات 5v5 بتوزيع متباعد على شبكة الملاحة الجاهزة وإطلاق العد التنازلي التلقائي
-            if (BotManager.Instance != null)
-            {
-                BotManager.Instance.CreateOfflineBots(localPlayer);
-            }
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ [EnchantedForestDecorator] Local player spawn timed out during auto restart.");
-        }
-
-        MatchEndStatsUI.isAutoRestartingMatch = false;
     }
 
     void Awake()
@@ -2209,9 +2118,15 @@ public class EnchantedForestDecorator : MonoBehaviour
 
         if (topLevelObj != null)
         {
-            LevelVisibilitySync sync = sanctum.AddComponent<LevelVisibilitySync>();
-            sync.targetLevel = topLevelObj;
-            sanctum.SetActive(topLevelObj.activeInHierarchy);
+            PlatformDecorationsVisibilityManager visManager = FindAnyObjectByType<PlatformDecorationsVisibilityManager>();
+            if (visManager != null)
+            {
+                visManager.RegisterPair(topLevelObj, sanctum);
+            }
+            else
+            {
+                sanctum.SetActive(topLevelObj.activeInHierarchy);
+            }
         }
 
         // 1. Central Carved Sacred Pedestal
@@ -2342,6 +2257,8 @@ public class EnchantedForestDecorator : MonoBehaviour
 
     // =========================================================================
     // ENCHANTED TREE CANOPY LEVELS OVERHAUL (تحويل المنصات إلى عروش وأغصان شجرية حية)
+    // تزيين جميع الطوابق (المستوى 1 و 2 و 3 والقمة) بجذور وعروق بارزة خارجة وأوراق متدلية
+    // ومزامنة ظهورها مع فتح الطابق بشكل مضمون 100% عبر مدير نشط
     // =========================================================================
     void DecorateTreeCanopyLevels()
     {
@@ -2353,10 +2270,15 @@ public class EnchantedForestDecorator : MonoBehaviour
             for (int i = 0; i < levelsContainer.transform.childCount; i++)
             {
                 Transform child = levelsContainer.transform.GetChild(i);
-                levelTransforms.Add(child);
+                if (child.name == "Level_0") continue;
+                if (child.name.StartsWith("Level_") || child.name.Contains("Top"))
+                {
+                    levelTransforms.Add(child);
+                }
             }
         }
-        else
+
+        if (levelTransforms.Count == 0)
         {
             string[] names = new string[] { "Level_1", "Level_2", "Level_3", "TopLevel" };
             foreach (string nm in names)
@@ -2388,31 +2310,35 @@ public class EnchantedForestDecorator : MonoBehaviour
         canopiesRoot.transform.rotation = Quaternion.identity;
         canopiesRoot.transform.localScale = Vector3.one;
 
+        // Active visibility manager running every frame on the active canopiesRoot
+        PlatformDecorationsVisibilityManager visManager = canopiesRoot.AddComponent<PlatformDecorationsVisibilityManager>();
+
         foreach (Transform levelTr in levelTransforms)
         {
             if (levelTr == null) continue;
 
             bool isTop = levelTr.name == "TopLevel" || levelTr.name.Contains("Top");
 
-            // مزامنة الظهور مع الطابق: إذا كان الطابق مغلقاً/مخفياً، تختفي ديكوراته وعروشه تماماً!
+            // إنشاء وعاء زينة الطابق
             GameObject levelDecor = new GameObject($"{levelTr.name}_CanopyDecorations");
             levelDecor.transform.SetParent(canopiesRoot.transform, false);
             levelDecor.transform.position = Vector3.zero;
             levelDecor.transform.rotation = Quaternion.identity;
             levelDecor.transform.localScale = Vector3.one;
 
-            LevelVisibilitySync sync = levelDecor.AddComponent<LevelVisibilitySync>();
-            sync.targetLevel = levelTr.gameObject;
-            levelDecor.SetActive(levelTr.gameObject.activeInHierarchy);
+            // تسجيل الطابق مع مدير الرؤية النشط
+            visManager.RegisterPair(levelTr.gameObject, levelDecor);
 
             Vector3 centerPos = levelTr.position;
-            Vector3 parentScale = levelTr.localScale;
-            float worldRadius = parentScale.x * 0.5f;
-            float floorTopY = SpiralConnector.GetPlatformTopSurfaceY(levelTr, centerPos.y + parentScale.y);
-            float floorBottomY = centerPos.y - parentScale.y;
+            Vector3 parentScale = levelTr.lossyScale;
+            float worldRadius = Mathf.Max(parentScale.x, parentScale.z) * 0.5f;
+            if (worldRadius < 3f) worldRadius = 6f; // Safe minimum radius
+
+            float floorTopY = SpiralConnector.GetPlatformTopSurfaceY(levelTr, centerPos.y + (parentScale.y * 0.5f));
+            float floorBottomY = centerPos.y - (parentScale.y * 0.5f);
 
             // 1. UNDERNEATH GIANT SUPPORT BOUGHS (عروش خشبية مقوسة تسند المنصة من الأسفل)
-            int boughCount = worldRadius > 10f ? 6 : (worldRadius > 7f ? 5 : 4);
+            int boughCount = worldRadius > 10f ? 8 : (worldRadius > 7f ? 6 : 4);
             for (int b = 0; b < boughCount; b++)
             {
                 float boughAngle = (float)b / boughCount * Mathf.PI * 2f + 0.25f;
@@ -2434,7 +2360,7 @@ public class EnchantedForestDecorator : MonoBehaviour
             }
 
             // 2. GENTLE CANOPY LEAF PUFFS UNDERNEATH RIM (وسائد أوراق خضراء ناعمة تسند حواف المنصة من الأسفل)
-            int cushionCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 0.7f), 6, 14);
+            int cushionCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 0.85f), 8, 18);
             for (int c = 0; c < cushionCount; c++)
             {
                 float cAngle = (float)c / cushionCount * Mathf.PI * 2f + 0.12f;
@@ -2451,38 +2377,131 @@ public class EnchantedForestDecorator : MonoBehaviour
             }
 
             // 3. LIVING PERIMETER ROOT COLLAR (طوق جذور خشبية متداخلة يلتف حول حافة المنصة تماماً)
-            // يغلف حافة الطابق بمظهر نباتي شجري أسطوري بارز وجميل كما طلب غيث
-            int rimSegCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 1.4f), 12, 28);
+            int rimSegCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 1.6f), 16, 36);
             for (int r = 0; r < rimSegCount; r++)
             {
                 float a0 = (float)r / rimSegCount * Mathf.PI * 2f;
                 float a1 = (float)(r + 1) / rimSegCount * Mathf.PI * 2f;
 
-                float r0 = worldRadius + Mathf.Sin(r * 1.7f) * 0.25f;
-                float r1 = worldRadius + Mathf.Sin((r + 1) * 1.7f) * 0.25f;
+                float r0 = worldRadius + Mathf.Sin(r * 1.7f) * 0.35f;
+                float r1 = worldRadius + Mathf.Sin((r + 1) * 1.7f) * 0.35f;
 
-                float y0 = floorTopY + Mathf.Sin(r * 2.3f) * 0.12f;
-                float y1 = floorTopY + Mathf.Sin((r + 1) * 2.3f) * 0.12f;
+                float y0 = floorTopY + Mathf.Sin(r * 2.3f) * 0.16f;
+                float y1 = floorTopY + Mathf.Sin((r + 1) * 2.3f) * 0.16f;
 
                 Vector3 p0 = new Vector3(centerPos.x + Mathf.Cos(a0) * r0, y0, centerPos.z + Mathf.Sin(a0) * r0);
                 Vector3 p1 = new Vector3(centerPos.x + Mathf.Cos(a1) * r1, y1, centerPos.z + Mathf.Sin(a1) * r1);
 
                 Material rimMat = (r % 3 == 0) ? (trunkMossyBarkMat ?? darkBarkMaterial) : ((r % 3 == 1) ? (trunkDeepOakMat ?? darkBarkMaterial) : (trunkWarmAmberCedarMat ?? barkMaterial));
 
-                CreateBranchSegment(levelDecor.transform, p0, p1, 0.42f, rimMat, $"{levelTr.name}_RimRoot_{r}");
+                CreateBranchSegment(levelDecor.transform, p0, p1, 0.46f, rimMat, $"{levelTr.name}_RimRoot_{r}");
 
                 // عقدة جذرية طبيعية عند كل مفصل
                 GameObject rootKnot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 rootKnot.name = $"{levelTr.name}_RimKnot_{r}";
                 rootKnot.transform.SetParent(levelDecor.transform, false);
                 rootKnot.transform.position = p0;
-                rootKnot.transform.localScale = new Vector3(0.65f, 0.45f, 0.65f);
+                rootKnot.transform.localScale = new Vector3(0.70f, 0.48f, 0.70f);
                 rootKnot.GetComponent<Renderer>().material = rimMat;
                 DestroyCollider(rootKnot);
             }
 
-            // 4. LUSH FOLIAGE CLUSTERS & VINES HUGGING THE RIM (عناقيد أوراق خضراء ساحرة تغلف الحواف)
-            int foliageCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 1.1f), 10, 22);
+            // 4. PROTRUDING ORGANIC WOOD VEINS & ROOT SPURS (عروق وجذور خشبية ضخمة خارجة وبارزة عن الإطار)
+            // الميزة الجمالية الأسطورية المطلوبة: عروق تمتد للخارج 1.0 إلى 1.8 متر لتكسر الشكل الأسطواني تماماً
+            int spurCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 0.65f), 5, 10);
+            for (int s = 0; s < spurCount; s++)
+            {
+                float sAngle = (float)s / spurCount * Mathf.PI * 2f + (s % 2 == 0 ? 0.32f : -0.22f);
+                float rimBaseX = centerPos.x + Mathf.Cos(sAngle) * worldRadius;
+                float rimBaseZ = centerPos.z + Mathf.Sin(sAngle) * worldRadius;
+                Vector3 baseRimPos = new Vector3(rimBaseX, floorTopY - 0.05f, rimBaseZ);
+
+                float reach = UnityEngine.Random.Range(1.15f, 1.85f);
+                float elbowAngle = sAngle + UnityEngine.Random.Range(-0.15f, 0.15f);
+                Vector3 elbowPos = new Vector3(
+                    centerPos.x + Mathf.Cos(elbowAngle) * (worldRadius + reach),
+                    floorTopY + UnityEngine.Random.Range(-0.35f, 0.25f),
+                    centerPos.z + Mathf.Sin(elbowAngle) * (worldRadius + reach)
+                );
+
+                float tipAngle = elbowAngle + (s % 2 == 0 ? 0.22f : -0.22f);
+                Vector3 tipPos = new Vector3(
+                    centerPos.x + Mathf.Cos(tipAngle) * (worldRadius + reach * 0.82f),
+                    elbowPos.y - UnityEngine.Random.Range(0.45f, 0.85f),
+                    centerPos.z + Mathf.Sin(tipAngle) * (worldRadius + reach * 0.82f)
+                );
+
+                Material spurMat = (s % 3 == 0) ? (trunkDeepOakMat ?? darkBarkMaterial) : ((s % 3 == 1) ? (trunkWarmAmberCedarMat ?? barkMaterial) : (trunkMossyBarkMat ?? darkBarkMaterial));
+
+                CreateBranchSegment(levelDecor.transform, baseRimPos, elbowPos, 0.52f, spurMat, $"{levelTr.name}_Spur_{s}_1");
+                CreateBranchSegment(levelDecor.transform, elbowPos, tipPos, 0.34f, spurMat, $"{levelTr.name}_Spur_{s}_2");
+
+                GameObject spurKnot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                spurKnot.name = $"{levelTr.name}_SpurKnot_{s}";
+                spurKnot.transform.SetParent(levelDecor.transform, false);
+                spurKnot.transform.position = elbowPos;
+                spurKnot.transform.localScale = new Vector3(0.85f, 0.65f, 0.85f);
+                spurKnot.GetComponent<Renderer>().material = spurMat;
+                DestroyCollider(spurKnot);
+
+                GameObject spurFoliage = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                spurFoliage.name = $"{levelTr.name}_SpurFoliage_{s}";
+                spurFoliage.transform.SetParent(levelDecor.transform, false);
+                spurFoliage.transform.position = tipPos;
+                spurFoliage.transform.localScale = new Vector3(0.95f, 0.55f, 0.95f);
+                spurFoliage.GetComponent<Renderer>().material = (s % 2 == 0) ? brightCanopyMaterial : lushCanopyMaterial;
+                DestroyCollider(spurFoliage);
+            }
+
+            // 5. HANGING TENDRIL VINES & IVY (لبلاب وعروق معلقة تتدلى من أسفل الحافة)
+            int vineCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 0.95f), 8, 18);
+            for (int v = 0; v < vineCount; v++)
+            {
+                float vAngle = (float)v / vineCount * Mathf.PI * 2f + 0.18f;
+                float vDist = worldRadius + 0.08f;
+                Vector3 vTop = new Vector3(centerPos.x + Mathf.Cos(vAngle) * vDist, floorBottomY + 0.15f, centerPos.z + Mathf.Sin(vAngle) * vDist);
+
+                float vineLen = UnityEngine.Random.Range(1.3f, 2.6f);
+                Vector3 vMid = vTop + new Vector3(UnityEngine.Random.Range(-0.15f, 0.15f), -vineLen * 0.5f, UnityEngine.Random.Range(-0.15f, 0.15f));
+                Vector3 vBottom = vTop + new Vector3(UnityEngine.Random.Range(-0.25f, 0.25f), -vineLen, UnityEngine.Random.Range(-0.25f, 0.25f));
+
+                Material vMat = (v % 2 == 0) ? (trunkMossyBarkMat ?? barkMaterial) : (trunkDeepOakMat ?? darkBarkMaterial);
+
+                CreateBranchSegment(levelDecor.transform, vTop, vMid, 0.20f, vMat, $"{levelTr.name}_HangVine_{v}_1");
+                CreateBranchSegment(levelDecor.transform, vMid, vBottom, 0.14f, vMat, $"{levelTr.name}_HangVine_{v}_2");
+
+                GameObject dropLeaf1 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                dropLeaf1.name = $"{levelTr.name}_VineLeaf_{v}_1";
+                dropLeaf1.transform.SetParent(levelDecor.transform, false);
+                dropLeaf1.transform.position = vMid;
+                dropLeaf1.transform.localScale = new Vector3(0.50f, 0.70f, 0.50f);
+                dropLeaf1.GetComponent<Renderer>().material = brightCanopyMaterial;
+                DestroyCollider(dropLeaf1);
+
+                GameObject dropLeaf2 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                dropLeaf2.name = $"{levelTr.name}_VineLeaf_{v}_2";
+                dropLeaf2.transform.SetParent(levelDecor.transform, false);
+                dropLeaf2.transform.position = vBottom;
+                dropLeaf2.transform.localScale = new Vector3(0.60f, 0.85f, 0.60f);
+                dropLeaf2.GetComponent<Renderer>().material = lushCanopyMaterial;
+                DestroyCollider(dropLeaf2);
+            }
+
+            // 6. VERTICAL BARK BUTTRESSES (عروق لحاء عمودية تتسلق جدار الأسطوانة الخارجي)
+            int buttressCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 0.8f), 6, 16);
+            for (int w = 0; w < buttressCount; w++)
+            {
+                float wAngle = (float)w / buttressCount * Mathf.PI * 2f + 0.08f;
+                float wDist = worldRadius + 0.04f;
+                Vector3 wBase = new Vector3(centerPos.x + Mathf.Cos(wAngle) * wDist, floorBottomY - 0.2f, centerPos.z + Mathf.Sin(wAngle) * wDist);
+                Vector3 wTop = new Vector3(centerPos.x + Mathf.Cos(wAngle) * wDist, floorTopY + 0.10f, centerPos.z + Mathf.Sin(wAngle) * wDist);
+
+                Material wMat = (w % 2 == 0) ? (trunkWarmAmberCedarMat ?? barkMaterial) : (trunkMossyBarkMat ?? darkBarkMaterial);
+                CreateBranchSegment(levelDecor.transform, wBase, wTop, 0.42f, wMat, $"{levelTr.name}_WallVein_{w}");
+            }
+
+            // 7. LUSH FOLIAGE CLUSTERS & VINES HUGGING THE UPPER RIM (عناقيد أوراق خضراء ساحرة تغلف الحواف)
+            int foliageCount = Mathf.Clamp(Mathf.RoundToInt(worldRadius * 1.3f), 12, 26);
             for (int f = 0; f < foliageCount; f++)
             {
                 float fAngle = (float)f / foliageCount * Mathf.PI * 2f + 0.18f;
@@ -2495,20 +2514,20 @@ public class EnchantedForestDecorator : MonoBehaviour
                 leafCluster.name = $"{levelTr.name}_RimFoliage_{f}";
                 leafCluster.transform.SetParent(levelDecor.transform, false);
                 leafCluster.transform.position = fPos;
-                leafCluster.transform.localScale = new Vector3(1.75f, 0.75f, 1.45f);
+                leafCluster.transform.localScale = new Vector3(1.85f, 0.80f, 1.55f);
                 leafCluster.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(-10f, 10f), fAngle * Mathf.Rad2Deg, UnityEngine.Random.Range(-15f, 15f));
                 leafCluster.GetComponent<Renderer>().material = (f % 3 == 0) ? brightCanopyMaterial : lushCanopyMaterial;
                 DestroyCollider(leafCluster);
 
-                // أزهار برية متناثرة على الحافة كلمسة جمالية ساحرة
-                if (f % 4 == 0)
+                // أزهار برية وأبواغ ذهبية متناثرة على الحافة
+                if (f % 3 == 0)
                 {
                     GameObject flowerOrb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     flowerOrb.name = $"{levelTr.name}_WildFlower_{f}";
                     flowerOrb.transform.SetParent(levelDecor.transform, false);
-                    flowerOrb.transform.position = fPos + Vector3.up * 0.35f;
-                    flowerOrb.transform.localScale = Vector3.one * 0.42f;
-                    flowerOrb.GetComponent<Renderer>().material = (f % 8 == 0) ? goldenPollenMaterial : (celestialPetalMaterial ?? pinkSakuraMat);
+                    flowerOrb.transform.position = fPos + Vector3.up * 0.38f;
+                    flowerOrb.transform.localScale = Vector3.one * 0.45f;
+                    flowerOrb.GetComponent<Renderer>().material = (f % 6 == 0) ? goldenPollenMaterial : (celestialPetalMaterial ?? pinkSakuraMat);
                     DestroyCollider(flowerOrb);
                 }
             }
@@ -3378,6 +3397,45 @@ public class EnchantedForestDecorator : MonoBehaviour
         {
             if (Application.isPlaying) Destroy(c);
             else DestroyImmediate(c);
+        }
+    }
+}
+
+/// <summary>
+/// مدير مراقبة ومزامنة ظهور ديكورات الطوابق وعروش الشجرة
+/// يعمل بشكل دائم ومستمر على كائن نشط (Active) ليضمن تفعيل زينة الطوابق 2 و 3 والقمة فور فتحها
+/// </summary>
+public class PlatformDecorationsVisibilityManager : MonoBehaviour
+{
+    [System.Serializable]
+    public struct LevelDecorPair
+    {
+        public GameObject targetLevel;
+        public GameObject decorObject;
+    }
+
+    public List<LevelDecorPair> watchedPairs = new List<LevelDecorPair>();
+
+    public void RegisterPair(GameObject targetLevel, GameObject decorObject)
+    {
+        if (targetLevel == null || decorObject == null) return;
+        watchedPairs.Add(new LevelDecorPair { targetLevel = targetLevel, decorObject = decorObject });
+        decorObject.SetActive(targetLevel.activeInHierarchy);
+    }
+
+    void Update()
+    {
+        for (int i = 0; i < watchedPairs.Count; i++)
+        {
+            var pair = watchedPairs[i];
+            if (pair.targetLevel != null && pair.decorObject != null)
+            {
+                bool active = pair.targetLevel.activeInHierarchy;
+                if (pair.decorObject.activeSelf != active)
+                {
+                    pair.decorObject.SetActive(active);
+                }
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ using System.Collections.Generic;
 /// </summary>
 public class CharacterSelectionUI : MonoBehaviour
 {
+    public static CharacterSelectionUI Instance { get; private set; }
     public static bool IsSelectionOpen { get; private set; } = false;
 
     [Header("References")]
@@ -113,6 +114,11 @@ public class CharacterSelectionUI : MonoBehaviour
         }
     }
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
         if (confirmButton != null)
@@ -124,6 +130,7 @@ public class CharacterSelectionUI : MonoBehaviour
 
     void OnDestroy()
     {
+        if (Instance == this) Instance = null;
         if (previewRenderTexture != null)
         {
             previewRenderTexture.Release();

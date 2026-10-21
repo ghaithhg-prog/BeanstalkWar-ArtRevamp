@@ -35,6 +35,13 @@ public class TreeGrowth : MonoBehaviour
     public static bool IsShieldCollapsing { get; private set; } = false;
     private static bool allBossesDefeatedDetected = false;
 
+    public static void ResetStaticState()
+    {
+        allBossesDefeatedDetected = false;
+        IsShieldCollapsing = false;
+        ShieldCollapseCountdown = 10f;
+    }
+
     public static bool IsShieldActive
     {
         get

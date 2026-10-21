@@ -196,6 +196,14 @@ public class GameIntroBriefingUI : MonoBehaviour
         }
     }
 
+    public void CloseBriefing()
+    {
+        showBriefingModal = false;
+        isVideoGuideOpen = false;
+        isVideoPlaying = false;
+        autoPlayPresentation = false;
+    }
+
     public void OpenBriefing()
     {
         showBriefingModal = true;

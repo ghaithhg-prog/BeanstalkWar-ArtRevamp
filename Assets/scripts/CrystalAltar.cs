@@ -68,8 +68,16 @@ public class CrystalAltar : NetworkBehaviour
 
     private static bool hasConfiguredAltars = false;
 
+    public static void ResetStaticState()
+    {
+        hasConfiguredAltars = false;
+        AllAltars.Clear();
+        Instance = null;
+    }
+
     void Awake()
     {
+        AllAltars.RemoveAll(a => a == null);
         if (!AllAltars.Contains(this)) AllAltars.Add(this);
         if (Instance == null) Instance = this;
 

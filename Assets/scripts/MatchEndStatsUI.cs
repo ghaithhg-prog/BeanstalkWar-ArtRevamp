@@ -410,36 +410,80 @@ public class MatchEndStatsUI : MonoBehaviour
         }
     }
 
+    public static void ExecuteCleanGameRestart()
+    {
+        Debug.Log("🔄 [MatchEndStatsUI] Executing pristine 100% clean-slate game restart...");
+
+        // 1. Reset match end flags & saved replay data
+        isAutoRestartingMatch = false;
+        savedCharacterID = 0;
+        savedTeam = PlayerMovement.TeamType.Protector;
+
+        if (Instance != null)
+        {
+            Instance.isGameOver = false;
+            Instance.stats.Clear();
+            Instance.winningTeamName = "";
+        }
+
+        // 2. Reset PlayModeUI state & show pristine mode selection
+        PlayModeUI.SelectedMode = PlayModeUI.PlayMode.None;
+        if (PlayModeUI.Instance != null)
+        {
+            PlayModeUI.Instance.ResetMenu();
+        }
+
+        // 3. Reset GameStateManager
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.ResetStateForNewMatch();
+        }
+
+        // 4. Reset static singletons & game objects
+        CrystalAltar.ResetStaticState();
+        TreeGrowth.ResetStaticState();
+        LevelBossManager.ClearStaticEvents();
+
+        if (LevelBossManager.Instance != null)
+        {
+            LevelBossManager.Instance.ResetBossManagerState();
+        }
+
+        if (BotManager.Instance != null)
+        {
+            BotManager.Instance.ResetBotManagerState();
+        }
+
+        // 5. Close all active modal dialogs
+        if (InGamePauseMenuUI.Instance != null)
+        {
+            InGamePauseMenuUI.Instance.ClosePauseMenu();
+        }
+        if (GameIntroBriefingUI.Instance != null)
+        {
+            GameIntroBriefingUI.Instance.CloseBriefing();
+        }
+        if (PlayerProgressionAndShopUI.Instance != null)
+        {
+            PlayerProgressionAndShopUI.Instance.CloseShop();
+        }
+        if (CharacterSelectionUI.Instance != null)
+        {
+            CharacterSelectionUI.Instance.Hide();
+        }
+
+        // 6. Safely shut down Netcode without destroying the GameObject (Unity will reload the scene's NetworkManager cleanly)
+        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+        {
+            Unity.Netcode.NetworkManager.Singleton.Shutdown();
+        }
+
+        // 7. Load scene freshly
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
     private void RestartMatch(bool autoRestart = false)
     {
-        if (autoRestart)
-        {
-            isAutoRestartingMatch = true;
-            PlayerMovement p = PlayerMovement.LocalPlayer ?? FindAnyObjectByType<PlayerMovement>();
-            if (p != null)
-            {
-                savedCharacterID = p.selectedCharacterID.Value >= 0 ? p.selectedCharacterID.Value : 0;
-                savedTeam = p.hasSelectedTeam.Value ? p.networkTeam.Value : p.team;
-            }
-        }
-        else
-        {
-            isAutoRestartingMatch = false;
-        }
-
-        // 1. Reset static play mode state
-        PlayModeUI.SelectedMode = PlayModeUI.PlayMode.None;
-
-        // 2. Safely shut down Netcode and destroy lingering NetworkManager so reloaded scene starts fresh
-        if (Unity.Netcode.NetworkManager.Singleton != null)
-        {
-            if (Unity.Netcode.NetworkManager.Singleton.IsListening)
-            {
-                Unity.Netcode.NetworkManager.Singleton.Shutdown();
-            }
-            Destroy(Unity.Netcode.NetworkManager.Singleton.gameObject);
-        }
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        ExecuteCleanGameRestart();
     }
 }
