@@ -90,7 +90,7 @@ public class CrystalAltar : NetworkBehaviour
 
     void Start()
     {
-        triggerRadius = 4.2f;
+        triggerRadius = 7.5f;
         GroundSanctuary();
         BuildSanctuaryVisuals();
 
@@ -105,12 +105,52 @@ public class CrystalAltar : NetworkBehaviour
         else
         {
             existingCollider.isTrigger = true;
+            if (existingCollider is SphereCollider sc)
+            {
+                sc.radius = triggerRadius;
+            }
         }
 
         gameObject.tag = "Ground";
 
         if (auraEffect != null && !auraEffect.isPlaying)
             auraEffect.Play();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        HandleTriggerCheck(other);
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        HandleTriggerCheck(other);
+    }
+
+    void HandleTriggerCheck(Collider other)
+    {
+        if (gameWon || other == null) return;
+        bool isServerOrAuthority = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
+        if (!isServerOrAuthority) return;
+
+        PlayerMovement pm = other.GetComponentInParent<PlayerMovement>();
+        BotController bot = other.GetComponentInParent<BotController>();
+
+        GameObject carrierObj = null;
+        if (pm != null && pm.team == PlayerMovement.TeamType.Protector) carrierObj = pm.gameObject;
+        else if (bot != null && bot.team == PlayerMovement.TeamType.Protector) carrierObj = bot.gameObject;
+
+        if (carrierObj == null) return;
+        Health health = carrierObj.GetComponent<Health>();
+        if (health != null && health.isDead) return;
+
+        bool carriesCrystal = (pm != null && pm.isCarryingCrystal.Value) ||
+                              (CrystalItem.Instance != null && CrystalItem.Instance.IsCarrier(carrierObj));
+
+        if (carriesCrystal)
+        {
+            OnCrystalDeliveredServer(carrierObj);
+        }
     }
 
     void OnDestroy()
@@ -487,7 +527,56 @@ public class CrystalAltar : NetworkBehaviour
 
     void CheckAltarDeliveryServer()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, triggerRadius);
+        if (gameWon) return;
+
+        // 1. Direct Proximity to Crystal and its Carrier
+        if (CrystalItem.Instance != null && CrystalItem.Instance.isCarried.Value)
+        {
+            GameObject carrier = CrystalItem.Instance.GetCarrierObject();
+            if (carrier != null)
+            {
+                PlayerMovement pm = carrier.GetComponent<PlayerMovement>();
+                BotController bot = carrier.GetComponent<BotController>();
+                bool isProtector = (pm != null && pm.team == PlayerMovement.TeamType.Protector) ||
+                                   (bot != null && bot.team == PlayerMovement.TeamType.Protector);
+
+                if (isProtector)
+                {
+                    Health hp = carrier.GetComponent<Health>();
+                    if (hp == null || !hp.isDead)
+                    {
+                        Vector3 altarCenter = transform.position;
+                        Vector3 carrierPos = carrier.transform.position;
+                        float horizDist = Vector2.Distance(
+                            new Vector2(altarCenter.x, altarCenter.z),
+                            new Vector2(carrierPos.x, carrierPos.z)
+                        );
+                        float vertDist = Mathf.Abs(carrierPos.y - altarCenter.y);
+
+                        if (horizDist <= 7.5f && vertDist <= 5.0f)
+                        {
+                            OnCrystalDeliveredServer(carrier);
+                            return;
+                        }
+
+                        Vector3 crystalPos = CrystalItem.Instance.transform.position;
+                        float crystalHorizDist = Vector2.Distance(
+                            new Vector2(altarCenter.x, altarCenter.z),
+                            new Vector2(crystalPos.x, crystalPos.z)
+                        );
+                        if (crystalHorizDist <= 7.5f && Mathf.Abs(crystalPos.y - altarCenter.y) <= 5.0f)
+                        {
+                            OnCrystalDeliveredServer(carrier);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Generous OverlapSphere detection
+        float checkRadius = Mathf.Max(triggerRadius, 7.5f);
+        Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f, checkRadius);
 
         foreach (Collider hit in hits)
         {
@@ -526,46 +615,104 @@ public class CrystalAltar : NetworkBehaviour
         }
     }
 
-    void OnCrystalDeliveredServer(GameObject carrier)
+    public void OnCrystalDeliveredServer(GameObject carrier)
     {
         if (gameWon || carrier == null) return;
+
+        // Mark gameWon across ALL altars to prevent duplicate triggers
+        for (int i = 0; i < AllAltars.Count; i++)
+        {
+            if (AllAltars[i] != null) AllAltars[i].gameWon = true;
+        }
         gameWon = true;
 
         Debug.Log($"👑 CRYSTAL DELIVERED TO {altarName} by {carrier.name}! PROTECTORS WIN!");
 
-        // 1. Register stats
-        MatchEndStatsUI.Instance?.RegisterCrystalDelivered(carrier);
+        // 1. Register stats safely
+        try
+        {
+            MatchEndStatsUI.Instance?.RegisterCrystalDelivered(carrier);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[CrystalAltar] RegisterCrystalDelivered exception: {ex}");
+        }
 
-        // 2. Trigger Victory Spectacle across all clients
-        TriggerVictorySpectacleRpc(transform.position, carrier.name);
+        // 2. Trigger Victory Spectacle across all clients (with local fallback if unspawned)
+        try
+        {
+            if (IsSpawned && NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            {
+                TriggerVictorySpectacleRpc(transform.position, carrier.name);
+            }
+            else
+            {
+                TriggerVictorySpectacleLocal(transform.position, carrier.name);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[CrystalAltar] TriggerVictorySpectacleRpc failed, falling back to local: {ex}");
+            TriggerVictorySpectacleLocal(transform.position, carrier.name);
+        }
 
         // 3. Trigger explosive celebratory tree growth
-        TreeGrowth tree = FindAnyObjectByType<TreeGrowth>();
-        if (tree != null)
+        try
         {
-            tree.TriggerCelebratoryExplosiveGrowth(18f);
+            TreeGrowth tree = FindAnyObjectByType<TreeGrowth>();
+            if (tree != null)
+            {
+                tree.TriggerCelebratoryExplosiveGrowth(18f);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[CrystalAltar] TriggerCelebratoryExplosiveGrowth exception: {ex}");
         }
 
-        // 4. Notify GameStateManager
-        if (GameStateManager.Instance != null)
+        // 4. Notify GameStateManager immediately
+        try
         {
-            GameStateManager.Instance.EndGame("Protectors");
+            if (GameStateManager.Instance != null)
+            {
+                GameStateManager.Instance.EndGame("Protectors");
+            }
+            else
+            {
+                MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[CrystalAltar] EndGame exception: {ex}");
+            MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
         }
 
-        // 5. Show Post-Match Statistics Screen after celebration
+        // 5. Show Post-Match Statistics Screen after brief celebration
         StartCoroutine(ShowVictoryScreenDelayed(3.2f));
     }
 
     IEnumerator ShowVictoryScreenDelayed(float delay)
     {
         yield return new WaitForSeconds(delay);
-        MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
+        try
+        {
+            MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[CrystalAltar] ShowVictoryScreen exception: {ex}");
+        }
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     void TriggerVictorySpectacleRpc(Vector3 altarPos, string heroName)
     {
+        TriggerVictorySpectacleLocal(altarPos, heroName);
+    }
 
+    public void TriggerVictorySpectacleLocal(Vector3 altarPos, string heroName)
+    {
         if (victoryEffect != null)
         {
             victoryEffect.transform.position = altarPos + Vector3.up * 1.5f;

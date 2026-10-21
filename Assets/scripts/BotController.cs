@@ -1007,7 +1007,7 @@ public class BotController : NetworkBehaviour
         if (agent != null && agent.isOnNavMesh)
         {
             agent.isStopped = false;
-            agent.stoppingDistance = 0.2f;
+            agent.stoppingDistance = 0.1f;
             agent.speed = (moveSpeed + personalOffset) * 1.35f; // +35% crystal sprint
         }
 
@@ -1015,12 +1015,28 @@ public class BotController : NetworkBehaviour
         if (altar != null)
         {
             Vector3 altarPos = altar.transform.position;
-            if (NavMesh.SamplePosition(altarPos, out NavMeshHit navHit, 6f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(altarPos, out NavMeshHit navHit, 8f, NavMesh.AllAreas))
             {
                 altarPos = navHit.position;
             }
-            SetNewDestination(altarPos);
-            if (agent != null) agent.stoppingDistance = 0.2f;
+
+            if (agent != null && agent.isOnNavMesh)
+            {
+                agent.stoppingDistance = 0.1f;
+                agent.SetDestination(altarPos);
+            }
+            currentDestination = altarPos;
+            hasDestination = true;
+
+            // فحص تسليم مباشر من البوت نفسه لضمان الفوز فور وصوله للمذبح
+            float horizDist = Vector2.Distance(
+                new Vector2(transform.position.x, transform.position.z),
+                new Vector2(altar.transform.position.x, altar.transform.position.z)
+            );
+            if (horizDist <= 7.0f && Mathf.Abs(transform.position.y - altar.transform.position.y) <= 4.5f)
+            {
+                altar.OnCrystalDeliveredServer(gameObject);
+            }
         }
         else if (treeTarget != null)
         {
