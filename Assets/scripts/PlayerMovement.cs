@@ -930,7 +930,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         bool isCurrentlyGrounded = false;
         Vector3 origin = transform.position + Vector3.up * 0.25f;
-        if (Physics.SphereCast(origin, 0.30f, Vector3.down, out RaycastHit hit, 0.40f, ~LayerMask.GetMask("Ignore Raycast")))
+        if (Physics.SphereCast(origin, 0.30f, Vector3.down, out RaycastHit hit, 0.50f, ~LayerMask.GetMask("Ignore Raycast")))
         {
             if (!hit.collider.isTrigger && hit.collider.gameObject != gameObject && !hit.collider.transform.IsChildOf(transform))
             {
@@ -968,9 +968,43 @@ public class PlayerMovement : NetworkBehaviour
         {
             if (wasAirborne)
             {
+                float fallDistance = highestFallY - transform.position.y;
                 wasAirborne = false;
                 highestFallY = float.MinValue;
-                // إلغاء ضرر السقوط بنسبة 100% كما طلب المستخدم: اللاعب لا ينقص من صحته أي نقطة عند القفز أو السقوط من أعلى الشجرة أو المنصات
+
+                // نظام ضرر السقوط الواقعي والتصاعدي الدقيق كما طلبه المستخدم تماماً:
+                // 1. القفزات الصغيرة العادية على نفس المنصة (< 3.8م): آمنة تماماً بدون أي ضرر (0 HP).
+                // 2. السقوط من مستوى إلى المستوى الذي تحته مباشرة (~5.5م إلى 10م): ينقص الصحة قليلاً (15 إلى 40 HP).
+                // 3. السقوط من مكان أعلى (طابقين ~16م إلى 20م): ينقص الصحة أكثر (70 إلى 125 HP).
+                // 4. السقوط من أعلى قمة الشجرة (TopLevel) إلى الأرض مباشرة (أكثر من 30م إلى 40م): ضرر ساحق/قاتل (250 إلى 500+ HP)!
+                if (fallDistance > 3.8f)
+                {
+                    float damage = (fallDistance - 3.8f) * 6.0f;
+
+                    if (fallDistance > 11.0f)
+                    {
+                        damage += (fallDistance - 11.0f) * 5.0f;
+                    }
+
+                    if (fallDistance > 22.0f)
+                    {
+                        damage += (fallDistance - 22.0f) * 8.0f;
+                    }
+
+                    if (fallDistance > 32.0f)
+                    {
+                        damage += (fallDistance - 32.0f) * 15.0f;
+                    }
+
+                    Health h = GetComponent<Health>();
+                    if (h != null && !h.isDead)
+                    {
+                        h.TakeDamage(damage);
+                        Health.TriggerDamageFlash(0.6f);
+                        ThirdPersonCamera.Shake(0.35f, Mathf.Clamp(damage / 100f, 0.2f, 0.8f));
+                        Debug.Log($"💥 [Fall Damage] Dropped {fallDistance:F1}m -> Suffered {damage:F1} HP damage! (Remaining HP: {h.currentHealth}/{h.maxHealth})");
+                    }
+                }
             }
         }
     }
@@ -1190,13 +1224,17 @@ public class PlayerMovement : NetworkBehaviour
 
     void CheckGroundedCollision(Collision collision)
     {
-        if (Time.time - lastJumpTime >= 0.30f)
+        if (Time.time - lastJumpTime >= 0.25f)
         {
             foreach (ContactPoint contact in collision.contacts)
             {
                 if (contact.normal.y > 0.3f)
                 {
                     jumpCount = 0;
+                    if (wasAirborne)
+                    {
+                        TrackFallDamage(true);
+                    }
                     break;
                 }
             }
