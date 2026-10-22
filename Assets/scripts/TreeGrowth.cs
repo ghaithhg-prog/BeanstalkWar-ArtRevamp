@@ -843,6 +843,12 @@ public class TreeGrowth : MonoBehaviour
         if (LevelBossManager.Instance == null || !LevelBossManager.Instance.AreAllBossesDefeated)
         {
             int deadCount = LevelBossManager.Instance != null ? LevelBossManager.Instance.DefeatedBossCount : 0;
+            if (deadCount < 3 && LevelBossManager.Instance != null)
+            {
+                LevelBossManager.Instance.CheckBossesDefeatStatus();
+                deadCount = LevelBossManager.Instance.DefeatedBossCount;
+            }
+
             shieldStatus = LanguageSelectionUI.Localize(
                 $"🛡️ DIVINE SHIELD ACTIVE ({deadCount}/3 BOSS SEALS BROKEN)",
                 ar: $"🛡️ الدرع الإلهي مفعل ({deadCount}/3 أختام مكسورة - اقتل كل الزعماء لإسقاطه)",

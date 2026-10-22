@@ -756,6 +756,14 @@ public class LevelBoss : NetworkBehaviour
             }
         }
 
+        if (levelNumber < 1 || levelNumber > 3)
+        {
+            if (gameObject.name.Contains("1") || transform.position.y < 12f) levelNumber = 1;
+            else if (gameObject.name.Contains("2") || transform.position.y < 22f) levelNumber = 2;
+            else if (gameObject.name.Contains("3") || transform.position.y >= 22f) levelNumber = 3;
+            else levelNumber = 1;
+        }
+
         Debug.Log($"👑 BOSS SLAIN! {bossTitle} (Level {levelNumber}) was defeated by {killerName} ({killerTeam})!");
 
         // 1. تسجيل هزيمة الزعيم في مدير الزعماء فوراً كأولوية قصوى مطلقة لضمان فك الأختام والكريستالة

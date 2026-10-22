@@ -390,13 +390,14 @@ public class BotController : NetworkBehaviour
                         return;
                     }
 
-                    float distToCarrier = Vector3.Distance(transform.position, carrier.transform.position);
-                    if (distToCarrier <= 11f || (GetInstanceID() & 1) == 0)
+                    // تقسيم استراتيجي للمدمرين: 70% تدمير الشجرة و30% ملاحقة حامل الكريستالة ومنعه من الوصول للمذبح
+                    int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
+                    if (botRatio >= 7) // 30% صيادو الكريستالة
                     {
                         EnterFight(carrier.transform);
                         return;
                     }
-                    else if (allBossesSlain)
+                    else // 70% مهاجمو الشجرة
                     {
                         enemyTarget = null;
                         currentState = BotState.AttackTree;
@@ -424,9 +425,17 @@ public class BotController : NetworkBehaviour
             }
         }
 
-        // 4. للمدمرين (Destroyer Bots): بمجرد موت الزعماء الثلاثة، الأولوية القصوى هي الهجوم المباشر على الشجرة وتدميرها!
+        // 4. للمدمرين (Destroyer Bots): بمجرد موت الزعماء الثلاثة وسقوط الدرع:
         if (team == PlayerMovement.TeamType.Destroyer && allBossesSlain)
         {
+            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
+            // 30% من المدمرين يركزون على مراقبة واعتراض الكريستالة الساقطة لمنع الحماة من التقاطها
+            if (botRatio >= 7 && CrystalItem.Instance != null && CrystalItem.Instance.isDropped.Value)
+            {
+                currentState = BotState.GuardDroppedCrystal;
+                return;
+            }
+
             Transform veryCloseEnemy = FindClosestEnemy();
             // لا ينشغل المدمر بقتال جانبي إلا إذا كان العدو ملاصقاً له تماماً (أقل من 3.5 م)
             if (veryCloseEnemy != null && Vector3.Distance(transform.position, veryCloseEnemy.position) <= 3.5f)
@@ -435,6 +444,7 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
+            // 70% تركيز مباشر حتمي على ضرب الشجرة وتدميرها
             enemyTarget = null;
             currentState = BotState.AttackTree;
             return;

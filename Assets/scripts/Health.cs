@@ -419,124 +419,125 @@ public class Health : MonoBehaviour
         float sw = Screen.width;
         float sh = Screen.height;
 
-        // 1. شاشة معتمة سينمائية داكنة مع لمسة قرمزية خفيفة
-        GUI.color = new Color(0.04f, 0.01f, 0.02f, 0.88f);
-        GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
-        GUI.color = Color.white;
+        // 1. لا توجد أي شاشة سوداء معتمة إطلاقاً حتى يظل المشهد ثلاثي الأبعاد وسقوط الشخصية وموتها واضحاً 100%
+        // فقط شريط علوي عائم شبه شفاف وفخم للغاية بتصميم قروسطي جذاب
+        float bannerW = Mathf.Min(sw * 0.72f, 520f);
+        float bannerH = 135f;
+        float bannerX = (sw - bannerW) * 0.5f;
+        float bannerY = 28f; // في أعلى الشاشة لترك كامل منتصف وأسفل الشاشة مكشوفاً لرؤية الجثة والسقوط والمعركة
 
-        // 2. بطاقة مركزية فخمة
-        float cardW = Mathf.Min(sw * 0.85f, 580f);
-        float cardH = 340f;
-        float cardX = (sw - cardW) * 0.5f;
-        float cardY = (sh - cardH) * 0.42f;
+        // خلفية زجاجية فائقة النقاء وشبه شفافة تسمح برؤية المعركة وسقوط الشخصية خلفها بوضوح تام
+        GUI.color = new Color(0.04f, 0.02f, 0.05f, 0.42f);
+        GUI.DrawTexture(new Rect(bannerX, bannerY, bannerW, bannerH), Texture2D.whiteTexture);
 
-        // خلفية البطاقة
-        GUI.color = new Color(0.08f, 0.06f, 0.08f, 0.94f);
-        GUI.DrawTexture(new Rect(cardX, cardY, cardW, cardH), Texture2D.whiteTexture);
-
-        // إطار نيون قرمزي وذهبي
-        Color borderRed = new Color(0.95f, 0.22f, 0.22f, 0.9f);
+        // إطار نيون سحري قرمزي وذهبي رفيع
+        Color borderRed = new Color(0.95f, 0.22f, 0.25f, 0.85f);
         Color borderGold = new Color(1.0f, 0.82f, 0.25f, 0.9f);
 
+        GUI.color = borderGold;
+        GUI.DrawTexture(new Rect(bannerX, bannerY, bannerW, 2f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(bannerX, bannerY + bannerH - 2f, bannerW, 2f), Texture2D.whiteTexture);
         GUI.color = borderRed;
-        GUI.DrawTexture(new Rect(cardX, cardY, cardW, 3f), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(cardX, cardY + cardH - 3f, cardW, 3f), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(cardX, cardY, 3f, cardH), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(cardX + cardW - 3f, cardY, 3f, cardH), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(bannerX, bannerY, 2f, bannerH), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(bannerX + bannerW - 2f, bannerY, 2f, bannerH), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        // 3. أيقونة الجمجمة والعنوان
-        GUIStyle iconStyle = new GUIStyle(GUI.skin.label);
-        iconStyle.alignment = TextAnchor.MiddleCenter;
-        iconStyle.fontSize = 38;
-        GUI.Label(new Rect(cardX, cardY + 18f, cardW, 45f), "☠️", iconStyle);
-
-        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
-        titleStyle.alignment = TextAnchor.MiddleCenter;
-        titleStyle.fontSize = 26;
-        titleStyle.fontStyle = FontStyle.Bold;
-        titleStyle.normal.textColor = borderRed;
+        // 2. العنوان وأيقونة السقوط مع ظل داكن لقراءة فائقة الوضوح فوق أي مشهد ثلاثي الأبعاد
+        int secondsLeft = Mathf.Clamp(Mathf.CeilToInt(currentRespawnCountdown), 1, 10);
+        float pulse = 1f + Mathf.Sin(Time.time * 5f) * 0.04f;
 
         string titleStr = LanguageSelectionUI.Localize(
-            "YOU HAVE FALLEN IN BATTLE",
-            ar: "سقطت في المعركة",
-            ru: "ВЫ ПАЛИ В БОЮ",
-            fr: "VOUS ÊTES TOMBÉ AU COMBAT",
-            es: "HAS CAÍDO EN COMBATE",
-            de: "DU BIST IM KAMPF GEFALLEN",
-            hi: "आप युद्ध में वीरगति को प्राप्त हुए",
-            zh: "你已在战斗中阵亡",
-            ja: "戦闘不能になりました",
-            pt: "VOCÊ FOI DERROTADO EM COMBATE"
+            "☠️ YOU HAVE FALLEN IN BATTLE ☠️",
+            ar: "☠️ سقطت في المعركة ☠️",
+            ru: "☠️ ВЫ ПАЛИ В БОЮ ☠️",
+            fr: "☠️ VOUS ÊTES TOMBÉ AU COMBAT ☠️",
+            es: "☠️ HAS CAÍDO EN COMBATE ☠️",
+            de: "☠️ DU BIST IM KAMPF GEFALLEN ☠️",
+            hi: "☠️ आप युद्ध में वीरगति को प्राप्त हुए ☠️",
+            zh: "☠️ 你已在战斗中阵亡 ☠️",
+            ja: "☠️ 戦闘不能になりました ☠️",
+            pt: "☠️ VOCÊ FOI DERROTADO EM COMBATE ☠️"
         );
-        GUI.Label(new Rect(cardX, cardY + 68f, cardW, 35f), titleStr, titleStyle);
 
-        // 4. الرقم الضخم للعد التنازلي مع نبض خفيف
-        int secondsLeft = Mathf.Clamp(Mathf.CeilToInt(currentRespawnCountdown), 1, 10);
-        float pulse = 1f + Mathf.Sin(Time.time * 6f) * 0.05f;
+        GUIStyle titleShadow = new GUIStyle(GUI.skin.label);
+        titleShadow.alignment = TextAnchor.MiddleCenter;
+        titleShadow.fontSize = 20;
+        titleShadow.fontStyle = FontStyle.Bold;
+        titleShadow.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
 
-        GUIStyle countStyle = new GUIStyle(GUI.skin.label);
-        countStyle.alignment = TextAnchor.MiddleCenter;
-        countStyle.fontSize = Mathf.RoundToInt(64 * pulse);
-        countStyle.fontStyle = FontStyle.Bold;
+        GUIStyle titleStyle = new GUIStyle(titleShadow);
+        titleStyle.normal.textColor = borderRed;
+
+        Rect titleRect = new Rect(bannerX, bannerY + 10f, bannerW, 26f);
+        GUI.Label(new Rect(titleRect.x + 1f, titleRect.y + 1f, titleRect.width, titleRect.height), titleStr, titleShadow);
+        GUI.Label(titleRect, titleStr, titleStyle);
+
+        // 3. عداد العودة للحياة بنمط ذهبي متوهج وواضح جداً
+        string countdownMsg = LanguageSelectionUI.Localize(
+            $"⚡ Respawning in {secondsLeft} seconds...",
+            ar: $"⚡ ستعود للحياة بعد {secondsLeft} ثوانٍ...",
+            ru: $"⚡ Возрождение через {secondsLeft} сек...",
+            fr: $"⚡ Réapparition dans {secondsLeft} secondes...",
+            es: $"⚡ Volverás a la vida en {secondsLeft} segundos...",
+            de: $"⚡ Wiederbelebung in {secondsLeft} Sekunden...",
+            hi: $"⚡ {secondsLeft} सेकंड में पुनर्जीवन...",
+            zh: $"⚡ 将在 {secondsLeft} 秒后复活...",
+            ja: $"⚡ {secondsLeft} 秒後に復活...",
+            pt: $"⚡ Renascendo em {secondsLeft} segundos..."
+        );
+
+        GUIStyle countShadow = new GUIStyle(GUI.skin.label);
+        countShadow.alignment = TextAnchor.MiddleCenter;
+        countShadow.fontSize = Mathf.RoundToInt(22 * pulse);
+        countShadow.fontStyle = FontStyle.Bold;
+        countShadow.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+
+        GUIStyle countStyle = new GUIStyle(countShadow);
         countStyle.normal.textColor = borderGold;
 
-        GUI.Label(new Rect(cardX, cardY + 110f, cardW, 80f), secondsLeft.ToString(), countStyle);
+        Rect countRect = new Rect(bannerX, bannerY + 40f, bannerW, 30f);
+        GUI.Label(new Rect(countRect.x + 1f, countRect.y + 1f, countRect.width, countRect.height), countdownMsg, countShadow);
+        GUI.Label(countRect, countdownMsg, countStyle);
 
-        // 5. النص التفسيري الكامل بجميع اللغات
-        GUIStyle msgStyle = new GUIStyle(GUI.skin.label);
-        msgStyle.alignment = TextAnchor.MiddleCenter;
-        msgStyle.fontSize = 18;
-        msgStyle.fontStyle = FontStyle.Bold;
-        msgStyle.normal.textColor = Color.white;
-
-        string countdownMsg = LanguageSelectionUI.Localize(
-            $"You will respawn in {secondsLeft} seconds",
-            ar: $"ستعود للحياة بعد {secondsLeft} ثوانٍ",
-            ru: $"Вы вернетесь к жизни через {secondsLeft} сек.",
-            fr: $"Vous réapparaîtrez dans {secondsLeft} secondes",
-            es: $"Volverás a la vida en {secondsLeft} segundos",
-            de: $"Wiederbelebung in {secondsLeft} Sekunden",
-            hi: $"आप {secondsLeft} सेकंड में जीवित होंगे",
-            zh: $"你将在 {secondsLeft} 秒后复活",
-            ja: $"{secondsLeft} 秒後に復活します",
-            pt: $"Você voltará à vida em {secondsLeft} segundos"
-        );
-        GUI.Label(new Rect(cardX + 20f, cardY + 195f, cardW - 40f, 30f), countdownMsg, msgStyle);
-
-        // 6. شريط تقدم العد التنازلي (10 ثوانٍ)
-        float barW = cardW * 0.75f;
-        float barH = 10f;
-        float barX = cardX + (cardW - barW) * 0.5f;
-        float barY = cardY + 238f;
+        // 4. شريط تقدم العودة للحياة (10 ثوانٍ)
+        float barW = bannerW * 0.82f;
+        float barH = 7f;
+        float barX = bannerX + (bannerW - barW) * 0.5f;
+        float barY = bannerY + 76f;
 
         float ratio = Mathf.Clamp01(currentRespawnCountdown / 10f);
 
-        GUI.color = new Color(0.15f, 0.15f, 0.2f, 0.9f);
+        GUI.color = new Color(0.1f, 0.1f, 0.15f, 0.75f);
         GUI.DrawTexture(new Rect(barX, barY, barW, barH), Texture2D.whiteTexture);
 
         GUI.color = Color.Lerp(borderRed, borderGold, 1f - ratio);
         GUI.DrawTexture(new Rect(barX, barY, barW * (1f - ratio), barH), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        // 7. تلميح الموقع المخصص
-        GUIStyle subStyle = new GUIStyle(GUI.skin.label);
-        subStyle.alignment = TextAnchor.MiddleCenter;
-        subStyle.fontSize = 13;
-        subStyle.normal.textColor = new Color(0.75f, 0.85f, 0.8f);
+        // 5. نص إرشادي لطيف وموجز في أسفل الشريط
+        GUIStyle subShadow = new GUIStyle(GUI.skin.label);
+        subShadow.alignment = TextAnchor.MiddleCenter;
+        subShadow.fontSize = 12;
+        subShadow.normal.textColor = new Color(0f, 0f, 0f, 0.9f);
+
+        GUIStyle subStyle = new GUIStyle(subShadow);
+        subStyle.normal.textColor = new Color(0.8f, 0.95f, 0.88f, 0.95f);
 
         string hintStr = LanguageSelectionUI.Localize(
-            "🌿 Preparing respawn at your team's sacred sanctuary...",
-            ar: "🌿 جاري تجهيز إحيائك عند ملاذ فريقك المخصص...",
-            ru: "🌿 Подготовка к возрождению на базе вашей команды...",
-            fr: "🌿 Préparation de la réapparition au sanctuaire d'équipe...",
-            es: "🌿 Preparando reaparición en el santuario de tu equipo...",
-            de: "🌿 Wiederbelebung am Heiligtum deines Teams wird vorbereitet...",
-            hi: "🌿 आपकी टीम के पवित्र स्थान पर पुनर्जन्म की तैयारी...",
-            zh: "🌿 正在为你在团队圣地重生做准备...",
-            ja: "🌿 チームの拠点にて復活の準備中...",
-            pt: "🌿 Preparando renascimento no santuário da sua equipe..."
+            "🌿 Preparing safe respawn at your team's sanctuary",
+            ar: "🌿 جاري تجهيز إحيائك عند ملاذ فريقك المخصص",
+            ru: "🌿 Подготовка к возрождению на базе команды",
+            fr: "🌿 Réapparition au sanctuaire de votre équipe",
+            es: "🌿 Preparando reaparición en el santuario de tu equipo",
+            de: "🌿 Wiederbelebung am Heiligtum deines Teams",
+            hi: "🌿 आपकी टीम के अभयारण्य में पुनर्जीवन की तैयारी",
+            zh: "🌿 正在团队圣地准备重生",
+            ja: "🌿 拠点で復活準備中",
+            pt: "🌿 Preparando renascimento no santuário da equipe"
         );
-        GUI.Label(new Rect(cardX + 15f, cardY + 270f, cardW - 30f, 40f), hintStr, subStyle);
+
+        Rect subRect = new Rect(bannerX, bannerY + 92f, bannerW, 20f);
+        GUI.Label(new Rect(subRect.x + 1f, subRect.y + 1f, subRect.width, subRect.height), hintStr, subShadow);
+        GUI.Label(subRect, hintStr, subStyle);
     }
 }

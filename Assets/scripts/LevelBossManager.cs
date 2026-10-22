@@ -10,7 +10,24 @@ using System.Collections.Generic;
 /// </summary>
 public class LevelBossManager : MonoBehaviour
 {
-    public static LevelBossManager Instance { get; private set; }
+    private static LevelBossManager _instance;
+    public static LevelBossManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<LevelBossManager>();
+                if (_instance == null)
+                {
+                    GameObject managerObj = new GameObject("LevelBossManager");
+                    _instance = managerObj.AddComponent<LevelBossManager>();
+                }
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("Bot Prefab For Boss Generation")]
     public GameObject botPrefab;
@@ -78,7 +95,12 @@ public class LevelBossManager : MonoBehaviour
 
     void Awake()
     {
-        Instance = this;
+        if (_instance != null && _instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
         defeatedBossLevels.Clear();
         allThreeBossesTriggered = false;
         bossesSpawned = false;
@@ -89,11 +111,19 @@ public class LevelBossManager : MonoBehaviour
         CleanupDuplicateBossesAndAdoptSceneBosses();
     }
 
+    void OnEnable()
+    {
+        if (_instance == null)
+        {
+            _instance = this;
+        }
+    }
+
     void OnDestroy()
     {
-        if (Instance == this)
+        if (_instance == this)
         {
-            Instance = null;
+            _instance = null;
         }
         ClearStaticEvents();
     }
@@ -445,23 +475,20 @@ public class LevelBossManager : MonoBehaviour
 
     void Update()
     {
-        // فحص دوري منظم ومحكوم (مرة كل 0.75 ثانية بدلاً من 120 مرة في الثانية) لمنع استنزاف الرام والـ GC!
+        // فحص دوري منظم ومحكوم (مرة كل 0.4 ثانية بدلاً من 120 مرة في الثانية) لمنع استنزاف الرام والـ GC!
         checkBossTimer -= Time.deltaTime;
         if (checkBossTimer <= 0f)
         {
-            checkBossTimer = 0.75f;
-            if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying())
+            checkBossTimer = 0.4f;
+            if (!bossesSpawned)
             {
-                if (!bossesSpawned)
-                {
-                    CheckAndSpawnBossesPerLevel();
-                }
-                CheckBossesDefeatStatus();
+                CheckAndSpawnBossesPerLevel();
             }
+            CheckBossesDefeatStatus();
         }
     }
 
-    void CheckBossesDefeatStatus()
+    public void CheckBossesDefeatStatus()
     {
         if (allThreeBossesTriggered) return;
 
@@ -474,7 +501,7 @@ public class LevelBossManager : MonoBehaviour
                 if (!defeatedBossLevels.Contains(b.levelNumber))
                 {
                     Debug.Log($"🛡️ [LevelBossManager] Auto-registering defeated boss for level {b.levelNumber} ({b.bossTitle})");
-                    defeatedBossLevels.Add(b.levelNumber);
+                    RegisterBossDefeated(b.levelNumber, b.bossTitle, "Champion", PlayerMovement.TeamType.Protector);
                 }
             }
         }
