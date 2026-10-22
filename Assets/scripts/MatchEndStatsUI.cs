@@ -20,7 +20,9 @@ public class MatchEndStatsUI : MonoBehaviour
 
     public class PlayerMatchStat
     {
-        public string name;
+        public int entityId;
+        public string heroName = "Champion";
+        public string characterClass = "";
         public PlayerMovement.TeamType team;
         public int kills = 0;
         public int deaths = 0;
@@ -35,7 +37,7 @@ public class MatchEndStatsUI : MonoBehaviour
         }
     }
 
-    private Dictionary<string, PlayerMatchStat> stats = new Dictionary<string, PlayerMatchStat>();
+    private Dictionary<int, PlayerMatchStat> stats = new Dictionary<int, PlayerMatchStat>();
     private bool isGameOver = false;
     private string winningTeamName = "Protectors";
     private float gameOverTime = 0f;
@@ -67,7 +69,7 @@ public class MatchEndStatsUI : MonoBehaviour
     {
         if (attacker == null || amount <= 0f) return;
         PlayerMatchStat stat = GetOrCreateStat(attacker);
-        stat.damageDealt += amount;
+        if (stat != null) stat.damageDealt += amount;
     }
 
     public void RegisterKill(GameObject killer, GameObject victim)
@@ -75,13 +77,13 @@ public class MatchEndStatsUI : MonoBehaviour
         if (victim != null)
         {
             PlayerMatchStat victimStat = GetOrCreateStat(victim);
-            victimStat.deaths++;
+            if (victimStat != null) victimStat.deaths++;
         }
 
         if (killer != null)
         {
             PlayerMatchStat killerStat = GetOrCreateStat(killer);
-            killerStat.kills++;
+            if (killerStat != null) killerStat.kills++;
         }
     }
 
@@ -90,7 +92,7 @@ public class MatchEndStatsUI : MonoBehaviour
         if (killer != null)
         {
             PlayerMatchStat stat = GetOrCreateStat(killer);
-            stat.bossesKilled++;
+            if (stat != null) stat.bossesKilled++;
         }
     }
 
@@ -99,28 +101,48 @@ public class MatchEndStatsUI : MonoBehaviour
         if (deliverer != null)
         {
             PlayerMatchStat stat = GetOrCreateStat(deliverer);
-            stat.deliveredCrystal = true;
+            if (stat != null) stat.deliveredCrystal = true;
         }
     }
 
     PlayerMatchStat GetOrCreateStat(GameObject go)
     {
-        string id = go.name;
+        if (go == null) return null;
+        int id = go.GetInstanceID();
         if (!stats.TryGetValue(id, out PlayerMatchStat s))
         {
             s = new PlayerMatchStat();
-            s.name = go.name.Replace("(Clone)", "").Trim();
+            s.entityId = id;
 
             PlayerMovement pm = go.GetComponent<PlayerMovement>();
+            BotController bot = go.GetComponent<BotController>();
+            CharacterCombat combat = go.GetComponent<CharacterCombat>();
+
             if (pm != null)
             {
                 s.team = pm.team;
                 s.isLocalPlayer = pm.IsOwner;
+                s.heroName = pm.IsOwner ? PlayerProfile.GetSavedPlayerName() : go.name.Replace("(Clone)", "").Trim();
+
+                int charId = pm.selectedCharacterID.Value;
+                CharacterDatabase db = Resources.Load<CharacterDatabase>("Characters/CharacterDatabase");
+                CharacterData cd = (charId >= 0 && db != null) ? db.GetCharacter(charId) : (combat != null ? combat.characterData : null);
+                s.characterClass = cd != null ? cd.characterName : "Hero";
+            }
+            else if (bot != null)
+            {
+                s.team = bot.team;
+                s.isLocalPlayer = false;
+                s.heroName = !string.IsNullOrEmpty(bot.botHeroName) ? bot.botHeroName : go.name.Replace("(Clone)", "").Trim();
+
+                CharacterData cd = combat != null ? combat.characterData : null;
+                s.characterClass = cd != null ? cd.characterName : "Champion";
             }
             else
             {
-                CharacterCombat cc = go.GetComponent<CharacterCombat>();
-                if (cc != null) s.team = cc.team;
+                s.team = combat != null ? combat.team : PlayerMovement.TeamType.Protector;
+                s.heroName = go.name.Replace("(Clone)", "").Trim();
+                s.characterClass = "Warrior";
             }
 
             stats[id] = s;
@@ -135,14 +157,14 @@ public class MatchEndStatsUI : MonoBehaviour
         winningTeamName = winner;
         gameOverTime = Time.time;
 
-        // Populate any remaining active players or bots into stats table
-        PlayerMovement[] allPlayers = FindObjectsByType<PlayerMovement>();
+        // Populate all 10 players and bots into stats table
+        PlayerMovement[] allPlayers = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
         foreach (var p in allPlayers)
         {
             if (p != null) GetOrCreateStat(p.gameObject);
         }
 
-        BotController[] allBots = FindObjectsByType<BotController>();
+        BotController[] allBots = FindObjectsByType<BotController>(FindObjectsSortMode.None);
         foreach (var b in allBots)
         {
             if (b != null) GetOrCreateStat(b.gameObject);
@@ -183,16 +205,16 @@ public class MatchEndStatsUI : MonoBehaviour
         bool isProt = winningTeamName.ToLower().Contains("protector");
         string titleText = isProt
             ? LanguageSelectionUI.Localize(
-                "🌿 THE SACRED GROVE IS SAVED! 🌿",
-                "🌿 تم إنقاذ الغابة المقدسة! 🌿",
-                "🌿 СВЯЩЕННАЯ РОЩА СПАСЕНА! 🌿",
-                "🌿 ¡EL BOSQUE SAGRADO ESTÁ SALVADO! 🌿",
-                "🌿 LE BOSQUET SACRÉ EST SAUVÉ ! 🌿",
-                "🌿 DER HEILIGE HAIN IST GERETTET! 🌿",
-                "🌿 पवित्र उपवन बच गया! 🌿",
-                "🌿 神圣森林得救了！🌿",
-                "🌿 聖なる森は救われた！🌿",
-                "🌿 O BOSQUE SAGRADO FOI SALVO! 🌿")
+                "🌟 THE SACRED CRYSTAL REACHED THE SANCTUARY! PROTECTORS WIN! 🌟",
+                "🌟 لقد وصلت الكريستالة للمذبح، فاز الحماة! 🌟",
+                "🌟 КРИСТАЛЛ ДОСТИГ АЛТАРЯ! ЗАЩИТНИКИ ПОБЕДИЛИ! 🌟",
+                "🌟 ¡EL CRISTAL HA LLEGADO AL ALTAR, GANARON LOS PROTECTORES! 🌟",
+                "🌟 LE CRISTAL A ATTEINT L'AUTEL, LES PROTECTEURS ONT GAGNÉ ! 🌟",
+                "🌟 DER KRISTALL HAT DEN ALTAR ERREICHT, DIE BESCHÜTZER HABEN GEWONNEN! 🌟",
+                "🌟 क्रिस्टल वेदी पर पहुंच गया, संरक्षकों की विजय हुई! 🌟",
+                "🌟 水晶已送达圣坛，守护者获胜！🌟",
+                "🌟 水晶が祭壇に到達した、守護者の勝利！🌟",
+                "🌟 O CRISTAL CHEGOU AO ALTAR, OS PROTETORES VENCERAM! 🌟")
             : LanguageSelectionUI.Localize(
                 "🔥 THE GREAT BEANSTALK HAS FALLEN! 🔥",
                 "🔥 سقطت شجرة الفاصولياء العظيمة! 🔥",
@@ -207,16 +229,16 @@ public class MatchEndStatsUI : MonoBehaviour
 
         string subtitleText = isProt
             ? LanguageSelectionUI.Localize(
-                "🏆 PROTECTORS VICTORIOUS! 🏆",
-                "🏆 انتصار فريق الحماة! 🏆",
-                "🏆 ПОБЕДА ЗАЩИТНИКОВ! 🏆",
-                "🏆 ¡VICTORIA DE LOS PROTECTORES! 🏆",
-                "🏆 VICTOIRE DES PROTECTEURS ! 🏆",
-                "🏆 DIE BESCHÜTZER HABEN GESIEGT! 🏆",
-                "🏆 संरक्षकों की विजय! 🏆",
-                "🏆 守护者获胜！🏆",
-                "🏆 守護者の勝利！🏆",
-                "🏆 VITÓRIA DOS PROTETORES! 🏆")
+                "🌿 THE SACRED GROVE IS SAVED! 🌿",
+                "🌿 تم إنقاذ الغابة المقدسة بسلام! 🌿",
+                "🌿 СВЯЩЕННАЯ РОЩА СПАСЕНА! 🌿",
+                "🌿 ¡EL BOSQUE SAGRADO ESTÁ SALVADO! 🌿",
+                "🌿 LE BOSQUET SACRÉ EST SAUVÉ ! 🌿",
+                "🌿 DER HEILIGE HAIN IST GERETTET! 🌿",
+                "🌿 पवित्र उपवन बच गया! 🌿",
+                "🌿 神圣森林得救了！🌿",
+                "🌿 聖なる森は救われた！🌿",
+                "🌿 O BOSQUE SAGRADO FOI SALVO! 🌿")
             : LanguageSelectionUI.Localize(
                 "⚔️ DESTROYERS VICTORIOUS! ⚔️",
                 "⚔️ انتصار فريق المدمرين! ⚔️",
@@ -286,18 +308,18 @@ public class MatchEndStatsUI : MonoBehaviour
         colHeaderStyle.normal.textColor = new Color(1f, 0.9f, 0.6f);
 
         float colX = headerRect.x + 8f;
-        GUI.Label(new Rect(colX, tableY + 4f, 145f, 20f), LanguageSelectionUI.Localize("HERO / BOT", "البطل / الآلي", "ГЕРОЙ / БОТ", "HÉROE / BOT", "HÉROS / BOT", "HELD / BOT", "नायक / बॉट", "英雄 / 机器人", "ヒーロー / ボット", "HERÓI / BOT"), colHeaderStyle);
-        colX += 150f;
-        GUI.Label(new Rect(colX, tableY + 4f, 85f, 20f), LanguageSelectionUI.Localize("TEAM", "الفريق", "КОМАНДА", "EQUIPO", "ÉQUIPE", "TEAM", "दल", "队伍", "チーム", "EQUIPE"), colHeaderStyle);
-        colX += 90f;
-        GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("KILLS", "قتلى", "УБИЙСТВА", "BAJAS", "ÉLIMINATIONS", "KILLS", "हताहत", "击杀", "キル", "ABATES"), colHeaderStyle);
-        colX += 52f;
-        GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("DEATHS", "وفيات", "СМЕРТИ", "MUERTES", "MORTS", "TODE", "मृत्यु", "死亡", "デス", "MORTES"), colHeaderStyle);
-        colX += 52f;
+        GUI.Label(new Rect(colX, tableY + 4f, 175f, 20f), LanguageSelectionUI.Localize("HERO & CLASS", "البطل والفئة", "ГЕРОЙ И КЛАСС", "HÉROE Y CLASE", "HÉROS & CLASSE", "HELD & KLASSE", "नायक और वर्ग", "英雄与职业", "英雄とクラス", "HERÓI E CLASSE"), colHeaderStyle);
+        colX += 180f;
+        GUI.Label(new Rect(colX, tableY + 4f, 80f, 20f), LanguageSelectionUI.Localize("TEAM", "الفريق", "КОМАНДА", "EQUIPO", "ÉQUIPE", "TEAM", "दल", "队伍", "チーム", "EQUIPE"), colHeaderStyle);
+        colX += 85f;
+        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("KILLS", "قتلى", "УБИЙСТВА", "BAJAS", "ÉLIMINATIONS", "KILLS", "हताहत", "击杀", "キル", "ABATES"), colHeaderStyle);
+        colX += 48f;
+        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("DEATHS", "وفيات", "СМЕРТИ", "MUERTES", "MORTS", "TODE", "मृत्यु", "死亡", "デス", "MORTES"), colHeaderStyle);
+        colX += 48f;
         GUI.Label(new Rect(colX, tableY + 4f, 65f, 20f), LanguageSelectionUI.Localize("DAMAGE", "ضرر", "УРОН", "DAÑO", "DÉGÂTS", "SCHADEN", "क्षति", "伤害", "ダメージ", "DANO"), colHeaderStyle);
-        colX += 70f;
-        GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉस", "首领", "ボス", "CHEFE"), colHeaderStyle);
-        colX += 52f;
+        colX += 68f;
+        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉس", "首领", "ボス", "CHEFE"), colHeaderStyle);
+        colX += 48f;
         GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("CRYSTAL", "كريستال", "КРИСТАЛЛ", "CRISTAL", "CRISTAL", "KRISTALL", "क्रिस्टल", "水晶", "クリスタル", "CRISTAL"), colHeaderStyle);
         colX += 62f;
         GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("SCORE", "نقاط", "СЧЕТ", "PUNTOS", "SCORE", "PUNKTE", "स्कोर", "积分", "スコア", "PONTUAÇÃO"), colHeaderStyle);
@@ -337,9 +359,14 @@ public class MatchEndStatsUI : MonoBehaviour
             rowTextStyle.normal.textColor = s.isLocalPlayer ? Color.white : new Color(0.9f, 0.9f, 0.9f);
 
             float rX = 6f;
-            string prefix = (i == 0) ? "👑 " : (s.isLocalPlayer ? "⭐ " : "");
-            GUI.Label(new Rect(rX, currRowY + 4f, 145f, 20f), prefix + s.name, rowTextStyle);
-            rX += 150f;
+            string prefix = (i == 0) ? "👑 " : (s.isLocalPlayer ? "⭐ " : "⚔️ ");
+            string heroDisplay = $"{prefix}{s.heroName}";
+            if (!string.IsNullOrEmpty(s.characterClass))
+            {
+                heroDisplay += $" ({s.characterClass})";
+            }
+            GUI.Label(new Rect(rX, currRowY + 4f, 175f, 20f), heroDisplay, rowTextStyle);
+            rX += 180f;
 
             Color tCol = (s.team == PlayerMovement.TeamType.Protector) ? new Color(0.3f, 0.85f, 1f) : new Color(1f, 0.4f, 0.2f);
             GUIStyle teamStyle = new GUIStyle(rowTextStyle);
@@ -347,17 +374,17 @@ public class MatchEndStatsUI : MonoBehaviour
             string teamStr = (s.team == PlayerMovement.TeamType.Protector)
                 ? LanguageSelectionUI.Localize("Protector", "حامي", "Защитник", "Protector", "Protecteur", "Beschützer", "संरक्षक", "守护者", "守護者", "Protetor")
                 : LanguageSelectionUI.Localize("Destroyer", "مدمر", "Разрушитель", "Destructor", "Destructeur", "Zerstörer", "विनाशक", "破坏者", "破壊者", "Destruidor");
-            GUI.Label(new Rect(rX, currRowY + 4f, 85f, 20f), teamStr, teamStyle);
-            rX += 90f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 80f, 20f), teamStr, teamStyle);
+            rX += 85f;
 
-            GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.kills.ToString(), rowTextStyle);
-            rX += 52f;
-            GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.deaths.ToString(), rowTextStyle);
-            rX += 52f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 45f, 20f), s.kills.ToString(), rowTextStyle);
+            rX += 48f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 45f, 20f), s.deaths.ToString(), rowTextStyle);
+            rX += 48f;
             GUI.Label(new Rect(rX, currRowY + 4f, 65f, 20f), ((int)s.damageDealt).ToString(), rowTextStyle);
-            rX += 70f;
-            GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.bossesKilled > 0 ? $"⚔️{s.bossesKilled}" : "-", rowTextStyle);
-            rX += 52f;
+            rX += 68f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 45f, 20f), s.bossesKilled > 0 ? $"⚔️{s.bossesKilled}" : "-", rowTextStyle);
+            rX += 48f;
 
             string crystalStr = s.deliveredCrystal
                 ? LanguageSelectionUI.Localize("⭐ YES", "⭐ نعم", "⭐ ДА", "⭐ SÍ", "⭐ OUI", "⭐ JA", "⭐ हाँ", "⭐ 是", "⭐ 完了", "⭐ SIM")

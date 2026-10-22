@@ -328,33 +328,6 @@ public class CrystalItem : NetworkBehaviour
                 DropCrystalServer();
                 return;
             }
-
-            // فحص تسليم الكريستالة للمذبح استباقياً من الكريستالة نفسها لضمان النصر الفوري دون أدنى خطأ
-            PlayerMovement pmCarrier = currentCarrierObj.GetComponent<PlayerMovement>();
-            BotController botCarrier = currentCarrierObj.GetComponent<BotController>();
-            bool isProtectorCarrier = (pmCarrier != null && pmCarrier.team == PlayerMovement.TeamType.Protector) ||
-                                      (botCarrier != null && botCarrier.team == PlayerMovement.TeamType.Protector);
-
-            if (isProtectorCarrier)
-            {
-                for (int i = 0; i < CrystalAltar.AllAltars.Count; i++)
-                {
-                    CrystalAltar altar = CrystalAltar.AllAltars[i];
-                    if (altar == null) continue;
-
-                    Vector3 altarPos = altar.transform.position;
-                    Vector3 cPos = currentCarrierObj.transform.position;
-                    float horizDist = Vector2.Distance(new Vector2(altarPos.x, altarPos.z), new Vector2(cPos.x, cPos.z));
-                    float vertDist = Mathf.Abs(cPos.y - altarPos.y);
-
-                    if (horizDist <= 7.5f && vertDist <= 5.0f)
-                    {
-                        Debug.Log($"💎 [CrystalItem] Carrier {currentCarrierObj.name} reached altar {altar.name} ({horizDist:F1}m)! Delivering crystal!");
-                        altar.OnCrystalDeliveredServer(currentCarrierObj);
-                        return;
-                    }
-                }
-            }
         }
 
         if (isDropped.Value)

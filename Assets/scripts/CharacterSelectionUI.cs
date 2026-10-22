@@ -614,6 +614,43 @@ public class CharacterSelectionUI : MonoBehaviour
             fa: "برای بررسی زره، قدرت‌ها و مشخصات رزمی کلیک یا هاور کنید"
         );
         GUI.Label(new Rect(0, sh * 0.042f, sw, sh * 0.024f), subStr, subStyle);
+
+        // Top-Right: Custom Hero Name Selection Box
+        float nameBoxW = Mathf.Clamp(sw * 0.22f, 210f, 280f);
+        float nameBoxH = 34f;
+        float nameBoxX = sw * 0.98f - nameBoxW;
+        float nameBoxY = sh * 0.015f;
+
+        Rect nameRect = new Rect(nameBoxX, nameBoxY, nameBoxW, nameBoxH);
+        EnchantedNatureGUI.DrawWoodPlate(nameRect, new Color(0.12f, 0.20f, 0.12f, 0.96f), new Color(0.85f, 0.72f, 0.32f, 0.95f));
+
+        GUIStyle tagStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft
+        };
+        tagStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
+        GUI.Label(new Rect(nameBoxX + 8f, nameBoxY + 7f, 65f, 20f), LanguageSelectionUI.Localize("NAME:", "الاسم:", "ИМЯ:", "NOM :", "NOMBRE:", "NAME:", "नाम:", "名字:", "名前:", "NOME:", "نام:"), tagStyle);
+
+        string currentName = PlayerProfile.GetSavedPlayerName();
+        GUIStyle inputStyle = new GUIStyle(GUI.skin.textField)
+        {
+            fontSize = 12,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft
+        };
+        inputStyle.normal.textColor = new Color(0.35f, 1f, 0.6f);
+        string edited = GUI.TextField(new Rect(nameBoxX + 75f, nameBoxY + 5f, nameBoxW - 85f, 24f), currentName, 16, inputStyle);
+        if (edited != currentName)
+        {
+            PlayerProfile.Instance?.SetPlayerName(edited);
+            if (PlayerPrefs.GetString("BW_PlayerName", "Ghaith") != edited)
+            {
+                PlayerPrefs.SetString("BW_PlayerName", edited);
+                PlayerPrefs.Save();
+            }
+        }
     }
 
     // ==================== ROLE FILTER RIBBON ====================

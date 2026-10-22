@@ -24,6 +24,37 @@ public class BotManager : MonoBehaviour
     [Header("Characters")]
     public CharacterDatabase characterDatabase;
 
+    private static readonly string[] ProtectorHeroNames = new string[]
+    {
+        "Eldrin Leafwhisper",
+        "Aurelia Sunstrider",
+        "Thorin Oakheart",
+        "Faelynn Greensong",
+        "Kaelen Swiftbreeze",
+        "Rowan Barkwarden",
+        "Boran Stonebark",
+        "Althea Starbloom",
+        "Silas Verdantguard",
+        "Caelan Bramblethorn"
+    };
+
+    private static readonly string[] DestroyerHeroNames = new string[]
+    {
+        "Vorgar Ironbreaker",
+        "Zarek Bloodthorn",
+        "Grimlok Ashfall",
+        "Valeria Nightshade",
+        "Malakor Voidrender",
+        "Kragor Blightfang",
+        "Darius Doomhammer",
+        "Morrigan Cinderveil",
+        "Karn Blackblade",
+        "Ignis Hellfire"
+    };
+
+    private List<string> availableProtectorNames = new List<string>();
+    private List<string> availableDestroyerNames = new List<string>();
+
     private bool offlineBotsCreated = false;
 
     public void ResetBotManagerState()
@@ -70,6 +101,13 @@ public class BotManager : MonoBehaviour
         }
 
         offlineBotsCreated = true;
+
+        string playerName = PlayerProfile.GetSavedPlayerName();
+        availableProtectorNames = new List<string>(ProtectorHeroNames);
+        availableProtectorNames.RemoveAll(n => string.Equals(n, playerName, System.StringComparison.OrdinalIgnoreCase));
+
+        availableDestroyerNames = new List<string>(DestroyerHeroNames);
+        availableDestroyerNames.RemoveAll(n => string.Equals(n, playerName, System.StringComparison.OrdinalIgnoreCase));
 
         PlayerMovement.TeamType humanTeam = humanPlayer.hasSelectedTeam.Value
             ? humanPlayer.networkTeam.Value
@@ -378,6 +416,30 @@ public class BotManager : MonoBehaviour
                 rotation
             );
 
+        string botHeroName = "";
+        if (team == PlayerMovement.TeamType.Protector)
+        {
+            if (availableProtectorNames.Count > 0)
+            {
+                int rIdx = Random.Range(0, availableProtectorNames.Count);
+                botHeroName = availableProtectorNames[rIdx];
+                availableProtectorNames.RemoveAt(rIdx);
+            }
+            else botHeroName = $"Protector Guardian #{botIndex + 1}";
+        }
+        else
+        {
+            if (availableDestroyerNames.Count > 0)
+            {
+                int rIdx = Random.Range(0, availableDestroyerNames.Count);
+                botHeroName = availableDestroyerNames[rIdx];
+                availableDestroyerNames.RemoveAt(rIdx);
+            }
+            else botHeroName = $"Destroyer Raider #{botIndex + 1}";
+        }
+
+        botObject.name = botHeroName;
+
         // =========================
         // Bot Controller
         // =========================
@@ -389,6 +451,9 @@ public class BotManager : MonoBehaviour
         {
             controller.team =
                 team;
+
+            controller.botHeroName =
+                botHeroName;
 
             if (character != null)
             {

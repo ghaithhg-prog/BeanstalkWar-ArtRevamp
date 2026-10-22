@@ -66,6 +66,19 @@ public class CrystalAltar : NetworkBehaviour
     private static Material sharedEmeraldMat;
     private static Material sharedSkyBeamMat;
 
+    [Header("Sacred Consecration (3-Second Altar Hold)")]
+    public float innerCircleRadius = 2.8f;
+    public const float REQUIRED_CHANNEL_TIME = 3.0f;
+    private GameObject activeCarrier = null;
+    private float channelTimer = 0f;
+
+    public static CrystalAltar ChannellingAltar { get; private set; } = null;
+    public static bool IsAnyAltarChannelling => ChannellingAltar != null && ChannellingAltar.activeCarrier != null && !ChannellingAltar.gameWon;
+    public float ChannelProgress => Mathf.Clamp01(channelTimer / REQUIRED_CHANNEL_TIME);
+    public float RemainingTime => Mathf.Max(0f, REQUIRED_CHANNEL_TIME - channelTimer);
+    public GameObject ActiveCarrier => activeCarrier;
+    public bool IsChannelling => activeCarrier != null && channelTimer > 0f && !gameWon;
+
     private static bool hasConfiguredAltars = false;
 
     public static void ResetStaticState()
@@ -73,6 +86,7 @@ public class CrystalAltar : NetworkBehaviour
         hasConfiguredAltars = false;
         AllAltars.Clear();
         Instance = null;
+        ChannellingAltar = null;
     }
 
     void Awake()
@@ -90,7 +104,7 @@ public class CrystalAltar : NetworkBehaviour
 
     void Start()
     {
-        triggerRadius = 7.5f;
+        triggerRadius = innerCircleRadius;
         GroundSanctuary();
         BuildSanctuaryVisuals();
 
@@ -100,14 +114,14 @@ public class CrystalAltar : NetworkBehaviour
         {
             SphereCollider sphere = gameObject.AddComponent<SphereCollider>();
             sphere.isTrigger = true;
-            sphere.radius = triggerRadius;
+            sphere.radius = innerCircleRadius;
         }
         else
         {
             existingCollider.isTrigger = true;
             if (existingCollider is SphereCollider sc)
             {
-                sc.radius = triggerRadius;
+                sc.radius = innerCircleRadius;
             }
         }
 
@@ -115,42 +129,6 @@ public class CrystalAltar : NetworkBehaviour
 
         if (auraEffect != null && !auraEffect.isPlaying)
             auraEffect.Play();
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        HandleTriggerCheck(other);
-    }
-
-    void OnTriggerStay(Collider other)
-    {
-        HandleTriggerCheck(other);
-    }
-
-    void HandleTriggerCheck(Collider other)
-    {
-        if (gameWon || other == null) return;
-        bool isServerOrAuthority = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
-        if (!isServerOrAuthority) return;
-
-        PlayerMovement pm = other.GetComponentInParent<PlayerMovement>();
-        BotController bot = other.GetComponentInParent<BotController>();
-
-        GameObject carrierObj = null;
-        if (pm != null && pm.team == PlayerMovement.TeamType.Protector) carrierObj = pm.gameObject;
-        else if (bot != null && bot.team == PlayerMovement.TeamType.Protector) carrierObj = bot.gameObject;
-
-        if (carrierObj == null) return;
-        Health health = carrierObj.GetComponent<Health>();
-        if (health != null && health.isDead) return;
-
-        bool carriesCrystal = (pm != null && pm.isCarryingCrystal.Value) ||
-                              (CrystalItem.Instance != null && CrystalItem.Instance.IsCarrier(carrierObj));
-
-        if (carriesCrystal)
-        {
-            OnCrystalDeliveredServer(carrierObj);
-        }
     }
 
     void OnDestroy()
@@ -522,18 +500,62 @@ public class CrystalAltar : NetworkBehaviour
         bool isServerOrAuthority = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
         if (!isServerOrAuthority) return;
 
-        CheckAltarDeliveryServer();
+        UpdateAltarChannellingServer();
     }
 
-    void CheckAltarDeliveryServer()
+    void UpdateAltarChannellingServer()
     {
         if (gameWon) return;
 
-        // 1. Direct Proximity to Crystal and its Carrier
+        // 1. إذا كان هناك بطل حامي يقوم حالياً بتعميد الكريستالة في هذا المذبح
+        if (activeCarrier != null)
+        {
+            bool stillValid = false;
+            if (activeCarrier.activeInHierarchy)
+            {
+                Health hp = activeCarrier.GetComponent<Health>();
+                bool isAlive = hp == null || !hp.isDead;
+                bool carriesCrystal = (CrystalItem.Instance != null && CrystalItem.Instance.IsCarrier(activeCarrier));
+
+                Vector3 carrierPos = activeCarrier.transform.position;
+                Vector3 altarCenter = transform.position;
+                float horizDist = Vector2.Distance(
+                    new Vector2(carrierPos.x, carrierPos.z),
+                    new Vector2(altarCenter.x, altarCenter.z)
+                );
+                float vertDist = Mathf.Abs(carrierPos.y - altarCenter.y);
+
+                // يجب أن يبقى الحامل حياً، ومعه الكريستالة، وداخل الدائرة الدقيقة للمذبح (أقل من 2.8م)
+                if (isAlive && carriesCrystal && horizDist <= innerCircleRadius && vertDist <= 2.5f)
+                {
+                    stillValid = true;
+                }
+            }
+
+            if (stillValid)
+            {
+                channelTimer += Time.deltaTime;
+                ApplyChannellingDynamicVisuals(ChannelProgress);
+
+                // بعد صمود الحامل 3 ثوانٍ كاملة وهو حي داخل الدائرة:
+                if (channelTimer >= REQUIRED_CHANNEL_TIME)
+                {
+                    OnCrystalDeliveredServer(activeCarrier);
+                }
+            }
+            else
+            {
+                // إذا مات الحامل أو خرج من الدائرة أو أسقط الكريستالة قبل انقضاء الـ 3 ثوانٍ
+                CancelChannelling();
+            }
+            return;
+        }
+
+        // 2. البحث عن حامل كريستالة من الحماة دخل في قلب دائرة المذبح لبدء الـ 3 ثوانٍ
         if (CrystalItem.Instance != null && CrystalItem.Instance.isCarried.Value)
         {
             GameObject carrier = CrystalItem.Instance.GetCarrierObject();
-            if (carrier != null)
+            if (carrier != null && carrier.activeInHierarchy)
             {
                 PlayerMovement pm = carrier.GetComponent<PlayerMovement>();
                 BotController bot = carrier.GetComponent<BotController>();
@@ -545,73 +567,114 @@ public class CrystalAltar : NetworkBehaviour
                     Health hp = carrier.GetComponent<Health>();
                     if (hp == null || !hp.isDead)
                     {
-                        Vector3 altarCenter = transform.position;
                         Vector3 carrierPos = carrier.transform.position;
+                        Vector3 altarCenter = transform.position;
                         float horizDist = Vector2.Distance(
-                            new Vector2(altarCenter.x, altarCenter.z),
-                            new Vector2(carrierPos.x, carrierPos.z)
+                            new Vector2(carrierPos.x, carrierPos.z),
+                            new Vector2(altarCenter.x, altarCenter.z)
                         );
                         float vertDist = Mathf.Abs(carrierPos.y - altarCenter.y);
 
-                        if (horizDist <= 7.5f && vertDist <= 5.0f)
+                        // دخول دائرة المذبح المقدسة (2.8 متر)
+                        if (horizDist <= innerCircleRadius && vertDist <= 2.5f)
                         {
-                            OnCrystalDeliveredServer(carrier);
-                            return;
-                        }
-
-                        Vector3 crystalPos = CrystalItem.Instance.transform.position;
-                        float crystalHorizDist = Vector2.Distance(
-                            new Vector2(altarCenter.x, altarCenter.z),
-                            new Vector2(crystalPos.x, crystalPos.z)
-                        );
-                        if (crystalHorizDist <= 7.5f && Mathf.Abs(crystalPos.y - altarCenter.y) <= 5.0f)
-                        {
-                            OnCrystalDeliveredServer(carrier);
-                            return;
+                            StartChannelling(carrier);
                         }
                     }
                 }
             }
         }
+    }
 
-        // 2. Generous OverlapSphere detection
-        float checkRadius = Mathf.Max(triggerRadius, 7.5f);
-        Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f, checkRadius);
+    void StartChannelling(GameObject carrier)
+    {
+        activeCarrier = carrier;
+        channelTimer = 0f;
+        ChannellingAltar = this;
 
-        foreach (Collider hit in hits)
+        string cName = carrier.name.Replace("(Clone)", "").Trim();
+        Debug.Log($"⚡ [CrystalAltar] {cName} entered sanctuary circle! 3-Second crystal consecration started!");
+
+        string msg = LanguageSelectionUI.Localize(
+            $"⚡ {cName.ToUpper()} PLACED CRYSTAL ON ALTAR! HOLD 3 SECONDS! ⚡",
+            ar: $"⚡ وضع {cName} الكريستالة في المذبح! اثبت حياً في المذبح 3 ثوانٍ للفوز! ⚡",
+            ru: $"⚡ {cName.ToUpper()} ПОМЕСТИЛ КРИСТАЛЛ! УДЕРЖИВАЙТЕ 3 СЕКУНДЫ! ⚡",
+            fr: $"⚡ {cName.ToUpper()} A POSÉ LE CRISTAL ! TENEZ 3 SECONDES ! ⚡",
+            es: $"⚡ ¡{cName.ToUpper()} COLOCÓ EL CRISTAL! ¡MANTÉN LA POSICIÓN 3 SEGUNDOS! ⚡",
+            de: $"⚡ {cName.ToUpper()} HAT DEN KRISTALL PLATZIERT! 3 SEKUNDEN HALTEN! ⚡",
+            hi: $"⚡ {cName} ने वेदी पर क्रिस्टल रखा! 3 सेकंड तक बने रहें! ⚡",
+            zh: $"⚡ {cName} 已将水晶放入圣坛！坚守3秒即可获胜！⚡",
+            ja: $"⚡ {cName}が水晶を祭壇に設置！3秒間維持せよ！⚡",
+            pt: $"⚡ {cName.ToUpper()} COLOCOU O CRISTAL! SEGURE POR 3 SEGUNDOS! ⚡",
+            fa: $"⚡ {cName} بلور را در محراب قرار داد! 3 ثانیه مقاومت کنید! ⚡"
+        );
+        PlayerProgressionAndShopUI.Instance?.ShowNotification(msg);
+    }
+
+    public void CancelChannelling()
+    {
+        if (activeCarrier != null)
         {
-            if (hit == null) continue;
+            Debug.Log($"⚠️ [CrystalAltar] Crystal channelling interrupted!");
+            ResetAltarVisualsToIdle();
+        }
+        activeCarrier = null;
+        channelTimer = 0f;
+        if (ChannellingAltar == this) ChannellingAltar = null;
+    }
 
-            PlayerMovement pm = hit.GetComponentInParent<PlayerMovement>();
-            BotController bot = hit.GetComponentInParent<BotController>();
+    void ApplyChannellingDynamicVisuals(float progress)
+    {
+        // 1. تصاعد قوة إضاءة عمود النور والانتقال للون الذهبي الساطع
+        if (beaconLight != null)
+        {
+            float pulse = Mathf.PingPong(Time.time * 8f, 2.5f);
+            beaconLight.intensity = Mathf.Lerp(4.0f, 11.0f, progress) + pulse;
+            beaconLight.range = Mathf.Lerp(15f, 32f, progress);
+            beaconLight.color = Color.Lerp(new Color(0.22f, 0.88f, 1.0f), new Color(1.0f, 0.85f, 0.20f), progress);
+        }
 
-            GameObject carrierObj = null;
-            bool isProtector = false;
+        // 2. إضاءة قلب المذبح الكريستالي تتوهج بنبض سريع متصاعد
+        if (heartLight != null)
+        {
+            heartLight.intensity = Mathf.Lerp(5.0f, 15.0f, progress) + Mathf.PingPong(Time.time * 10f, 3f);
+            heartLight.color = Color.Lerp(new Color(0.40f, 0.95f, 1.0f), new Color(1.0f, 0.95f, 0.40f), progress);
+        }
 
-            if (pm != null && pm.team == PlayerMovement.TeamType.Protector)
-            {
-                carrierObj = pm.gameObject;
-                isProtector = true;
-            }
-            else if (bot != null && bot.team == PlayerMovement.TeamType.Protector)
-            {
-                carrierObj = bot.gameObject;
-                isProtector = true;
-            }
+        // 3. تسارع دوران الحلقات الرونية وعمود النور لـ 4 أضعاف السرعة
+        if (groundRuneRing != null)
+        {
+            groundRuneRing.Rotate(Vector3.up, -120f * Time.deltaTime, Space.World);
+        }
+        if (lightCylinder != null)
+        {
+            lightCylinder.Rotate(Vector3.up, 45f * Time.deltaTime, Space.World);
+            float scaleSurge = 1f + progress * 0.25f + Mathf.Sin(Time.time * 12f) * 0.05f;
+            lightCylinder.localScale = new Vector3(4.6f * scaleSurge, 3.5f * scaleSurge, 4.6f * scaleSurge);
+        }
+        if (floatingCrystal != null)
+        {
+            floatingCrystal.Rotate(Vector3.up, 180f * Time.deltaTime, Space.World);
+        }
+    }
 
-            if (!isProtector || carrierObj == null) continue;
-
-            Health health = carrierObj.GetComponent<Health>();
-            if (health != null && health.isDead) continue;
-
-            bool carriesCrystal = (pm != null && pm.isCarryingCrystal.Value) ||
-                                  (CrystalItem.Instance != null && CrystalItem.Instance.IsCarrier(carrierObj));
-
-            if (carriesCrystal)
-            {
-                OnCrystalDeliveredServer(carrierObj);
-                break;
-            }
+    void ResetAltarVisualsToIdle()
+    {
+        if (beaconLight != null)
+        {
+            beaconLight.color = new Color(0.22f, 0.88f, 1.0f);
+            beaconLight.range = 15f;
+            beaconLight.intensity = 3.5f;
+        }
+        if (heartLight != null)
+        {
+            heartLight.color = new Color(0.40f, 0.95f, 1.0f);
+            heartLight.range = 10f;
+            heartLight.intensity = 4.5f;
+        }
+        if (lightCylinder != null)
+        {
+            lightCylinder.localScale = new Vector3(4.6f, 3.5f, 4.6f);
         }
     }
 
@@ -625,8 +688,25 @@ public class CrystalAltar : NetworkBehaviour
             if (AllAltars[i] != null) AllAltars[i].gameWon = true;
         }
         gameWon = true;
+        ChannellingAltar = null;
 
-        Debug.Log($"👑 CRYSTAL DELIVERED TO {altarName} by {carrier.name}! PROTECTORS WIN!");
+        Debug.Log($"👑 CRYSTAL CONSECRATION COMPLETE AT {altarName} by {carrier.name}! PROTECTORS WIN!");
+
+        // الإعلان الواضح فوق كل شيء: "لقد وصلت الكريستالة للمذبح، فاز الحماة"
+        string victoryAnnouncement = LanguageSelectionUI.Localize(
+            "🌟 THE SACRED CRYSTAL REACHED THE SANCTUARY! THE PROTECTORS HAVE WON! 🌟",
+            ar: "🌟 لقد وصلت الكريستالة للمذبح، فاز الحماة! 🌟",
+            ru: "🌟 КРИСТАЛЛ ДОСТИГ АЛТАРЯ! ЗАЩИТНИКИ ПОБЕДИЛИ! 🌟",
+            fr: "🌟 LE CRISTAL A ATTEINT L'AUTEL, LES PROTECTEURS ONT GAGNÉ ! 🌟",
+            es: "🌟 ¡EL CRISTAL HA LLEGADO AL ALTAR, GANARON LOS PROTECTORES! 🌟",
+            de: "🌟 DER KRISTALL HAT DEN ALTAR ERREICHT, DIE BESCHÜTZER HABEN GEWONNEN! 🌟",
+            hi: "🌟 क्रिस्टल वेदी पर पहुंच गया, संरक्षकों की विजय हुई! 🌟",
+            zh: "🌟 水晶已送达圣坛，守护者获胜！🌟",
+            ja: "🌟 水晶が祭壇に到達した、守護者の勝利！🌟",
+            pt: "🌟 O CRISTAL CHEGOU AO ALTAR, OS PROTETORES VENCERAM! 🌟",
+            fa: "🌟 بلور به محراب رسید، حامیان پیروز شدند! 🌟"
+        );
+        PlayerProgressionAndShopUI.Instance?.ShowNotification(victoryAnnouncement);
 
         // 1. Register stats safely
         try
@@ -690,6 +770,84 @@ public class CrystalAltar : NetworkBehaviour
 
         // 5. Show Post-Match Statistics Screen after brief celebration
         StartCoroutine(ShowVictoryScreenDelayed(3.2f));
+    }
+
+    void OnGUI()
+    {
+        if (gameWon) return;
+        if (activeCarrier == null || channelTimer <= 0f) return;
+
+        // شريط تقدم تعميد الكريستالة والعد التنازلي لـ 3 ثوانٍ في أعلى الشاشة
+        float sw = Screen.width;
+        float boxW = Mathf.Clamp(sw * 0.48f, 360f, 560f);
+        float boxH = 68f;
+        float boxX = (sw - boxW) * 0.5f;
+        float boxY = 72f;
+
+        Rect bannerRect = new Rect(boxX, boxY, boxW, boxH);
+        EnchantedNatureGUI.DrawWoodPlate(bannerRect, new Color(0.12f, 0.20f, 0.12f, 0.96f), new Color(1.0f, 0.85f, 0.25f, 0.98f));
+
+        float remTime = RemainingTime;
+        float progress = ChannelProgress;
+
+        GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 15,
+            fontStyle = FontStyle.Bold
+        };
+        titleStyle.normal.textColor = new Color(1.0f, 0.90f, 0.35f);
+
+        string title = LanguageSelectionUI.Localize(
+            $"⚡ CONSECRATING CRYSTAL: {remTime:F1}s ⚡",
+            ar: $"⚡ جاري تثبيت الكريستالة في المذبح: {remTime:F1} ثوانٍ ⚡",
+            ru: $"⚡ ОСВЯЩЕНИЕ КРИСТАЛЛА: {remTime:F1}с ⚡",
+            fr: $"⚡ CONSÉCRATION DU CRISTAL : {remTime:F1}s ⚡",
+            es: $"⚡ CONSAGRANDO EL CRISTAL: {remTime:F1}s ⚡",
+            de: $"⚡ WEIHE DES KRISTALLS: {remTime:F1}s ⚡",
+            hi: $"⚡ क्रिस्टल की प्रतिष्ठा: {remTime:F1}s ⚡",
+            zh: $"⚡ 正在圣坛注入神圣水晶：{remTime:F1}秒 ⚡",
+            ja: $"⚡ 聖なる水晶の奉納中: {remTime:F1}秒 ⚡",
+            pt: $"⚡ CONSAGRANDO O CRISTAL: {remTime:F1}s ⚡",
+            fa: $"⚡ تقدیس بلور مقدس در محراب: {remTime:F1} ثانیه ⚡"
+        );
+        GUI.Label(new Rect(boxX, boxY + 6f, boxW, 22f), title, titleStyle);
+
+        // شريط التقدم الذهبي المتوهج
+        float barW = boxW - 40f;
+        float barH = 14f;
+        float barX = boxX + 20f;
+        float barY = boxY + 30f;
+
+        GUI.color = new Color(0.08f, 0.12f, 0.08f, 0.9f);
+        GUI.DrawTexture(new Rect(barX, barY, barW, barH), Texture2D.whiteTexture);
+
+        GUI.color = Color.Lerp(new Color(0.2f, 0.8f, 1f), new Color(1f, 0.85f, 0.2f), progress);
+        GUI.DrawTexture(new Rect(barX + 1f, barY + 1f, (barW - 2f) * progress, barH - 2f), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+
+        // الإرشاد والتوجيه
+        GUIStyle subStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 11,
+            fontStyle = FontStyle.Italic
+        };
+        subStyle.normal.textColor = new Color(0.85f, 1f, 0.85f);
+        string sub = LanguageSelectionUI.Localize(
+            "🛡️ Protect the carrier inside the sacred circle!",
+            ar: "🛡️ اثبت حياً واحمِ الحامل داخل الدائرة المقدسة!",
+            ru: "🛡️ Защитите носителя внутри круга!",
+            fr: "🛡️ Protégez le porteur à l'intérieur du cercle sacré !",
+            es: "🛡️ ¡Protege al portador dentro del círculo sagrado!",
+            de: "🛡️ Beschütze den Träger im heiligen Kreis!",
+            hi: "🛡️ पवित्र वृत्त के अंदर वाहक की रक्षा करें!",
+            zh: "🛡️ 在神圣圆圈内保护水晶守护者！",
+            ja: "🛡️ 聖なる円の中で運び手を守れ！",
+            pt: "🛡️ Proteja o portador dentro do círculo sagrado!",
+            fa: "🛡️ از حامل در داخل دایره مقدس محافظت کنید!"
+        );
+        GUI.Label(new Rect(boxX, boxY + 46f, boxW, 18f), sub, subStyle);
     }
 
     IEnumerator ShowVictoryScreenDelayed(float delay)

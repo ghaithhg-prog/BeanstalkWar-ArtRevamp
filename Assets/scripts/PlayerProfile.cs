@@ -25,8 +25,10 @@ public class PlayerProfile : MonoBehaviour
     private const string PREF_ADS_WATCHED = "BW_AdsWatched";
     private const string PREF_PURCHASES = "BW_PurchasesCount";
     private const string PREF_BOSSES_KILLED = "BW_BossesKilled";
+    private const string PREF_PLAYER_NAME = "BW_PlayerName";
 
     // البيانات المحفوظة
+    public string PlayerName { get; private set; } = "Ghaith";
     public int Coins { get; private set; }
     public int Gems { get; private set; }
     public int AccountLevel { get; private set; }
@@ -34,6 +36,22 @@ public class PlayerProfile : MonoBehaviour
     public int AdsWatched { get; private set; }
     public int PurchasesMade { get; private set; }
     public int BossesKilled { get; private set; }
+
+    public static string GetSavedPlayerName()
+    {
+        return PlayerPrefs.GetString(PREF_PLAYER_NAME, "Ghaith");
+    }
+
+    public void SetPlayerName(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName)) newName = "Ghaith";
+        newName = newName.Trim();
+        if (newName.Length > 16) newName = newName.Substring(0, 16);
+        PlayerName = newName;
+        PlayerPrefs.SetString(PREF_PLAYER_NAME, PlayerName);
+        PlayerPrefs.Save();
+        OnProfileUpdated?.Invoke();
+    }
 
     void Awake()
     {
@@ -51,6 +69,7 @@ public class PlayerProfile : MonoBehaviour
 
     void LoadProfile()
     {
+        PlayerName = PlayerPrefs.GetString(PREF_PLAYER_NAME, "Ghaith");
         Coins = PlayerPrefs.GetInt(PREF_COINS, 250); // رصيد افتراضي للبدء
         Gems = PlayerPrefs.GetInt(PREF_GEMS, 30);
         AccountLevel = PlayerPrefs.GetInt(PREF_ACC_LEVEL, 1);

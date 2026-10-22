@@ -84,6 +84,7 @@ public class PlayerMovement : NetworkBehaviour
         if (IsOwner)
         {
             LocalPlayer = this;
+            gameObject.name = PlayerProfile.GetSavedPlayerName();
         }
 
         networkTeam.OnValueChanged += OnTeamChanged;

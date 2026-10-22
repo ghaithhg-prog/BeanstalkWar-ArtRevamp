@@ -20,6 +20,9 @@ public class BotController : NetworkBehaviour
     [Header("Team")]
     public PlayerMovement.TeamType team;
 
+    [Header("Hero Name")]
+    public string botHeroName = "Champion";
+
     [Header("AI")]
     public BotState currentState;
 
@@ -358,6 +361,14 @@ public class BotController : NetworkBehaviour
             {
                 if (team == PlayerMovement.TeamType.Protector)
                 {
+                    // إذا كان الحامي يقوم بتعميد الكريستالة في المذبح (عد 3 ثوانٍ):
+                    // يندفع بقية الحماة فوراً لحمايته وتشكيل درع دفاعي حول المذبح!
+                    if (CrystalAltar.IsAnyAltarChannelling)
+                    {
+                        currentState = BotState.EscortCarrier;
+                        return;
+                    }
+
                     Transform closeEnemy = FindClosestEnemy();
                     if (closeEnemy != null && Vector3.Distance(transform.position, closeEnemy.position) <= 6f)
                     {
@@ -369,8 +380,16 @@ public class BotController : NetworkBehaviour
                     }
                     return;
                 }
-                else // Destroyer: نصف المدمرين يطاردون حامل الكريستالة، والنصف الآخر يواصل تحطيم الشجرة!
+                else // Destroyer:
                 {
+                    // ذكاء تكتيكي خارق: إذا كان الحامي يقوم بتعميد الكريستالة في المذبح (عد 3 ثوانٍ):
+                    // يتحول جميع المدمرين بدون استثناء وبأقصى سرعة لمهاجمة حامل الكريستالة وقتله فوراً لإيقاف التعميد!
+                    if (CrystalAltar.IsAnyAltarChannelling)
+                    {
+                        EnterFight(carrier.transform);
+                        return;
+                    }
+
                     float distToCarrier = Vector3.Distance(transform.position, carrier.transform.position);
                     if (distToCarrier <= 11f || (GetInstanceID() & 1) == 0)
                     {
@@ -1004,39 +1023,62 @@ public class BotController : NetworkBehaviour
 
     void UpdateDeliverCrystal()
     {
-        if (agent != null && agent.isOnNavMesh)
-        {
-            agent.isStopped = false;
-            agent.stoppingDistance = 0.1f;
-            agent.speed = (moveSpeed + personalOffset) * 1.35f; // +35% crystal sprint
-        }
-
         CrystalAltar altar = FindClosestAltar();
         if (altar != null)
         {
-            Vector3 altarPos = altar.transform.position;
-            if (NavMesh.SamplePosition(altarPos, out NavMeshHit navHit, 8f, NavMesh.AllAreas))
+            Vector3 altarCenter = altar.transform.position;
+            float horizDist = Vector2.Distance(
+                new Vector2(transform.position.x, transform.position.z),
+                new Vector2(altarCenter.x, altarCenter.z)
+            );
+
+            // ذكاء حاسم للبوت الحامي: إذا وصل داخل دائرة المذبح (أقل من 2.2م من المركز):
+            // يثبت أقدامه فوراً في قلب المذبح ويبقى صامداً طوال الـ 3 ثوانٍ حتى يتم التعميد والفوز!
+            if (horizDist <= 2.2f)
             {
-                altarPos = navHit.position;
+                if (agent != null && agent.isOnNavMesh)
+                {
+                    agent.isStopped = true;
+                    agent.velocity = Vector3.zero;
+                }
+
+                Transform closeThreat = FindClosestEnemy();
+                if (closeThreat != null)
+                {
+                    Vector3 lookDir = closeThreat.position - transform.position;
+                    lookDir.y = 0f;
+                    if (lookDir.sqrMagnitude > 0.01f)
+                    {
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), 10f * Time.deltaTime);
+                    }
+                    if (CrystalItem.Instance != null && Vector3.Distance(transform.position, closeThreat.position) <= 4.5f)
+                    {
+                        CrystalItem.Instance.RequestShockwaveRpc();
+                    }
+                    CharacterCombat myCombat = GetComponent<CharacterCombat>();
+                    if (myCombat != null && Vector3.Distance(transform.position, closeThreat.position) <= myCombat.attackRange)
+                    {
+                        myCombat.TryAIAttack(closeThreat);
+                    }
+                }
+                return;
+            }
+
+            // إذا لم يصل بعد، يتحرك نحو المركز الدقيق للمذبح
+            if (NavMesh.SamplePosition(altarCenter, out NavMeshHit navHit, 6f, NavMesh.AllAreas))
+            {
+                altarCenter = navHit.position;
             }
 
             if (agent != null && agent.isOnNavMesh)
             {
+                agent.isStopped = false;
                 agent.stoppingDistance = 0.1f;
-                agent.SetDestination(altarPos);
+                agent.speed = (moveSpeed + personalOffset) * 1.35f; // +35% crystal sprint
+                agent.SetDestination(altarCenter);
             }
-            currentDestination = altarPos;
+            currentDestination = altarCenter;
             hasDestination = true;
-
-            // فحص تسليم مباشر من البوت نفسه لضمان الفوز فور وصوله للمذبح
-            float horizDist = Vector2.Distance(
-                new Vector2(transform.position.x, transform.position.z),
-                new Vector2(altar.transform.position.x, altar.transform.position.z)
-            );
-            if (horizDist <= 7.0f && Mathf.Abs(transform.position.y - altar.transform.position.y) <= 4.5f)
-            {
-                altar.OnCrystalDeliveredServer(gameObject);
-            }
         }
         else if (treeTarget != null)
         {
@@ -1065,6 +1107,21 @@ public class BotController : NetworkBehaviour
         if (carrier == null)
         {
             currentState = BotState.Advance;
+            return;
+        }
+
+        // إذا كان الحامل يعمد الكريستالة داخل المذبح (عد 3 ثوانٍ)، يقف الحامي المساعد على بعد 3.8م كحارس محيطي لمهاجمة المعتدين
+        if (CrystalAltar.IsAnyAltarChannelling)
+        {
+            Transform threat = FindClosestEnemy();
+            if (threat != null && Vector3.Distance(transform.position, threat.position) <= 8f)
+            {
+                EnterFight(threat);
+                return;
+            }
+
+            Vector3 guardPos = carrier.transform.position + transform.right * 3.8f;
+            SetNewDestination(guardPos);
             return;
         }
 
