@@ -40,6 +40,7 @@ public class TreeGrowth : MonoBehaviour
         allBossesDefeatedDetected = false;
         IsShieldCollapsing = false;
         ShieldCollapseCountdown = 10f;
+        OnTreeReachedTopLevel = null;
     }
 
     public static bool IsShieldActive

@@ -968,29 +968,9 @@ public class PlayerMovement : NetworkBehaviour
         {
             if (wasAirborne)
             {
-                float fallDistance = highestFallY - transform.position.y;
                 wasAirborne = false;
                 highestFallY = float.MinValue;
-
-                if (fallDistance > 6.0f)
-                {
-                    bool carryingCrystal = (isCarryingCrystal != null && isCarryingCrystal.Value);
-                    if (carryingCrystal)
-                    {
-                        Debug.Log($"🕊️ [Sacred Feather Fall] Crystal bearer landed safely with 0 damage from {fallDistance:F1}m drop!");
-                    }
-                    else
-                    {
-                        float fallDamage = Mathf.Clamp((fallDistance - 6.0f) * 4.5f, 12f, 38f);
-                        Health h = GetComponent<Health>();
-                        if (h != null && !h.isDead)
-                        {
-                            h.TakeDamage(fallDamage);
-                            Health.TriggerDamageFlash(0.5f);
-                            Debug.Log($"💥 Fall damage taken: {fallDamage:F1} HP from {fallDistance:F1}m drop!");
-                        }
-                    }
-                }
+                // إلغاء ضرر السقوط بنسبة 100% كما طلب المستخدم: اللاعب لا ينقص من صحته أي نقطة عند القفز أو السقوط من أعلى الشجرة أو المنصات
             }
         }
     }

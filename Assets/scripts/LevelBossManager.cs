@@ -52,6 +52,15 @@ public class LevelBossManager : MonoBehaviour
         OnAllThreeBossesDefeated = null;
     }
 
+    public static void ResetStaticState()
+    {
+        ClearStaticEvents();
+        if (Instance != null)
+        {
+            Instance.ResetBossManagerState();
+        }
+    }
+
     public void ResetBossManagerState()
     {
         defeatedBossLevels.Clear();
@@ -73,9 +82,10 @@ public class LevelBossManager : MonoBehaviour
         defeatedBossLevels.Clear();
         allThreeBossesTriggered = false;
         bossesSpawned = false;
-        System.Array.Clear(tierSpawned, 0, tierSpawned.Length);
-        configuredBossInstanceIDs.Clear();
+        if (tierSpawned != null) System.Array.Clear(tierSpawned, 0, tierSpawned.Length);
+        if (configuredBossInstanceIDs != null) configuredBossInstanceIDs.Clear();
 
+        FindBotPrefab();
         CleanupDuplicateBossesAndAdoptSceneBosses();
     }
 
@@ -85,6 +95,7 @@ public class LevelBossManager : MonoBehaviour
         {
             Instance = null;
         }
+        ClearStaticEvents();
     }
 
     void Start()
@@ -220,6 +231,7 @@ public class LevelBossManager : MonoBehaviour
     public void AwakenBossForLevel(int level)
     {
         if (level < 1 || level > 3) return;
+        if (defeatedBossLevels.Contains(level)) return;
 
         string levelName = level switch
         {
@@ -270,26 +282,32 @@ public class LevelBossManager : MonoBehaviour
             }
         }
 
-        if (targetBoss != null)
+        if (targetBoss == null)
         {
-            if (!targetBoss.isDefeated && !defeatedBossLevels.Contains(level))
-            {
-                targetBoss.gameObject.SetActive(true);
-                targetBoss.AwakenBossNow(spawnPos);
-            }
-        }
-        else if (!defeatedBossLevels.Contains(level))
-        {
+            FindBotPrefab();
             for (int i = 0; i < tiers.Length; i++)
             {
                 if (tiers[i].levelNumber == level)
                 {
-                    SpawnSingleLevelBoss(tiers[i], spawnPos, levelTr);
+                    GameObject spawnedObj = SpawnSingleLevelBoss(tiers[i], spawnPos, levelTr);
+                    if (spawnedObj != null)
+                    {
+                        targetBoss = spawnedObj.GetComponent<LevelBoss>();
+                    }
                     tierSpawned[level] = true;
                     break;
                 }
             }
         }
+
+        if (targetBoss != null)
+        {
+            targetBoss.gameObject.SetActive(true);
+            targetBoss.AwakenBossNow(spawnPos);
+            Debug.Log($"🔥 [LevelBossManager] Successfully awakened Boss for Level {level} ({targetBoss.bossTitle}) at {spawnPos}!");
+        }
+
+        RebuildNavigationMesh();
     }
 
     private void RebuildNavigationMesh()
@@ -362,6 +380,15 @@ public class LevelBossManager : MonoBehaviour
         if (botPrefab == null)
         {
             botPrefab = Resources.Load<GameObject>("Prefabs/Bot");
+        }
+
+        if (botPrefab == null)
+        {
+            BotController anyBot = FindAnyObjectByType<BotController>();
+            if (anyBot != null)
+            {
+                botPrefab = anyBot.gameObject;
+            }
         }
     }
 
@@ -491,15 +518,17 @@ public class LevelBossManager : MonoBehaviour
                     if (pObj != null) pltTr = pObj.transform;
                 }
 
-                // حماية قاطعة: الزعيم للمستوى 2 والمستوى 3 يجب أن يبدأ خاملاً ومخفياً حتى يفتح مستواه عبر نمو الشجرة
-                if (lvl > 1)
+                bool platformActive = (pltTr != null && pltTr.gameObject.activeInHierarchy);
+
+                // الزعيم للمستوى 2 والمستوى 3 يبدأ خاملاً ومخفياً فقط إذا كانت منصته غير نشطة ولم يُوقظ بعد
+                if (lvl > 1 && !platformActive && !b.IsAwakenedAndAlive)
                 {
                     b.gameObject.SetActive(false);
                     b.CheckPlatformReadiness();
                 }
                 else
                 {
-                    // حماية صارمة: لا توقظ الزعيم أبداً إذا كان مهزوماً أو ميتاً أو مسجلاً كهزيمة!
+                    // إيقاظ الزعيم إذا لم يكن مهزوماً
                     if (!b.isDefeated && !defeatedBossLevels.Contains(lvl))
                     {
                         Health bh = b.GetComponent<Health>();
@@ -549,9 +578,6 @@ public class LevelBossManager : MonoBehaviour
             return;
         }
 
-        // 1. أولاً: فحص وتنظيف أي نسخ مكررة واعتماد الزعماء المتواجدين في المشهد
-        CleanupDuplicateBossesAndAdoptSceneBosses();
-
         // إذا كان زعماء المشهد الثلاثة موجودين، لا نولد أي كائن جديد إطلاقاً لمنع الازدواجية!
         if (bossesSpawned) return;
 
@@ -564,6 +590,7 @@ public class LevelBossManager : MonoBehaviour
         {
             var tier = tiers[i];
             if (tierSpawned[tier.levelNumber]) continue;
+            if (defeatedBossLevels.Contains(tier.levelNumber)) continue;
 
             // 2. فحص صريح إضافي: هل يوجد زعيم بالفعل لهذا الطابق؟
             LevelBoss[] existing = FindObjectsByType<LevelBoss>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -601,21 +628,42 @@ public class LevelBossManager : MonoBehaviour
 
             if (isPlatformReady)
             {
-                Vector3 spawnPos = tier.fallbackPos;
-                if (levelTr != null)
+                float expectedY = tier.levelNumber switch
                 {
-                    spawnPos = levelTr.position + Vector3.up * 1.5f;
-                }
+                    1 => 6.5f,
+                    2 => 16.5f,
+                    3 => 26.5f,
+                    _ => 6.5f
+                };
 
-                SpawnSingleLevelBoss(tier, spawnPos, levelTr);
+                Vector3 spawnPos = (levelTr != null)
+                    ? new Vector3(levelTr.position.x, expectedY, levelTr.position.z)
+                    : tier.fallbackPos;
+
+                GameObject bossObj = SpawnSingleLevelBoss(tier, spawnPos, levelTr);
+                if (bossObj != null)
+                {
+                    LevelBoss b = bossObj.GetComponent<LevelBoss>();
+                    if (b != null)
+                    {
+                        b.AwakenBossNow(spawnPos);
+                    }
+                }
                 tierSpawned[tier.levelNumber] = true;
                 bossesSpawned = (tierSpawned[1] && tierSpawned[2] && tierSpawned[3]);
             }
         }
     }
 
-    void SpawnSingleLevelBoss(BossTierConfig config, Vector3 position, Transform parentContainer)
+    GameObject SpawnSingleLevelBoss(BossTierConfig config, Vector3 position, Transform parentContainer)
     {
+        FindBotPrefab();
+        if (botPrefab == null)
+        {
+            Debug.LogError($"[LevelBossManager] botPrefab is null! Cannot spawn boss {config.title}!");
+            return null;
+        }
+
         GameObject bossObj = Instantiate(botPrefab, position, Quaternion.identity);
         bossObj.name = $"Boss_{config.levelName}";
 
@@ -664,6 +712,7 @@ public class LevelBossManager : MonoBehaviour
         }
 
         Debug.Log($"👑 Level Boss Created: {config.title} safely on Level {config.levelNumber} at {position}");
+        return bossObj;
     }
 
     private struct BossTierConfig

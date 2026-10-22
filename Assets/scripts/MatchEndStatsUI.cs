@@ -469,12 +469,7 @@ public class MatchEndStatsUI : MonoBehaviour
         // 4. Reset static singletons & game objects
         CrystalAltar.ResetStaticState();
         TreeGrowth.ResetStaticState();
-        LevelBossManager.ClearStaticEvents();
-
-        if (LevelBossManager.Instance != null)
-        {
-            LevelBossManager.Instance.ResetBossManagerState();
-        }
+        LevelBossManager.ResetStaticState();
 
         if (BotManager.Instance != null)
         {

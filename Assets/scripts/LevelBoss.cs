@@ -452,11 +452,10 @@ public class LevelBoss : NetworkBehaviour
     /// <summary>إيقاظ فوري ومباشر للزعيم عند فتح مستواه من قبل TreeLevelManager</summary>
     public void AwakenBossNow(Vector3 platformPos)
     {
-        // حماية صارمة: لا توقظ زعيماً هُزم أو مات أو مسجل كهزيمة في LevelBossManager أبداً!
-        if (isDefeated) return;
-        if (health != null && health.isDead) return;
+        // حماية صارمة: لا توقظ زعيماً إذا كان مستواه مسجلاً كهزيمة مسبقة في LevelBossManager
         if (LevelBossManager.Instance != null && LevelBossManager.Instance.IsBossLevelDefeated(levelNumber)) return;
 
+        isDefeated = false;
         gameObject.SetActive(true);
         isAwaitingLevelUnlock = false;
         float y = GetExpectedLevelY();
