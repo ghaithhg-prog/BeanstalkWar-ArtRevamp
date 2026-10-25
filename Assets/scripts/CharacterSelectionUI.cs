@@ -43,6 +43,8 @@ public class CharacterSelectionUI : MonoBehaviour
     // UI Scroll & Animation State
     private Vector2 gridScrollPosition;
     private Vector2 detailsScrollPosition;
+    private float lastCardClickTime = 0f;
+    private int lastClickedCardID = -1;
     private int lastDetailsCharID = -999;
     private string skinNotification = "";
     private float skinNotificationTimer = 0f;
@@ -381,6 +383,10 @@ public class CharacterSelectionUI : MonoBehaviour
         hoverAnimTime = 0f;
         selectionAnimTime = 0f;
         isDraggingModel = false;
+        gridScrollPosition = Vector2.zero;
+        detailsScrollPosition = Vector2.zero;
+        lastCardClickTime = 0f;
+        lastClickedCardID = -1;
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -457,6 +463,18 @@ public class CharacterSelectionUI : MonoBehaviour
         if (!isShowing) return;
         if (GameIntroBriefingUI.IsBriefingOpen) return;
         if (PlayerProgressionAndShopUI.IsShopOpen) return;
+
+        // دعم اختصار الكيبورد للتأكيد الفوري والدخول للمعركة (Enter أو مسافة)
+        if (Event.current.type == EventType.KeyDown)
+        {
+            if (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter || Event.current.keyCode == KeyCode.Space)
+            {
+                Event.current.Use();
+                ConfirmSelection();
+                return;
+            }
+        }
+
         if (gradientTex == null) CreateCachedTextures();
 
         float sw = Screen.width;
@@ -773,6 +791,11 @@ public class CharacterSelectionUI : MonoBehaviour
 
             if (GUI.Button(cardRect, GUIContent.none, GUIStyle.none))
             {
+                float now = Time.realtimeSinceStartup;
+                bool isDoubleClick = (lastClickedCardID == ch.characterID && (now - lastCardClickTime) < 0.45f);
+                lastCardClickTime = now;
+                lastClickedCardID = ch.characterID;
+
                 selectedCharacterID = ch.characterID;
                 selectionAnimTime = 0f;
                 currentSkinIndex = 0;
@@ -780,6 +803,12 @@ public class CharacterSelectionUI : MonoBehaviour
                 availableSkins = CharacterSkinDatabase.GetSkinsForCharacter(ch.characterID);
                 if (availableSkins != null && availableSkins.Length > 0)
                     currentSkin = availableSkins[0];
+
+                if (isDoubleClick)
+                {
+                    ConfirmSelection();
+                    return;
+                }
             }
         }
 
@@ -966,6 +995,34 @@ public class CharacterSelectionUI : MonoBehaviour
         roleBadgeStyle.normal.textColor = Color.white;
         GUI.Label(badgeRect, roleTag, roleBadgeStyle);
 
+        // Pinned Grand Center Confirmation Button (Directly on the 3D Stage)
+        float centerBtnW = Mathf.Min(340f, area.width * 0.88f);
+        float centerBtnH = 46f;
+        float centerBtnX = area.x + (area.width - centerBtnW) * 0.5f;
+        float centerBtnY = area.y + area.height - centerBtnH - 26f;
+        Rect centerConfirmRect = new Rect(centerBtnX, centerBtnY, centerBtnW, centerBtnH);
+
+        string locChar = LanguageSelectionUI.Localize(ch.characterName).ToUpper();
+        string centerBtnText = "⚔️ " + LanguageSelectionUI.Localize(
+            "COMMENCE EXPEDITION",
+            ar: "انطلق في الحملة",
+            ru: "НАЧАТЬ ПОХОД",
+            fr: "COMMENCER L'EXPÉDITION",
+            es: "INICIAR EXPEDICIÓN",
+            de: "EXPEDITION STARTEN",
+            hi: "अभियान शुरू करें",
+            zh: "开始远征",
+            ja: "遠征を開始",
+            pt: "INICIAR EXPEDIÇÃO",
+            fa: "آغاز نبرد"
+        ) + $" ({locChar}) ⚔️";
+
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(centerConfirmRect, centerBtnText, new Color(0.25f, 0.95f, 0.45f), 13))
+        {
+            selectedCharacterID = ch.characterID;
+            ConfirmSelection();
+        }
+
         // Bottom Drag-to-Rotate Hint
         GUIStyle hintStyle = new GUIStyle(GUI.skin.label);
         hintStyle.fontSize = Mathf.Max(8, (int)(area.width * 0.026f));
@@ -974,19 +1031,19 @@ public class CharacterSelectionUI : MonoBehaviour
         hintStyle.fontStyle = FontStyle.Italic;
 
         string hintStr = LanguageSelectionUI.Localize(
-            "✦ Drag mouse horizontally to rotate champion ✦",
-            ar: "✦ اسحب بالفأرة أفقياً لتدوير البطل ✦",
-            ru: "✦ Перетащите мышь для вращения героя ✦",
-            fr: "✦ Glissez la souris pour faire pivoter ✦",
-            es: "✦ Arrastra el ratón para rotar al héroe ✦",
-            de: "✦ Ziehen zum Drehen des Helden ✦",
-            hi: "✦ घुमाने के लिए माउस खींचें ✦",
-            zh: "✦ 按住鼠标水平拖动以旋转英雄 ✦",
-            ja: "✦ ドラッグして英雄を回転 ✦",
-            pt: "✦ Arraste o mouse para girar o campeão ✦",
-            fa: "✦ برای چرخاندن قهرمان، ماوس را بکشید ✦"
+            "✦ Drag mouse to rotate | Press Enter/Space to select ✦",
+            ar: "✦ اسحب بالفأرة للتدوير | اضغط Enter أو مسافة للاختيار ✦",
+            ru: "✦ Тяните мышь для вращения | Enter/Пробел для выбора ✦",
+            fr: "✦ Glissez pour pivoter | Entrée/Espace pour choisir ✦",
+            es: "✦ Arrastra para rotar | Pulsa Enter/Espacio para elegir ✦",
+            de: "✦ Ziehen zum Drehen | Enter/Leertaste zum Auswählen ✦",
+            hi: "✦ घुमाने के लिए माउस खींचें | चुनने के लिए Enter दबाएं ✦",
+            zh: "✦ 拖动旋转英雄 | 按回车或空格直接出战 ✦",
+            ja: "✦ ドラッグで回転 | Enter/スペースで決定 ✦",
+            pt: "✦ Arraste para girar | Enter/Espaço para escolher ✦",
+            fa: "✦ کشیدن برای چرخش | فشردن Enter/فاصله برای انتخاب ✦"
         );
-        GUI.Label(new Rect(area.x, area.y + area.height - 24f, area.width, 20f), hintStr, hintStyle);
+        GUI.Label(new Rect(area.x, area.y + area.height - 22f, area.width, 18f), hintStr, hintStyle);
     }
 
     // ==================== COLUMN 3: RIGHT COMBAT CODEX & SACRED SKINS ====================
@@ -1041,7 +1098,7 @@ public class CharacterSelectionUI : MonoBehaviour
 
         // Pinned Bottom Section: Grand Expedition Confirmation Gateway (Height 76px)
         float footerH = 76f;
-        float footerY = area.y + area.height - footerH - 4f;
+        float footerY = Mathf.Min(area.y + area.height - footerH - 4f, Screen.height - footerH - 8f);
 
         // Separator above footer
         GUI.color = new Color(0.35f, 0.65f, 0.40f, 0.45f);
