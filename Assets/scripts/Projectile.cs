@@ -42,8 +42,8 @@ public class Projectile : MonoBehaviour
         if (health == null) health = other.GetComponentInParent<Health>();
         if (health != null)
         {
-            CharacterCombat otherCombat = health.GetComponent<CharacterCombat>();
-            if (otherCombat != null && otherCombat.team != this.team)
+            CharacterCombat otherCombat = health.GetComponent<CharacterCombat>() ?? health.GetComponentInParent<CharacterCombat>() ?? other.GetComponent<CharacterCombat>() ?? other.GetComponentInParent<CharacterCombat>();
+            if (otherCombat != null && otherCombat.team != this.team && !health.isDead)
             {
                 health.TakeDamage(damage, owner);
                 Destroy(gameObject);

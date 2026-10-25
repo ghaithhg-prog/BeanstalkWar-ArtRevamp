@@ -305,6 +305,22 @@ public class CharacterCombat : NetworkBehaviour
                 }
             }
         }
+        else if (target != null && attackType == AttackType.Melee)
+        {
+            // ضمان إلحاق الضرر بالعدو المستهدف في القتال القريب بين البوتات واللاعبين
+            float maxMeleeReach = attackRange + 2.5f;
+            if (Vector3.Distance(transform.position, target.position) <= maxMeleeReach)
+            {
+                Health targetHp = target.GetComponent<Health>() ?? target.GetComponentInParent<Health>();
+                CharacterCombat targetCombat = target.GetComponent<CharacterCombat>() ?? target.GetComponentInParent<CharacterCombat>() ?? (targetHp != null ? targetHp.GetComponent<CharacterCombat>() : null);
+                if (targetHp != null && targetCombat != null && targetCombat.team != team && !targetHp.isDead)
+                {
+                    PlayerXP xp = GetComponent<PlayerXP>();
+                    float xpMult = (xp != null) ? xp.GetDamageMultiplier() : 1f;
+                    targetHp.TakeDamage(attackDamage * xpMult, gameObject);
+                }
+            }
+        }
 
         nextAttackTime =
             Time.time +
@@ -516,21 +532,20 @@ public class CharacterCombat : NetworkBehaviour
             // Players / Bots
             // =========================
 
-            Health health =
-                hit.GetComponent<Health>();
+            Health health = hit.GetComponent<Health>() ?? hit.GetComponentInParent<Health>();
 
             if (health == null ||
-                hit.gameObject ==
-                gameObject)
+                hit.gameObject == gameObject ||
+                health.gameObject == gameObject)
             {
                 continue;
             }
 
-            CharacterCombat other =
-                hit.GetComponent<CharacterCombat>();
+            CharacterCombat other = hit.GetComponent<CharacterCombat>() ?? hit.GetComponentInParent<CharacterCombat>() ?? health.GetComponent<CharacterCombat>();
 
             if (other != null &&
-                other.team != team)
+                other.team != team &&
+                !health.isDead)
             {
                 // تمرير المهاجم لتتبع القاتل ومنح XP
                 health.TakeDamage(

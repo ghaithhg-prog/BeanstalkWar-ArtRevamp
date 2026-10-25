@@ -561,6 +561,77 @@ public class LanguageSelectionUI : MonoBehaviour
         SetLangFa("CRYSTAL", "بلور");
         SetLangFa("SCORE", "امتیاز");
         SetLangFa("⭐ YES", "⭐ بله");
+
+        // --- Deep Localization for Internal Cards, Attributes, Play Modes & Guides ---
+        void Reg(string en, string ar, string fa, string de, string it, string tr, string ru, string fr, string es, string hi, string zh, string ja, string pt)
+        {
+            var d = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase)
+            {
+                { "en", en }, { "ar", ar }, { "fa", fa }, { "de", de }, { "it", it }, { "tr", tr },
+                { "ru", ru }, { "fr", fr }, { "es", es }, { "hi", hi }, { "zh", zh }, { "ja", ja }, { "pt", pt }
+            };
+            masterDict[en] = d;
+        }
+
+        // RPG Attributes & Badges
+        Reg("MAX HEALTH", "الصحة القصوى", "حداکثر سلامت", "MAX. GESUNDHEIT", "SALUTE MASSIMA", "MAKSİMUM CAN", "МАКС. ЗДОРОВЬЕ", "SANTÉ MAXIMALE", "SALUD MÁXIMA", "अधिकतम स्वास्थ्य", "最大生命", "最大HP", "VIDA MÁXIMA");
+        Reg("ATTACK DAMAGE", "القوة الهجومية", "قدرت حمله", "ANGRIFFSSCHADEN", "DANNO DI ATTACCO", "SALDIRI HASARI", "СИЛА АТАКИ", "DÉGÂTS D'ATTAQUE", "DAÑO DE ATAQUE", "हमला क्षति", "攻击伤害", "攻撃力", "DANO DE ATAQUE");
+        Reg("MOVE SPEED", "سرعة التحرك", "سرعت حرکت", "LAUFGESCHWINDIGKEIT", "VELOCITÀ DI MOVIMENTO", "HAREKET HIZI", "СКОРОСТЬ ПЕРЕДВИЖЕНИЯ", "VITESSE DE DÉPL.", "VELOCIDAD DE MOV.", "गति", "移动速度", "移動速度", "VELOCIDADE DE MOV.");
+        Reg("COMBAT RANGE", "مدى الاشتباك", "برد درگیری", "KAMPFREICHWEITE", "GITTATA DI COMBATTIMENTO", "DÖVÜŞ MENZİLİ", "ДАЛЬНОСТЬ БОЯ", "PORTÉE DE COMBAT", "RANGO DE COMBATE", "युद्ध सीमा", "攻击射程", "射程", "ALCANCE DE COMBATE");
+        Reg("ATTACK CADENCE", "سرعة الضربات", "آهنگ حمله", "ANGRIFFSTEMPO", "CADENZA DI ATTACCO", "SALDIRI RİTMİ", "ТЕМП АТАКИ", "CADENCE D'ATTAQUE", "CADENCIA DE ATAQUE", "हमला ताल", "攻击频率", "攻撃頻度", "CADÊNCIA DE ATAQUE");
+        Reg("JUMP & MOBILITY", "القفز والقدرة الحركية", "پرش و تحرک", "SPRUNG & MOBILITÄT", "SALTO E MOBILITÀ", "ZIPLAMA VE HAREKET", "ПРЫЖОК И МОБИЛЬНОСТЬ", "SAUT ET MOBILITÉ", "SALTO Y MOVILIDAD", "छलांग और गतिशीलता", "跳跃与机动性", "跳躍と機動性", "SALTO E MOBILIDADE");
+
+        Reg("JUGGERNAUT", "درع صامد", "زره مستحکم", "KOLOSS", "COLOSSO", "DURDURULAMAZ", "ДЖАГГЕРНАУТ", "COLOSSE", "IMPARABLE", "अजेय", "霸体重装", "巨漢", "COLOSSO");
+        Reg("STURDY", "صلب", "مقاوم", "ROBUST", "ROBUSTO", "DAYANIKLI", "СТОЙКИЙ", "ROBUSTE", "ROBUSTO", "मजबूत", "坚韧", "頑丈", "ROBUSTO");
+        Reg("AGILE", "رشيق", "چابک", "WENDIG", "AGILE", "ÇEVİK", "ЛОВКИЙ", "AGILE", "ÁGIL", "फुर्तीला", "灵动", "敏捷", "ÁGIL");
+        Reg("LETHAL", "فتاك", "مرگبار", "TÖDLICH", "LETALE", "ÖLÜMCÜL", "СМЕРТОНОСНЫЙ", "MORTEL", "LETAL", "घातक", "毁灭性", "致命的", "LETAL");
+        Reg("POTENT", "قوي", "قدرتمند", "KRAFTVOLL", "POTENTE", "GÜÇLÜ", "СИЛЬНЫЙ", "PUISSANT", "POTENTE", "शक्तिशाली", "强劲", "強力", "POTENTE");
+        Reg("BALANCED", "متوازن", "متعادل", "AUSGEWOGEN", "EQUILIBRATO", "DENGELİ", "БАЛАНС", "ÉQUILIBRÉ", "EQUILIBRADO", "संतुलित", "均衡", "バランス", "EQUILIBRADO");
+        Reg("WINDRUNNER", "سريع جداً", "بسیار سریع", "BLITZSCHNELL", "VELOCISSIMO", "RÜZGAR GİBİ", "БЫСТРЫЙ", "TRÈS RAPIDE", "VELOZ", "अति तीव्र", "迅捷如风", "疾風", "VELOZ");
+        Reg("SWIFT", "رشيق", "سریع", "SCHNELL", "RAPIDO", "ÇABUK", "ПРОВОРНЫЙ", "RAPIDE", "ÁGIL", "तेज", "敏捷", "素早い", "RÁPIDO");
+        Reg("HEAVY", "ثقيل", "سنگین", "SCHWER", "PESANTE", "AĞIR", "ТЯЖЕЛЫЙ", "LOURD", "PESADO", "भारी", "沉重", "重装", "PESADO");
+        Reg("SNIPER", "قناص بعيد", "تک‌تیرانداز", "SCHARFSCHÜTZE", "CECCHINO", "KESKİN NİŞANCI", "СНАЙПЕР", "SNIPER", "FRANCOTIRADOR", "निशानेबाज", "超远射程", "狙撃", "SNIPER");
+        Reg("MID-RANGE", "مدى متوسط", "برد متوسط", "MITTLERE REICHWEITE", "MEDIO RAGGIO", "ORTA MENZİL", "СРЕДНЯЯ ДИСТ.", "PORTÉE MOYENNE", "DISTANCIA MEDIA", "मध्यम सीमा", "中程", "中距離", "MÉDIO ALCANCE");
+        Reg("MELEE", "اشتباك مباشر", "نبرد نزدیک", "NAHKAMPF", "MISCHIA", "YAKIN DÖVÜŞ", "БЛИЖНИЙ БОЙ", "CORPS À CORPS", "CUERPO A CUERPO", "हाथापाई", "近战肉搏", "近接格闘", "CORPO A CORPO");
+        Reg("RAPID FLURRY", "ضربات متتالية", "ضربات پیاپی", "SCHNELLE SCHLÄGE", "RAFFICA RAPIDA", "SERİ SALDIRILAR", "БЫСТРЫЕ УДАРЫ", "RAFALE RAPIDE", "RÁFAGA RÁPIDA", "तीव्र प्रहार", "连贯连击", "連撃", "GOLPES RÁPIDOS");
+        Reg("MEASURED", "متزن", "سنجیده", "GEMESSEN", "MISURATO", "ÖLÇÜLÜ", "УМЕРЕННЫЙ", "CADENCÉ", "MEDIDO", "मापा हुआ", "匀速", "安定", "COMPASSADO");
+        Reg("POWER STRIKE", "ضربة قاضية", "ضربه سنگین", "KRAFTSCHLAG", "COLPO POTENTE", "GÜÇLÜ VURUŞ", "МОЩНЫЙ УДАР", "FRAPPE PUISSANTE", "GOLPE PODEROSO", "शक्ति प्रहार", "强力重击", "強打", "GOLPE FORTE");
+        Reg("DOUBLE JUMP", "قفز مزدوج متاح", "پرش دوگانه فعال", "DOPPELSPRUNG AKTIV", "DOPPIO SALTO", "ÇİFT ZIPLAMA", "ДВОЙНОЙ ПРЫЖОК", "DOUBLE SAUT", "SALTO DOBLE", "दोहरी छलांग", "二段跳跃", "二段ジャンプ", "PULO DUPLO");
+        Reg("SINGLE JUMP", "قفز أرضي ثابت", "پرش استاندارد", "STANDARDSPRUNG", "SALTO SINGOLO", "TEK ZIPLAMA", "ОДИНАРНЫЙ ПРЫЖОК", "SAUT UNIQUE", "SALTO SIMPLE", "एकल छलांग", "单段跳跃", "通常ジャンプ", "PULO SIMPLES");
+
+        Reg("GUARDIAN CODEX & TACTICAL ROLE", "سجل الحارس والتكتيك القتالي", "طومار نگهبان و نقش تاکتیکی", "WÄCHTER-KODEX & TAKTISCHE ROLLE", "CODICE DEL GUARDIANO & RUOLO TATTICO", "MUHAFIZ KÜTÜĞÜ VE TAKTİK ROLÜ", "КОДЕКС СТРАЖА И ТАКТИЧЕСКАЯ РОЛЬ", "CODEX DU GARDIEN ET RÔLE TACTIQUE", "CÓDICE DEL GUARDIÁN Y ROL TÁCTICO", "संरक्षक संहिता और सामरिक भूमिका", "守护者法典与战术定位", "守護者の規範と戦術的役割", "CÓDICE DO GUARDIÃO E PAPEL TÁTICO");
+        Reg("Standard Base Attributes", "السمات الأساسية القياسية", "ویژگی‌های پایه استاندارد", "Standard-Attribute", "Attributi Base Standard", "Standart Temel Nitelikler", "Базовые характеристики", "Attributs de base", "Atributos básicos", "मानक आधार विशेषताएँ", "标准基础属性", "基本ステータス", "Atributos Básicos");
+        Reg("ALL (25)", "الكل (25)", "همه (۲۵)", "ALLE (25)", "TUTTI (25)", "HEPSİ (25)", "ВСЕ (25)", "TOUS (25)", "TODOS (25)", "सभी (25)", "全部 (25)", "全て (25)", "TODOS (25)");
+
+        // Play Mode Cards & Navigation
+        Reg("SACRED TRIAL", "تجربة مقدسة", "آزمون مقدس", "HEILIGE PRÜFUNG", "PROVA SACRA", "KUTSAL DENEME", "ИСПЫТАНИЕ", "ÉPREUVE SACRÉE", "PRUEBA SAGRADA", "पवित्र परीक्षण", "神圣试炼", "聖なる試練", "PROVA SAGRADA");
+        Reg("SOLO EXPEDITION", "الحملة الفردية", "اکتشاف تک‌نفره", "SOLO-EXPEDITION", "SPEDIZIONE SOLITARIA", "TEK KİŞİLİK SEFER", "ОДИНОЧНЫЙ БОЙ", "EXPÉDITION SOLO", "EXPEDICIÓN INDIVIDUAL", "एकल अभियान", "单人离线远征", "ソロ遠征", "EXPEDIÇÃO INDIVIDUAL");
+        Reg("Vs Forest Bot Guardians", "ضد حراس الغابة الآليين", "در برابر ربات‌های نگهبان جنگل", "Gegen Bot-Wächter", "Contro Guardiani Bot", "Orman Bot Muhafızlarına Karşı", "Против лесных ботов", "Contre gardiens bots", "Contra guardianes bots", "बॉट अभिभावकों के विरुद्ध", "对阵森林人机守卫", "ボットの守護者と対戦", "Contra bots guardiões");
+        Reg("3 Guardian Titans", "٣ زعماء عمالقة", "۳ غول تایتان نگهبان", "3 Titanen-Bosse", "3 Titani Guardiani", "3 Muhafız Titan", "3 титана-босса", "3 titans gardiens", "3 jefes titanes", "३ अभिभावक टाइटन", "三大森林巨像Boss", "3体の守護タイタン", "3 chefes titãs");
+        Reg("Chop Tree or Take Crystal", "اسقط الشجرة أو خذ الكريستال", "قطع درخت یا تصاحب بلور", "Baum fällen oder Kristall", "Abbatti l'albero o prendi il cristallo", "Ağacı Kes veya Kristali Al", "Срубите древо или кристалл", "Abattez l'arbre ou cristal", "Tala el árbol o toma el cristal", "पेड़ काटें या क्रिस्टल लें", "伐倒古树或争夺水晶", "神木伐採または水晶奪回", "Derrube a árvore ou cristal");
+        Reg("Master 25 Hero Classes", "تدرّب على ٢٥ بطلاً", "تسلط بر ۲۵ رده قهرمان", "Meistert 25 Helden", "Padroneggia 25 eroi", "25 Kahraman Sınıfında Ustalaş", "25 классов героев", "Maîtrisez 25 héros", "Domina 25 héroes", "२५ नायकों में महारत", "驾驭25位传奇英雄", "25人の英雄を極めろ", "Domine 25 heróis");
+        Reg("Offline Gold & XP", "ذهب ونقاط خبرة بدون نت", "طلا و تجربه آفلاین", "Gold & XP offline", "Oro ed ESP offline", "Çevrimdışı Altın ve TP", "Золото и опыт без сети", "Or et EXP hors-ligne", "Oro y EXP sin internet", "बिना नेट सोना व XP", "离线获取金币与经验", "オフラインで報酬獲得", "Ouro e EXP offline");
+
+        Reg("LIVE WAR", "معركة حية", "نبرد زنده", "LIVE-SCHLACHT", "GUERRA DAL VIVO", "CANLI SAVAŞ", "ЖИВАЯ ВОЙНА", "GUERRE EN DIRECT", "GUERRA EN VIVO", "लाइव युद्ध", "实时全服战役", "リアルタイム戦", "GUERRA AO VIVO");
+        Reg("REALM WAR", "حرب العوالم", "نبرد قلمروها", "REICH-KRIEG", "GUERRA DEI REGNI", "DİYAR SAVAŞI", "ВОЙНА РЕАЛЬМА", "GUERRE DES ROYAUMES", "GUERRA DEL REINO", "क्षेत्र युद्ध", "全域远征", "領域大戦", "GUERRA DO REINO");
+        Reg("Global Multiplayer Arena", "معارك حية متعددة اللاعبين", "میدان چندنفره جهانی", "Globale Mehrspieler-Arena", "Arena Multigiocatore Globale", "Küresel Çok Oyunculu Arena", "Сетевая PvP-арена", "Arène multijoueur en ligne", "Arena multijugador global", "ग्लोबल मल्टीप्लेयर अखाड़ा", "跨服多人实时联机竞技场", "グローバルマルチプレイ闘技場", "Arena multijogador global");
+        Reg("PRIVATE COVEN", "تحالف سري", "پیمان خصوصی", "HEILIGER ZIRKEL", "CONGREGA PRIVATA", "ÖZEL BİRLİK", "СВОЙ КЛАН", "ALLIANCE PRIVÉE", "COFRADÍA SAGRADA", "पवित्र गठबंधन", "私密部落", "秘密の盟約", "CLÃ PRIVADO");
+        Reg("TRIBE SANCTUARY", "ملاذ العشيرة", "پناهگاه قبیله", "STAMMESHEILIGTUM", "SANTUARIO DELLA TRIBÙ", "KABİLE SIĞINAĞI", "ДРУЖЕСКОЕ ЛОББИ", "SANCTUAIRE D'AMIS", "SANTUARIO DE AMIGOS", "मित्र अभयारण्य", "部落圣所", "仲間たちの聖域", "SANTUÁRIO DA TRIBO");
+        Reg("Co-op Sanctuary with Allies", "ملاذ تعاوني مع الأصدقاء", "پناهگاه همکاری با یاران", "Koop-Zuflucht mit Verbündeten", "Santuario cooperativo con alleati", "Dostlarla Eşli Sığınak", "Кооператив с союзниками", "Sanctuaire coop avec alliés", "Santuario cooperativo", "सहयोगियों के साथ सह-ऑप", "好友协同游玩据点", "仲間との協力聖域", "Santuário cooperativo com aliados");
+
+        // Guide, Briefing & In-Game Announcements
+        Reg("GUIDE", "التوجيهات", "راهنما", "LEITFADEN", "GUIDA", "REHBER", "ИНФО", "GUIDE", "GUÍA", "मार्गदर्शिका", "指南", "ガイド", "GUIA");
+        Reg("BEANSTALK WAR — OFFICIAL TACTICAL BRIEFING", "حرب نبتة الفاصولياء — الدليل التكتيكي الرسمي", "نبرد ساقه لوبیا — راهنمای تاکتیکی رسمی", "BOHNENRANKEN-KRIEG — OFFIZIELLES TAKTIK-BRIEFING", "GUERRA DEL FAGIOLO — BRIEFING TATTICO UFFICIALE", "FASULYE SIRIĞI SAVAŞI — RESMİ TAKTİK BİLGİLENDİRME", "ВОЙНА БОБОВОГО СТЕБЛЯ — ТАКТИЧЕСКИЙ ИНСТРУКТАЖ", "GUERRE DU HARICOT — GUIDE TACTIQUE OFFICIEL", "GUERRA DEL TALLO — GUÍA TÁCTICA OFICIAL", "सेम का युद्ध — आधिकारिक सामरिक जानकारी", "圣豆之战 — 官方战术指南", "豆の木の戦い — 公式戦術ブリーフィング", "GUERRA DO FEIJÃO — BRIEFING TÁTICO OFICIAL");
+        Reg("THE BATTLE FOR THE SACRED BEANSTALK", "المعركة من أجل نبتة الفاصولياء المقدسة", "نبرد برای ساقه لوبیای مقدس", "DIE SCHLACHT UM DIE HEILIGE BOHNENRANKE", "LA BATTAGLIA PER IL FAGIOLO SACRO", "KUTSAL FASULYE SIRIĞI İÇİN SAVAŞ", "БИТВА ЗА СВЯЩЕННЫЙ БОБОВЫЙ СТЕБЕЛЬ", "LA BATAILLE POUR LE HARICOT SACRÉ", "LA BATALLA POR EL TALLO SAGRADO", "पवित्र सेम के लिए युद्ध", "神圣圣豆森林之战", "聖なる豆の木を巡る戦い", "A BATALHA PELO FEIJÃO SAGRADO");
+        Reg("THE 3 TREE LEVELS", "مستويات الشجرة الثلاثة", "۳ طبقه درخت", "DIE 3 BAUMSTUFEN", "I 3 LIVELLI DELL'ALBERO", "3 AĞAÇ SEVİYESİ", "3 УРОВНЯ ДЕРЕВА", "LES 3 NIVEAUX DE L'ARBRE", "LOS 3 NIVELES DEL ÁRBOL", "३ वृक्ष स्तर", "古树三大层阶", "神木の3つの階層", "OS 3 NÍVEIS DA ÁRVORE");
+        Reg("THE 3 GUARDIAN BOSS TITANS", "زعماء الحراس العمالقة الثلاثة", "۳ تایتان نگهبان غول‌پیکر", "DIE 3 WÄCHTER-TITANEN", "I 3 TITANI GUARDIANI", "3 MUHAFIZ TİTAN PATRON", "3 ТИТАНА-СТРАЖА", "LES 3 TITANS GARDIENS", "LOS 3 TITANES GUARDIANES", "३ अभिभावक टाइटन बॉस", "三大泰坦守护首领", "3体の守護タイタンボス", "OS 3 TITÃS GUARDIÕES");
+        Reg("WIN CONDITIONS & SACRED OBJECTIVES", "شروط النصر والأهداف المقدسة", "شرایط پیروزی و اهداف مقدس", "SIEG-BEDINGUNGEN & HEILIGE ZIELE", "CONDIZIONI DI VITTORIA E OBIETTIVI SACRI", "ZAFER KOŞULLARI VE KUTSAL HEDEFLER", "УСЛОВИЯ ПОБЕДЫ И ЦЕЛИ", "CONDITIONS DE VICTOIRE ET OBJECTIFS", "CONDICIONES DE VICTORIA Y OBJETIVOS", "जीत की शर्तें और पवित्र लक्ष्य", "胜利条件与神圣目标", "勝利条件と聖なる目的", "CONDIÇÕES DE VITÓRIA E OBJETIVOS");
+        Reg("CONTROLS & MASTER TACTICAL TIPS", "التحكم والنصائح التكتيكية الأساسية", "کنترل‌ها و نکات کلیدی تاکتیکی", "STEUERUNG & MEISTER-TIPPS", "COMANDI E CONSIGLI TATTICI", "KONTROLLER VE USTA TAKTİK İPUÇLARI", "УПРАВЛЕНИЕ И СОВЕТЫ", "COMMANDES ET CONSEILS TACTIQUES", "CONTROLES Y CONSEJOS TÁCTICOS", "नियंत्रण और मुख्य सामरिक सुझाव", "操作说明与大师战术技巧", "操作方法と上級戦術の秘訣", "CONTROLES E DICAS TÁTICAS");
+
+        Reg("10-Second Divine Shield Countdown active! Position yourselves — Tree becomes vulnerable in 10s!", "العد التنازلي لدرع الصمود المقدس بدأ (10 ثوانٍ)! خذوا مواقعكم — الشجرة ستصبح مكشوفة بالكامل بعد 10 ثوانٍ!", "شمارش معکوس سپر مقدس ۱۰ ثانیه‌ای آغاز شد! جای‌گیری کنید — درخت پس از ۱۰ ثانیه آسیب‌پذیر می‌شود!", "10-Sekunden-Göttlicher-Schild aktiv! Geht in Stellung — Baum in 10s verwundbar!", "Conto alla rovescia Scudo Divino di 10s attivo! Posizionatevi — L'albero sarà vulnerabile tra 10s!", "10 Saniyelik İlahi Kalkan Geri Sayımı başladı! Konum alın — Ağaç 10 sn içinde savunmasız kalacak!", "ОТСЧЕТ 10 СЕКУНД ДО СНЯТИЯ ЩИТА! Займите позиции — Дерево станет уязвимым через 10 сек!", "COMPTE À REBOURS DE 10S DU BOUCLIER DIVIN ! Prenez position — L'Arbre sera vulnérable dans 10s !", "¡CUENTA ATRÁS DE 10S DEL ESCUDO DIVINO! ¡El Árbol será vulnerable en 10s!", "१० सेकंड दिव्य ढाल उलटी गिनती सक्रिय! स्थान लें — पेड़ १० सेकंड में असुरक्षित हो जाएगा!", "10秒神圣圣树护盾倒计时已启动！就位迎战 — 古树将在10秒后失去免疫！", "神聖シールドの10秒カウントダウン開始！配置につけ — 10秒後に神木の無敵が解除される！", "CONTAGEM REGRESSIVA DE 10S DO ESCUDO DIVINO! Posicione-se — Árvore vulnerável em 10s!");
+        Reg("The Sacred Crystal has appeared! Grab the Crystal and deliver it to the Sacred Altar to WIN!", "ظهرت الكريستالة المقدسة! احمل الكريستالة وأوصلها إلى المذبح المقدس للفوز بالمعركة!", "بلور مقدس ظاهر شد! بلور را بردارید و برای پیروزی به محراب مقدس برسانید!", "Der heilige Kristall ist erschienen! Tragt ihn zum Altar, um zu GEWINNEN!", "Il Cristallo Sacro è apparso! Portalo all'Altare Sacro per VINCERE!", "Kutsal Kristal belirdi! Kristali alıp Kutsal Sunak'a taşıyarak KAZANIN!", "Священный кристалл появился! Отнесите его к алтарю для победы!", "Le Cristal Sacré est apparu ! Portez-le à l'Autel pour GAGNER !", "¡El Cristal Sagrado ha aparecido! ¡Llévalo al Altar para ganar!", "पवित्र क्रिस्टल प्रकट हुआ है! जीतने के लिए इसे पवित्र वेदी तक पहुँचाएँ!", "神圣水晶已降世！夺取水晶并护送至圣坛即可夺取全盘胜利！", "聖なる水晶が出現した！水晶を運んで聖なる祭壇へ奉納し、勝利を掴め！", "O Cristal Sagrado apareceu! Leve-o ao Altar Sagrado para VENCER!");
+        Reg("HOLD THE ALTAR FOR 3 SECONDS TO WIN!", "ابقَ في المذبح لمدة ٣ ثوانٍ للفوز!", "برای پیروزی ۳ ثانیه در محراب بایستید!", "HALTET DEN ALTAR FÜR 3 SEKUNDEN ZUM SIEG!", "MANTIENI L'ALTARE PER 3 SECONDI PER VINCERE!", "KAZANMAK İÇİN SUNAKTA 3 SANİYE KALIN!", "УДЕРЖИВАЙТЕ АЛТАРЬ 3 СЕКУНДЫ ДЛЯ ПОБЕДЫ!", "TENEZ L'AUTEL PENDANT 3 SECONDES POUR GAGNER !", "¡MANTÉN EL ALTAR 3 SEGUNDOS PARA GANAR!", "जीतने के लिए वेदी पर ३ सेकंड रुकें!", "在祭坛坚守3秒即可获胜！", "勝利のために祭壇で3秒間耐えよ！", "MANTENHA O ALTAR POR 3 SEGUNDOS PARA VENCER!");
+        Reg("SACRED CRYSTAL DELIVERED — PROTECTORS WIN!", "لقد وصلت الكريستالة للمذبح — فاز الحماة!", "بلور به محراب رسید — محافظان پیروز شدند!", "KRISTALL AM ALTAR — DIE BESCHÜTZER GEWINNEN!", "CRISTALLO CONSEGNATO — I PROTETTORI VINCONO!", "KRİSTAL SUNAĞA ULAŞTI — KORUYUCULAR KAZANDI!", "КРИСТАЛЛ ДОСТАВЛЕН — ПОБЕДА ЗАЩИТНИКОВ!", "LE CRISTAL EST À L'AUTEL — VICTOIRE DES PROTECTEURS !", "¡CRISTAL ENTREGADO — GANAN LOS PROTECTORES!", "क्रिस्टल वेदी पर पहुँचा — रक्षक जीते!", "圣晶归坛 — 守护者获胜！", "水晶奉納完了 — 守護者の大勝利！", "CRISTAL ENTREGUE — PROTETORES VENCEM!");
     }
 
     #endregion

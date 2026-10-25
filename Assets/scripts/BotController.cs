@@ -450,30 +450,55 @@ public class BotController : NetworkBehaviour
             return;
         }
 
-        // 5. للمدمرين (Destroyer Bots) قبل موت الزعماء الثلاثة: صعود المنصات ومهاجمة الزعيم المستيقظ لكسر الختم!
-        if (team == PlayerMovement.TeamType.Destroyer && LevelBossManager.Instance != null && !allBossesSlain)
+        // 5. إذا كان هناك زعيم مستيقظ في طابق علوي: أولوية عليا لجميع البوتات للصعود لطابق الزعيم فوراً!
+        LevelBoss activeBoss = (LevelBossManager.Instance != null && !allBossesSlain)
+            ? LevelBossManager.Instance.GetActiveAwakenedBoss()
+            : null;
+        bool hasBossAbove = activeBoss != null && (activeBoss.transform.position.y - transform.position.y) > 2.5f;
+
+        if (hasBossAbove)
         {
-            LevelBoss activeBoss = LevelBossManager.Instance.GetActiveAwakenedBoss();
-            if (activeBoss != null)
+            Transform targetLevel = GetBotCurrentCombatTargetLevel();
+            if (targetLevel != null && (targetLevel.position.y - transform.position.y) > 2.0f)
             {
-                // إذا كان هناك عدو (حامي) ملتصق بنا على نفس الطابق ويهددنا مباشرة
+                // إذا كان هناك عدو ملتصق بنا تماماً على نفس الطابق، نقاتله لفترة وجيزة (أقل من ثانيتين) ثم نواصل الصعود
                 Transform immediateThreat = FindClosestEnemy();
-                CharacterCombat myCombat = GetComponent<CharacterCombat>();
-                bool isRanged = myCombat != null && (myCombat.attackType == CharacterCombat.AttackType.Ranged || myCombat.attackRange >= 5.5f);
-                float threatDist = isRanged ? 4.0f : 2.5f;
-                if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= threatDist &&
-                    Mathf.Abs(immediateThreat.position.y - transform.position.y) <= 2.5f)
+                if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 2.2f &&
+                    Mathf.Abs(immediateThreat.position.y - transform.position.y) <= 2.2f &&
+                    (Time.time - fightStartTime) < 2.0f)
                 {
                     EnterFight(immediateThreat);
                     return;
                 }
 
-                EnterFight(activeBoss.transform);
+                // الصعود الحتمي عبر الممرات والمنصات لطابق الزعيم
+                currentState = BotState.Advance;
+                hasDestination = false;
+                currentTargetLevel = null;
                 return;
             }
         }
 
-        // 6. إذا كان مدمراً (Destroyer) ولا يوجد زعيم مستيقظ حالياً: الصعود نحو الطابق النشط ومقاتلة الأعداء
+        // 6. للمدمرين (Destroyer Bots) إذا كان الزعيم المستيقظ على نفس الطابق أو تم الوصول إليه:
+        if (team == PlayerMovement.TeamType.Destroyer && activeBoss != null)
+        {
+            // إذا كان هناك عدو (حامي) ملتصق بنا على نفس الطابق ويهددنا مباشرة
+            Transform immediateThreat = FindClosestEnemy();
+            CharacterCombat myCombat = GetComponent<CharacterCombat>();
+            bool isRanged = myCombat != null && (myCombat.attackType == CharacterCombat.AttackType.Ranged || myCombat.attackRange >= 5.5f);
+            float threatDist = isRanged ? 4.0f : 2.5f;
+            if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= threatDist &&
+                Mathf.Abs(immediateThreat.position.y - transform.position.y) <= 2.5f)
+            {
+                EnterFight(immediateThreat);
+                return;
+            }
+
+            EnterFight(activeBoss.transform);
+            return;
+        }
+
+        // 7. إذا كان مدمراً (Destroyer) ولا يوجد زعيم مستيقظ حالياً: الصعود نحو الطابق النشط ومقاتلة الأعداء
         if (team == PlayerMovement.TeamType.Destroyer)
         {
             Transform closeEnemy = FindClosestEnemy();
@@ -504,15 +529,7 @@ public class BotController : NetworkBehaviour
             return;
         }
 
-        // 7. قتال أي عدو ضمن مدى الرؤية للحماة
-        Transform foundEnemy = FindClosestEnemy();
-        if (foundEnemy != null)
-        {
-            EnterFight(foundEnemy);
-            return;
-        }
-
-        // 8. إذا كان حامياً (Protector): حراسة المنصات والدفاع عن الشجرة والارتقاء نحو طابق الزعيم
+        // 8. إذا كان حامياً (Protector): التحقق أولاً من الطابق القتالي والصعود قبل الدخول في معارك جانبية
         if (team == PlayerMovement.TeamType.Protector)
         {
             Transform targetLevel = GetBotCurrentCombatTargetLevel();
@@ -521,6 +538,13 @@ public class BotController : NetworkBehaviour
                 currentState = BotState.Advance;
                 hasDestination = false;
                 currentTargetLevel = null;
+                return;
+            }
+
+            Transform foundEnemy = FindClosestEnemy();
+            if (foundEnemy != null)
+            {
+                EnterFight(foundEnemy);
                 return;
             }
 
@@ -657,6 +681,18 @@ public class BotController : NetworkBehaviour
                 }
             }
 
+            // إذا كان هناك زعيم حي ومستيقظ في طابق علوي، نتجاهل الأعداء العاديين على الطوابق السفلية لنركز على الزعيم والصعود
+            LevelBoss lowestActive = LevelBossManager.Instance != null ? LevelBossManager.Instance.GetActiveAwakenedBoss() : null;
+            if (lowestActive != null && (lowestActive.transform.position.y - transform.position.y) > 2.8f)
+            {
+                // إذا كان هذا الكائن ليس الزعيم وهو على طابق سفلي، نتجاهله إلا إذا كان ملتصقاً جداً
+                if (bossComp == null && Mathf.Abs(character.transform.position.y - transform.position.y) <= 2.5f)
+                {
+                    float d = Vector3.Distance(transform.position, character.transform.position);
+                    if (d > 2.8f) continue;
+                }
+            }
+
             Health health = character.GetComponent<Health>();
             if (health == null || health.isDead) continue;
 
@@ -734,12 +770,12 @@ public class BotController : NetworkBehaviour
         if (targetBoss == null && LevelBossManager.Instance != null && !LevelBossManager.Instance.AreAllBossesDefeated)
         {
             LevelBoss awakenedBoss = LevelBossManager.Instance.GetActiveAwakenedBoss();
-            if (awakenedBoss != null && awakenedBoss.transform.position.y > (transform.position.y + 3.0f))
+            if (awakenedBoss != null && (awakenedBoss.transform.position.y - transform.position.y) > 2.5f)
             {
-                // إذا لم يكن العدو ملاصقاً تماماً (أقل من 2.0م) أو مر على القتال أكثر من ثانيتين، نترك القتال ونصعد للزعيم
-                if (distance > 2.0f || (Time.time - fightStartTime) > 2.0f)
+                // إذا لم يكن العدو ملاصقاً تماماً (أقل من 2.0م) أو مر على القتال أكثر من 1.8 ثانية، نترك القتال ونصعد للزعيم فوراً
+                if (distance > 2.0f || (Time.time - fightStartTime) > 1.8f)
                 {
-                    LeaveFight();
+                    LeaveFightAndAdvance();
                     return;
                 }
             }
@@ -841,6 +877,17 @@ public class BotController : NetworkBehaviour
     {
         enemyTarget = null;
         currentState = stateBeforeFight;
+        hasDestination = false;
+        currentTargetLevel = null;
+
+        if (agent != null)
+            agent.stoppingDistance = stoppingDistance;
+    }
+
+    void LeaveFightAndAdvance()
+    {
+        enemyTarget = null;
+        currentState = BotState.Advance;
         hasDestination = false;
         currentTargetLevel = null;
 

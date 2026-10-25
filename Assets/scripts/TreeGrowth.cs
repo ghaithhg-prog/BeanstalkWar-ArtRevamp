@@ -606,14 +606,14 @@ public class TreeGrowth : MonoBehaviour
 
     System.Collections.IEnumerator ApocalypticDestructionCelebrationRoutine(Vector3 treePos, Vector3 fallAxis)
     {
-        // 1. Spooky Chaotic Dark Hellfire Light over Fallen Tree
+        // 1. Giant Void Light engulfing entire arena in apocalyptic red-orange
         GameObject voidLightObj = new GameObject("ApocalypticVoidLight");
         Light voidLight = voidLightObj.AddComponent<Light>();
         voidLight.type = LightType.Point;
-        voidLight.color = new Color(1.0f, 0.22f, 0.08f);
-        voidLight.intensity = 13.0f;
-        voidLight.range = 85f;
-        voidLightObj.transform.position = treePos + Vector3.up * 8f;
+        voidLight.color = new Color(1.0f, 0.25f, 0.06f);
+        voidLight.intensity = 18.0f;
+        voidLight.range = 140f;
+        voidLightObj.transform.position = treePos + Vector3.up * 14f;
 
         Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit") 
                           ?? Shader.Find("Unlit/Transparent") 
@@ -627,25 +627,22 @@ public class TreeGrowth : MonoBehaviour
         Material flameMat = new Material(unlitShader);
         flameMat.color = new Color(1f, 0.35f, 0.05f, 0.9f);
 
-        for (int i = 0; i < 18; i++)
+        for (int i = 0; i < 24; i++)
         {
             GameObject fObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Collider c = fObj.GetComponent<Collider>();
             if (c != null) Destroy(c);
             fObj.transform.SetParent(flameGroup.transform);
-            Vector3 flamePos = treePos + fallAxis * (i * 2.2f) + new Vector3(Random.Range(-2.2f, 2.2f), Random.Range(0.5f, 3.5f), Random.Range(-2.2f, 2.2f));
+            Vector3 flamePos = treePos + fallAxis * (i * 2.2f) + new Vector3(Random.Range(-2.8f, 2.8f), Random.Range(0.5f, 4.0f), Random.Range(-2.8f, 2.8f));
             fObj.transform.position = flamePos;
-            fObj.transform.localScale = Vector3.one * Random.Range(0.6f, 1.4f);
+            fObj.transform.localScale = Vector3.one * Random.Range(0.8f, 1.8f);
             fObj.GetComponent<Renderer>().material = flameMat;
             flameEmberList.Add(fObj.transform);
         }
 
-        Material meteorMat = new Material(unlitShader);
-        meteorMat.color = new Color(1.0f, 0.45f, 0.1f);
-
-        float celebrationDuration = 5.2f;
+        float celebrationDuration = 5.5f;
         float elapsed = 0f;
-        float nextMeteorTime = 0.1f;
+        float nextMeteorTime = 0.05f;
 
         while (elapsed < celebrationDuration)
         {
@@ -653,25 +650,40 @@ public class TreeGrowth : MonoBehaviour
 
             if (voidLight != null)
             {
-                voidLight.intensity = 9f + Mathf.Sin(elapsed * 6f) * 4f;
-                voidLight.color = Color.Lerp(new Color(1f, 0.2f, 0.05f), new Color(0.85f, 0.05f, 0.4f), Mathf.PingPong(elapsed * 2f, 1f));
+                voidLight.intensity = 15f + Mathf.Sin(elapsed * 7f) * 6f;
+                voidLight.color = Color.Lerp(new Color(1f, 0.22f, 0.04f), new Color(0.9f, 0.08f, 0.35f), Mathf.PingPong(elapsed * 2.2f, 1f));
             }
 
             for (int i = 0; i < flameEmberList.Count; i++)
             {
                 if (flameEmberList[i] != null)
                 {
-                    float s = 0.8f + Mathf.Sin(elapsed * 12f + i) * 0.4f;
-                    flameEmberList[i].localScale = new Vector3(s, s * 1.5f, s);
+                    float s = 1.0f + Mathf.Sin(elapsed * 12f + i) * 0.5f;
+                    flameEmberList[i].localScale = new Vector3(s, s * 1.6f, s);
                 }
             }
 
+            // أمطار نيازك ضخمة وساطعة متلاحقة مباشرة في واجهة الكاميرا وأرجاء الساحة
             if (elapsed >= nextMeteorTime)
             {
-                nextMeteorTime = elapsed + Random.Range(0.25f, 0.48f);
-                Vector3 targetLand = treePos + fallAxis * Random.Range(0f, 35f) + new Vector3(Random.Range(-15f, 15f), 0f, Random.Range(-15f, 15f));
-                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-12f, -4f), Random.Range(35f, 55f), Random.Range(-12f, -4f));
-                StartCoroutine(SingleMeteorRoutine(meteorSpawn, targetLand, meteorMat));
+                nextMeteorTime = elapsed + Random.Range(0.14f, 0.26f);
+
+                Vector3 targetLand;
+                if (Camera.main != null && Random.value < 0.65f)
+                {
+                    Vector3 camFwd = Camera.main.transform.forward;
+                    camFwd.y = 0f;
+                    if (camFwd.sqrMagnitude < 0.01f) camFwd = Vector3.forward; else camFwd.Normalize();
+                    Vector3 camViewTarget = Camera.main.transform.position + camFwd * Random.Range(12f, 28f);
+                    targetLand = camViewTarget + new Vector3(Random.Range(-12f, 12f), 0f, Random.Range(-12f, 12f));
+                }
+                else
+                {
+                    targetLand = treePos + fallAxis * Random.Range(0f, 40f) + new Vector3(Random.Range(-18f, 18f), 0f, Random.Range(-18f, 18f));
+                }
+
+                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-24f, -8f), Random.Range(55f, 75f), Random.Range(-24f, -8f));
+                StartCoroutine(SingleMeteorRoutine(meteorSpawn, targetLand));
             }
 
             yield return null;
@@ -681,28 +693,165 @@ public class TreeGrowth : MonoBehaviour
         if (flameGroup != null) Destroy(flameGroup);
     }
 
-    System.Collections.IEnumerator SingleMeteorRoutine(Vector3 from, Vector3 to, Material mat)
+    System.Collections.IEnumerator SingleMeteorRoutine(Vector3 from, Vector3 to)
     {
+        // 1. جسم النيزك الضخم المتوهج بنيران أسطورية ساطعة
         GameObject mObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        mObj.name = "CataclysmMeteorCore";
         Collider c = mObj.GetComponent<Collider>();
         if (c != null) Destroy(c);
-        mObj.GetComponent<Renderer>().material = mat;
-        mObj.transform.position = from;
-        mObj.transform.localScale = Vector3.one * Random.Range(1.1f, 1.8f);
 
-        float flyTime = Random.Range(0.42f, 0.65f);
+        float meteorScale = Random.Range(3.4f, 5.0f);
+        mObj.transform.position = from;
+        mObj.transform.localScale = Vector3.one * meteorScale;
+
+        Shader litShader = Shader.Find("Universal Render Pipeline/Lit") 
+                        ?? Shader.Find("Standard") 
+                        ?? Shader.Find("Universal Render Pipeline/Unlit");
+
+        Material meteorMat = new Material(litShader);
+        meteorMat.color = new Color(1.0f, 0.40f, 0.05f, 1f);
+        if (meteorMat.HasProperty("_EmissionColor"))
+        {
+            meteorMat.EnableKeyword("_EMISSION");
+            meteorMat.SetColor("_EmissionColor", new Color(3.5f, 1.2f, 0.2f));
+        }
+        mObj.GetComponent<Renderer>().material = meteorMat;
+
+        // ضوء ناري ديناميكي ساطع يتحرك مع كل نيزك
+        Light mL = mObj.AddComponent<Light>();
+        mL.type = LightType.Point;
+        mL.color = new Color(1.0f, 0.55f, 0.15f);
+        mL.intensity = 18f;
+        mL.range = 45f;
+
+        // 2. ذيل ناري ملتهب من 4 كرات لهب متتابعة خلف النيزك
+        List<Transform> tailPieces = new List<Transform>();
+        int tailCount = 4;
+        for (int i = 0; i < tailCount; i++)
+        {
+            GameObject tObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Collider tc = tObj.GetComponent<Collider>();
+            if (tc != null) Destroy(tc);
+            float tailS = meteorScale * (1f - (i + 1) * 0.18f);
+            tObj.transform.localScale = Vector3.one * tailS;
+            Material tMat = new Material(meteorMat);
+            tMat.color = new Color(1f, 0.28f + i * 0.15f, 0.04f, 0.85f);
+            if (tMat.HasProperty("_EmissionColor"))
+            {
+                tMat.SetColor("_EmissionColor", new Color(2.8f, 0.8f, 0.1f) * (1f - i * 0.2f));
+            }
+            tObj.GetComponent<Renderer>().material = tMat;
+            tailPieces.Add(tObj.transform);
+        }
+
+        Vector3 moveDir = (to - from).normalized;
+        float flyTime = Random.Range(0.48f, 0.72f);
         float t = 0f;
 
         while (t < flyTime)
         {
             t += Time.deltaTime;
-            mObj.transform.position = Vector3.Lerp(from, to, t / flyTime);
+            float progress = Mathf.Clamp01(t / flyTime);
+            Vector3 curPos = Vector3.Lerp(from, to, progress);
+            mObj.transform.position = curPos;
+
+            for (int i = 0; i < tailPieces.Count; i++)
+            {
+                if (tailPieces[i] != null)
+                {
+                    tailPieces[i].position = curPos - moveDir * ((i + 1) * (meteorScale * 0.65f));
+                }
+            }
             yield return null;
         }
 
-        ThirdPersonCamera.Shake(0.55f, 0.4f);
-        SpawnCollapseDebris(to, 6);
         Destroy(mObj);
+        for (int i = 0; i < tailPieces.Count; i++)
+        {
+            if (tailPieces[i] != null) Destroy(tailPieces[i].gameObject);
+        }
+
+        // 3. انفجار كارثي وارتطام عنيف بالأرض
+        StartCoroutine(MeteorImpactExplosionRoutine(to, meteorScale));
+    }
+
+    System.Collections.IEnumerator MeteorImpactExplosionRoutine(Vector3 impactPos, float radius)
+    {
+        ThirdPersonCamera.Shake(0.70f, 0.55f);
+        SpawnCollapseDebris(impactPos, 14);
+
+        // أ. كرة نار متفجرة وموجة صدمة ساطعة تتسع بسرعة
+        GameObject boomSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        boomSphere.name = "MeteorFireballExplosion";
+        Collider bc = boomSphere.GetComponent<Collider>();
+        if (bc != null) Destroy(bc);
+
+        Shader litShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Unlit");
+        Material boomMat = new Material(litShader);
+        boomMat.color = new Color(1.0f, 0.45f, 0.08f, 0.85f);
+        if (boomMat.HasProperty("_EmissionColor"))
+        {
+            boomMat.EnableKeyword("_EMISSION");
+            boomMat.SetColor("_EmissionColor", new Color(4.0f, 1.8f, 0.3f));
+        }
+        boomSphere.GetComponent<Renderer>().material = boomMat;
+        boomSphere.transform.position = impactPos + Vector3.up * 1.5f;
+
+        // ب. وميض ضوئي هائل للانفجار
+        GameObject flashObj = new GameObject("MeteorImpactFlash");
+        flashObj.transform.position = impactPos + Vector3.up * 2.5f;
+        Light flashLight = flashObj.AddComponent<Light>();
+        flashLight.type = LightType.Point;
+        flashLight.color = new Color(1.0f, 0.65f, 0.2f);
+        flashLight.intensity = 28f;
+        flashLight.range = 55f;
+
+        // ج. فوهة نيران مشتعلة على الأرض
+        GameObject craterFire = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        craterFire.name = "MeteorCraterFire";
+        Collider cc = craterFire.GetComponent<Collider>();
+        if (cc != null) Destroy(cc);
+        craterFire.transform.position = impactPos + Vector3.up * 0.15f;
+        craterFire.transform.localScale = new Vector3(radius * 1.8f, 0.15f, radius * 1.8f);
+        Material craterMat = new Material(boomMat);
+        craterMat.color = new Color(1.0f, 0.25f, 0.05f, 0.9f);
+        if (craterMat.HasProperty("_EmissionColor"))
+        {
+            craterMat.SetColor("_EmissionColor", new Color(2.5f, 0.6f, 0.05f));
+        }
+        craterFire.GetComponent<Renderer>().material = craterMat;
+
+        float boomDuration = 0.38f;
+        float elapsed = 0f;
+        while (elapsed < boomDuration)
+        {
+            elapsed += Time.deltaTime;
+            float p = elapsed / boomDuration;
+            float curScale = Mathf.Lerp(radius * 0.8f, radius * 3.5f, p);
+            boomSphere.transform.localScale = Vector3.one * curScale;
+            flashLight.intensity = Mathf.Lerp(28f, 0f, p);
+            yield return null;
+        }
+
+        Destroy(boomSphere);
+        Destroy(flashObj);
+
+        // بقاء النيران مشتعلة وتلتهب على الأرض لمدة 2.6 ثانية
+        float fireDuration = 2.6f;
+        float fireElapsed = 0f;
+        while (fireElapsed < fireDuration)
+        {
+            fireElapsed += Time.deltaTime;
+            float pulse = 1f + Mathf.Sin(fireElapsed * 14f) * 0.2f;
+            if (craterFire != null)
+            {
+                craterFire.transform.localScale = new Vector3(radius * 1.8f * pulse, 0.15f, radius * 1.8f * pulse);
+            }
+            yield return null;
+        }
+
+        if (craterFire != null) Destroy(craterFire);
     }
 
     void SpawnGroundImpactShockwave(Vector3 center, float treeHeight)

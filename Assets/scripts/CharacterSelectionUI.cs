@@ -1374,21 +1374,7 @@ public class CharacterSelectionUI : MonoBehaviour
         loreBody.wordWrap = true;
         loreBody.normal.textColor = new Color(0.80f, 0.90f, 0.82f, 0.90f);
 
-        string loreText = !string.IsNullOrEmpty(ch.description)
-            ? ch.description
-            : LanguageSelectionUI.Localize(
-                "A seasoned guardian of the colossal ancient tree, harnessing primordial magic and martial prowess to defend sacred altars and lead expeditions to the apex canopy.",
-                ar: "حارس متمرس للشجرة القديمة العملاقة، يمتلك مهارات قتالية وسحراً مقدساً لحماية المذابح وقيادة الحملات نحو قمة الشجرة.",
-                ru: "Опытный страж древнего исполинского древа, защищающий священные алтари и ведущий походы к вершинам кроны.",
-                fr: "Un gardien aguerri de l'arbre colossal ancestral, défendant les autels sacrés et guidant les expéditions.",
-                es: "Un experimentado guardián del árbol antiguo colosal, defensor de los altares sagrados.",
-                de: "Ein erfahrener Wächter des kolossalen alten Baumes, der heilige Altäre verteidigt.",
-                hi: "विशाल प्राचीन वृक्ष का एक अनुभवी संरक्षक, जो पवित्र वेदियों की रक्षा करता है।",
-                zh: "巨树古国的资深守护者，运用神圣法力捍卫祭坛并引领登顶远征。",
-                ja: "巨大な古樹の熟練の守護者。聖なる祭壇を守り、頂上への遠征を導く。",
-                pt: "Um guardião veterano da colossal árvore antiga, defendendo os altares sagrados.",
-                fa: "نگهبانی باتجربه از درخت کهنسال و غول‌پیکر که از محراب‌های مقدس محافظت می‌کند."
-            );
+        string loreText = GetLocalizedCharacterLore(ch.characterName, ch.role, ch.attackType);
         GUI.Label(new Rect(8f, curY + 26f, innerW - 16f, loreH - 30f), loreText, loreBody);
 
         curY += loreH + 12f;
@@ -1458,7 +1444,7 @@ public class CharacterSelectionUI : MonoBehaviour
                 sNameStyle.fontSize = Mathf.Clamp((int)(innerW * 0.034f), 9, 11);
                 sNameStyle.fontStyle = FontStyle.Bold;
                 sNameStyle.normal.textColor = isEquipped ? new Color(0.4f, 1f, 0.55f) : (isUnlocked ? new Color(0.95f, 0.88f, 0.5f) : new Color(0.7f, 0.7f, 0.7f));
-                GUI.Label(new Rect(textX, cardR.y + 4f, textW, 18f), skin.skinName, sNameStyle);
+                GUI.Label(new Rect(textX, cardR.y + 4f, textW, 18f), GetLocalizedSkinName(skin.skinName, s), sNameStyle);
 
                 // Stat Buff tags
                 string buffText = "";
@@ -1477,7 +1463,7 @@ public class CharacterSelectionUI : MonoBehaviour
                 descStyle.fontSize = Mathf.Clamp((int)(innerW * 0.024f), 7, 8);
                 descStyle.normal.textColor = new Color(0.75f, 0.82f, 0.75f, 0.80f);
                 descStyle.wordWrap = true;
-                GUI.Label(new Rect(textX, cardR.y + 38f, textW, 28f), skin.description, descStyle);
+                GUI.Label(new Rect(textX, cardR.y + 38f, textW, 28f), GetLocalizedSkinDescription(skin.description, s), descStyle);
 
                 // Right: Action Button
                 Rect btnRect = new Rect(cardR.x + cardR.width - btnW - 6f, cardR.y + (cardH - 30f) / 2f, btnW, 30f);
@@ -1949,5 +1935,166 @@ public class CharacterSelectionUI : MonoBehaviour
         }
 
         Hide();
+    }
+
+    public static string GetLocalizedSkinName(string rawName, int index)
+    {
+        switch (index)
+        {
+            case 0:
+                return LanguageSelectionUI.Localize("Standard Attire", "الزي القياسي", "Стандартный наряд", "Atuendo estándar", "Tenue standard", "Standard-Gewand", "मानक पोशाक", "标准战袍", "標準装束", "Traje Padrão", it: "Veste Standard", tr: "Standart Kıyafet", fa: "لباس استاندارد");
+            case 1:
+                return LanguageSelectionUI.Localize("Grove Champion", "بطل الغابة", "Чемпион рощи", "Campeón del bosque", "Champion du bosquet", "Hain-Champion", "ग्रोव चैंपियन", "丛林勇士", "聖森の勇者", "Campeão do Bosque", it: "Campione del Bosco", tr: "Koru Şampiyonu", fa: "قهرمان بیشه");
+            case 2:
+                return LanguageSelectionUI.Localize("Solar Inferno", "جحيم الشمس", "Солнечное пламя", "Infierno solar", "Flamme solaire", "Sonnen-Inferno", "सौर ज्वाला", "烈日炽焰", "烈日の炎", "Inferno Solar", it: "Inferno Solare", tr: "Güneş Cehennemi", fa: "آتش خورشیدی");
+            case 3:
+                return LanguageSelectionUI.Localize("Storm Sovereign", "حاكم العاصفة", "Владыка бури", "Soberano de tormenta", "Souverain de tempête", "Sturmsouverän", "तूफान शासक", "风暴君王", "嵐の君主", "Soberano da Tempestade", it: "Sovrano della Tempesta", tr: "Fırtına Hükümdarı", fa: "فرمانروای توفان");
+            default:
+                return LanguageSelectionUI.Localize("Apex Celestial", "الكائن السماوي الأسمى", "Небесный владыка", "Celestial supremo", "Céleste suprême", "Himmlischer Herrscher", "सर्वोच्च आकाशीय", "苍穹极光", "天上の支配者", "Celestial Supremo", it: "Celeste Supremo", tr: "Yüce Semavi", fa: "آسمانی برین");
+        }
+    }
+
+    public static string GetLocalizedSkinDescription(string rawDesc, int index)
+    {
+        switch (index)
+        {
+            case 0:
+                return LanguageSelectionUI.Localize("Standard ceremonial attire, balanced for tree defense and scouting.", "الزي الاحتفالي القياسي، متوازن للدفاع عن الشجرة واستكشاف الغابة.", "Стандартное церемониальное облачение для защиты древа.", "Atuendo ceremonial estándar para la defensa del árbol.", "Tenue cérémonielle standard pour la défense de l'arbre.", "Rituelle Standard-Kluft für die Baumverteidigung.", "मानक औपचारिक पोशाक, वृक्ष रक्षा के लिए संतुलित।", "标准礼仪战甲，攻防兼备，专为守护巨树远征打造。", "神木防衛と探索のために調和された標準儀礼装束。", "Traje cerimonial padrão para defender a árvore.", it: "Abito cerimoniale standard, bilanciato per la difesa dell'albero.", tr: "Ağaç savunması ve keşifler için dengelenmiş standart tören kıyafeti.", fa: "لباس تشریفاتی استاندارد، متعادل برای دفاع از درخت کهنسال و گشت‌زنی در بیشه.");
+            case 1:
+                return LanguageSelectionUI.Localize("Tempered armor forged from petrified sacred wood, bestowing boosted vitality.", "درع صلب مصنوع من خشب مقدس متحجر، يمنح حيوية قتالية معززة.", "Закаленные доспехи из священной древесины, увеличивающие здоровье.", "Armadura forjada con madera sagrada que otorga vitalidad.", "Armure forgée dans du bois sacré, conférant une vitalité accrue.", "Gehärtete Rüstung aus versteinertem heiligen Holz für mehr Vitalität.", "पवित्र लकड़ी से बना कवच, जो अतिरिक्त जीवन शक्ति प्रदान करता है।", "由石化神木锻造的强化重铠，赋予更加充沛的战斗生命力。", "石化神木から鍛造された強化鎧。戦闘での生命力を高める。", "Armadura temperada em madeira sagrada, concedendo mais vitalidade.", it: "Armatura temprata in legno sacro pietrificato, che conferisce maggiore vitalità.", tr: "Taşlaşmış kutsal ahşaptan dövülmüş, gelişmiş savaş dayanıklılığı sağlayan zırh.", fa: "زره آبدیده از چوب سنگ‌شده مقدس که استقامت و پایداری جنگی را افزایش می‌دهد.");
+            default:
+                return LanguageSelectionUI.Localize("Enchanted garments radiant with molten ember magic, amplifying offensive devastation.", "رداء مسحور مشع بسحر الحمم والشرار، يضاعف القوة الهجومية التدميرية.", "Одеяние с магией раскаленной лавы, усиливающее урон.", "Prendas encantadas con magia de lava que aumentan el daño.", "Vêtements enchantés aux braises, amplifiant la puissance d'attaque.", "Verzauberte Gewänder aus Glutmagie, die den Angriffsschaden verstärken.", "पिघले हुए अंगारे के जादू से बने वस्त्र, जो घातक हमले को बढ़ाते हैं।", "熔火炎芒附魔的烈焰祭袍，大幅增强每一次进攻的致命杀伤力。", "灼熱の溶岩魔力を宿した装束。攻撃の破壊力を大幅に増幅する。", "Vestes encantadas com magia de brasas, amplificando o dano.", it: "Vesti incantate radianti di magia ardente, che amplificano la distruzione.", tr: "Erimiş kor büyüsüyle parıldayan ve saldırı gücünü artıran efsunlu giysiler.", fa: "جامه‌ای افسون‌شده آکنده از جادوی گدازه‌های سوزان که قدرت تخریب حملات را به اوج می‌رساند.");
+        }
+    }
+
+    public static string GetLocalizedCharacterLore(string charName, CharacterData.CharacterRole role, CharacterCombat.AttackType attackType)
+    {
+        string n = (charName ?? "").ToLowerInvariant().Trim();
+        if (n.Contains("warrior") || n.Contains("knight") || n.Contains("paladin") || n.Contains("templar"))
+        {
+            return LanguageSelectionUI.Localize(
+                "A stalwart melee guardian of the colossal ancient tree, wielding enchanted martial arms and steadfast resolve to break enemy sieges and secure holy altars.",
+                ar: "فارس متمرس للشجرة القديمة العملاقة، يمتلك مهارات قتالية وسحراً مقدساً لكسر حصار الأعداء وحماية المذابح وقيادة الحملات نحو قمة الشجرة.",
+                ru: "Доблестный страж древнего древа, сокрушающий врагов в ближнем бою и защищающий святыни.",
+                fr: "Un vaillant gardien du corps-à-corps protégeant l'arbre colossal et repoussant les assauts ennemis.",
+                es: "Un valiente guardián cuerpo a cuerpo que defiende el árbol sagrado con armas encantadas.",
+                de: "Ein standhafter Nahkampfwächter des uralten Baumes mit verzauberten Waffen zur Verteidigung der heiligen Altäre.",
+                hi: "विशाल प्राचीन वृक्ष का एक निष्ठावान संरक्षक, जो पवित्र वेदियों की रक्षा करता है।",
+                zh: "参天古树的百战勇士，披坚执锐粉碎敌军围攻，誓死捍卫神圣圣坛。",
+                ja: "巨大なる神木の屈強な守護者。聖なる武具を手に敵の包囲を破り、祭壇を死守する。",
+                pt: "Um valoroso guardião corpo a corpo que defende a árvore colossal com armas encantadas.",
+                it: "Un valoroso guardiano da mischia dell'albero colossale, usa armi incantate per difendere gli altari sacri.",
+                tr: "Devasa kutsal ağacın metanetli yakın dövüş muhafızı, kutsal sunakları korumak için savaşa liderlik eder.",
+                fa: "نگهبان دلاور نبرد نزدیک درخت کهنسال و غول‌پیکر با سلاح‌های افسون‌شده برای شکستن محاصره دشمن و دفاع از محراب‌های مقدس."
+            );
+        }
+        else if (n.Contains("mage") || n.Contains("elementalist") || n.Contains("enchantress") || n.Contains("necromancer"))
+        {
+            return LanguageSelectionUI.Localize(
+                "A master of mystic arcane surges, unleashing torrents of primordial elements and spellcraft to devastate rivals from a safe distance.",
+                ar: "سيد السحر والعناصر القديمة، يطلق صواعق سحرية وطاقات مدمرة لسحق صفوف الأعداء عن بعد والتحكم بمجريات المعركة.",
+                ru: "Мастер древней магии, обрушивающий стихии на врагов с безопасного расстояния.",
+                fr: "Un maître des arcanes mystiques déchaînant les éléments pour ravager les rangs ennemis.",
+                es: "Un maestro del poder arcano que desata los elementos para arrasar a los rivales desde lejos.",
+                de: "Ein Meister arkaner Strömungen, der urzeitliche Elemente entfesselt, um Feinde aus der Ferne zu vernichten.",
+                hi: "रहस्यमयी जादुई शक्तियों का स्वामी, जो दूर से ही दुश्मनों पर भारी प्रहार करता है।",
+                zh: "掌控远古奥术与自然元素的秘术贤者，于千里之外倾泻法术狂澜倾覆战场。",
+                ja: "秘術の奔流を操る大魔導士。太古の元素魔法を放ち、遠距離から敵陣を灰燼に帰す。",
+                pt: "Um mestre das correntes arcanas que canaliza os elementos para devastar inimigos à distância.",
+                it: "Un maestro dei flussi arcani, scatena elementi primordiali per devastare i rivali a distanza di sicurezza.",
+                tr: "Uzak mesafeden rakipleri yok etmek için ilkel elementleri ve büyü sanatını serbest bırakan gizemli usta.",
+                fa: "استاد امواج جادویی که سیلابی از عناصر باستانی و طلسم‌ها را برای نابودی دشمنان از فاصله‌ای امن به راه می‌اندازد."
+            );
+        }
+        else if (n.Contains("archer") || n.Contains("ranger") || n.Contains("windwalker"))
+        {
+            return LanguageSelectionUI.Localize(
+                "A swift sharpshooter navigating high branches with supreme agility, delivering piercing arrows and tactical strikes across the canopy.",
+                ar: "رامٍ سريع وقناص يتنقل بين أغصان الشجرة ببراعة وخفة فائقة، يسدد سهاماً خارقة وضربات تكتيكية حاسمة.",
+                ru: "Меткий стрелок, перемещающийся по кронам с непревзойденной ловкостью и поражающий цели издалека.",
+                fr: "Un tireur d'élite agile traversant la canopée pour décocher des flèches perçantes.",
+                es: "Un veloz arquero que recorre las ramas altas con gran agilidad y dispara flechas certeras.",
+                de: "Ein flinker Scharfschütze, der mit höchster Wendigkeit durch die Baumkrone gleitet und tödliche Pfeile schießt.",
+                hi: "एक तीव्र निशानेबाज जो विशाल वृक्ष की शाखाओं पर फुर्ती से चलता है और अचूक तीर चलाता है।",
+                zh: "穿梭于参天树冠的神射游侠，身形鬼魅，以致命的穿甲箭雨锁定敌首胜局。",
+                ja: "木々の間を素早く駆け巡る名射手。天上の梢から必中の矢を放ち、戦況を支配する。",
+                pt: "Um atirador veloz que percorre os galhos altos com suprema agilidade e precisão mortal.",
+                it: "Un agile tiratore scelto che attraversa i rami alti con agilità suprema, scoccando frecce perforanti.",
+                tr: "Ağaç tepelerinde üstün çeviklikle ilerleyen, delici oklar ve taktiksel vuruşlar yapan usta okçu.",
+                fa: "تک‌تیراندازی تیزپا که با چابکی خیره‌کننده بر شاخه‌های بلند می‌جهد و تیرهای شکافنده و ضربات تعیین‌کننده فرود می‌آورد."
+            );
+        }
+        else if (n.Contains("tank") || n.Contains("ironclad"))
+        {
+            return LanguageSelectionUI.Localize(
+                "An immovable colossus encased in heavy enchanted plate, absorbing monstrous blows and anchoring the frontline at all costs.",
+                ar: "صخرة دفاعية منيعة ترتدي دروعاً حديدية ثقيلة، يمتص أعتى ضربات الأعداء والزعماء ويصمد في الخط الأمامي لضمان النصر.",
+                ru: "Несокрушимый исполин в тяжелой броне, принимающий на себя удары врагов и удерживающий строй.",
+                fr: "Un colosse inébranlable en armure lourde absorbant les chocs et tenant la ligne de front.",
+                es: "Un coloso inamovible con armadura pesada que absorbe los golpes enemigos y lidera el frente.",
+                de: "Ein unerschütterlicher Koloss in schwerer Rüstung, der gewaltige Schläge abfängt und die Front hält.",
+                hi: "भारी कवच में ढका एक अडिग विशाल रक्षक, जो शत्रुओं के भीषण वार को झेलता है।",
+                zh: "身披重甲如壁立千仞的磐石要塞，稳立前线抵挡强敌与泰坦首领的惊涛狂澜。",
+                ja: "重厚な装甲を纏った不屈の巨神。あらゆる強撃を受け止め、最前線を死守する防壁。",
+                pt: "Um colosso inabalável em armadura pesada, absorvendo impactos e mantendo a linha de frente.",
+                it: "Un colosso inamovibile avvolto in pesanti piastre, assorbe i colpi più duri e guida la prima linea.",
+                tr: "Ağır zırhlara bürünmüş sarsılmaz bir dev, en sert darbeleri karşılayıp ön safları tutar.",
+                fa: "غول شکست‌ناپذیری پوشیده در زره‌های سنگین که سهمگین‌ترین ضربات دشمنان را دفع می‌کند و پایدار در خط مقدم می‌ماند."
+            );
+        }
+        else if (n.Contains("assassin") || n.Contains("rogue") || n.Contains("shadowblade"))
+        {
+            return LanguageSelectionUI.Localize(
+                "A deadly shadow blade striking with lightning speed from behind, exploiting weak points to eliminate high-value targets instantly.",
+                ar: "محارب ظل قاتل يضرب بسرعة البرق من المباغتة، يستغل نقاط الضعف لحسم القتل في اللحظة المناسبة ثم الانسحاب برشاقة.",
+                ru: "Смертоносный клинок из тени, наносящий молниеносные удары в уязвимые места противника.",
+                fr: "Une lame de l'ombre mortelle frappant à la vitesse de l'éclair pour abattre les cibles clés.",
+                es: "Un asesino de las sombras que ataca a velocidad fulminante para eliminar objetivos prioritarios.",
+                de: "Eine tödliche Schattenklinge, die blitzschnell aus dem Hinterhalt zuschlägt und Schwachstellen ausnutzt.",
+                hi: "छाया से वार करने वाला एक घातक शिकारी, जो बिजली की गति से दुश्मनों का खात्मा करता है।",
+                zh: "遁入阴影的致命影刃，以雷霆万钧之势突刺敌阵弱点，瞬息间收割战局关键要害。",
+                ja: "影より出でて迅雷の如く急所を突く暗殺者。一撃で重要拠点の敵を葬り去る。",
+                pt: "Uma lâmina sombria letal atacando com a velocidade da luz para eliminar alvos prioritários.",
+                it: "Una letale lama d'ombra che colpisce con velocità fulminea, sfruttando i punti deboli dei rivali.",
+                tr: "Gölgelerden yıldırım hızıyla vuran, zayıf noktaları hedef alarak kilit hedefleri anında eleyen suikastçı.",
+                fa: "تیغه مرگبار سایه‌ها که با سرعت آذرخش از کمینگاه حمله می‌برد و با ضربه زدن به نقاط حساس، اهداف را از پای درمی‌آورد."
+            );
+        }
+        else if (n.Contains("druid") || n.Contains("shaman") || n.Contains("cleric") || n.Contains("alchemist"))
+        {
+            return LanguageSelectionUI.Localize(
+                "A sacred spiritual conduit channeling forest life essence to mend companions, empower tree defenses, and turn the tide of war.",
+                ar: "وسيط روحي مقدّس يسخر طاقة الغابة الحيوية لشفاء الحلفاء، تعزيز دروع الشجرة، وقلب موازين المعركة.",
+                ru: "Хранитель природных сил, исцеляющий союзников и укрепляющий защиту священного древа.",
+                fr: "Un guide spirituel canalisant la sève vitale pour soigner ses alliés et renforcer le grand arbre.",
+                es: "Un guía espiritual que canaliza la fuerza del bosque para curar aliados y reforzar el árbol.",
+                de: "Ein spiritueller Heiler, der die Lebenskraft des Hains leitet, um Gefährten zu heilen und den Baum zu stärken.",
+                hi: "वन की जीवन ऊर्जा को प्रवाहित करने वाला पवित्र साधक, जो साथियों को ठीक करता है।",
+                zh: "连接大地生机的自然灵修贤者，呼唤远古甘霖治愈同袍，赋予神木生生不息的护佑。",
+                ja: "大自然の生命力を操る導き手。仲間の傷を癒やし、神木の防壁を強化して戦局を覆す。",
+                pt: "Um canalizador espiritual que usa a essência da floresta para curar aliados e fortalecer a árvore.",
+                it: "Un condotto spirituale che incanala l'essenza della foresta per curare gli alleati e difendere l'albero.",
+                tr: "Müttefikleri iyileştirmek ve ağaç savunmasını güçlendirmek için orman yaşam enerjisini yönlendiren ruhani rehber.",
+                fa: "واسطه‌ای معنوی که جوهره حیات جنگل را برای درمان یاران و تقویت پایداری درخت به کار می‌بندد."
+            );
+        }
+        else
+        {
+            return LanguageSelectionUI.Localize(
+                "A seasoned guardian of the colossal ancient tree, harnessing primordial magic and martial prowess to defend sacred altars and lead expeditions to the apex canopy.",
+                ar: "حارس متمرس للشجرة القديمة العملاقة، يمتلك مهارات قتالية وسحراً مقدساً لحماية المذابح وقيادة الحملات نحو قمة الشجرة.",
+                ru: "Опытный страж древнего исполинского древа, защищающий священные алтари и ведущий походы к вершинам кроны.",
+                fr: "Un gardien aguerri de l'arbre colossal ancestral, défendant les autels sacrés et guidant les expéditions.",
+                es: "Un experimentado guardián del árbol antiguo colosal, defensor de los altares sagrados.",
+                de: "Ein erfahrener Wächter des kolossalen alten Baumes, der heilige Altäre verteidigt und Expeditionen anführt.",
+                hi: "विशाल प्राचीन वृक्ष का एक अनुभवी संरक्षक, जो पवित्र वेदियों की रक्षा करता है।",
+                zh: "巨树古国的资深守护者，运用神圣法力捍卫祭坛并引领登顶远征。",
+                ja: "巨大な古樹の熟練の守護者。聖なる祭壇を守り、頂上への遠征を導く。",
+                pt: "Um guardião veterano da colossal árvore antiga, defendendo os altares sagrados.",
+                it: "Un esperto guardiano dell'albero antico colossale, difensore degli altari sacri e guida delle spedizioni.",
+                tr: "Kutsal sunakları korumak ve zirveye giden seferleri yönetmek için kadim güçleri kullanan tecrübeli muhafız.",
+                fa: "نگهبانی باتجربه از درخت کهنسال و غول‌پیکر که از محراب‌های مقدس محافظت می‌کند و راهبر نبردهاست."
+            );
+        }
     }
 }
