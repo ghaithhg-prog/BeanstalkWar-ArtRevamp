@@ -439,6 +439,128 @@ public class LanguageSelectionUI : MonoBehaviour
         SetLang("SOUND: MUTED", "SUONO: MUTO", "SES: KAPALI");
         SetLang("RETURN TO MAIN MENU", "TORNA AL MENU PRINCIPALE", "ANA MENÜYE DÖN");
         SetLang("QUIT GAME", "ESCI DAL GIOCO", "OYUNDAN ÇIK");
+
+        // --- Authentic Persian (فارسی) Comprehensive Translations ---
+        void SetLangFa(string en, string fa)
+        {
+            if (masterDict.TryGetValue(en, out var dict))
+            {
+                dict["fa"] = fa;
+            }
+        }
+
+        SetLangFa("THE SACRED BEANSTALK: FOREST WAR", "نبرد ساقه لوبیا مقدس: جنگ جنگل");
+        SetLangFa("Inscribed on Ancient Oak Bark Two Millennia Past", "حک شده بر پوست بلوط کهن از دو هزار سال پیش");
+        SetLangFa("OFFLINE EXPEDITION (SOLO vs BOTS)", "نبرد آفلاین (تک‌نفره با ربات‌ها)");
+        SetLangFa("REALM EXPEDITION (ONLINE MULTIPLAYER)", "نبرد آنلاین (چند نفره)");
+        SetLangFa("TRIBE SANCTUARY (FRIENDLY LOBBY)", "پناهگاه قبیله (لابی دوستانه)");
+        SetLangFa("ENTER GROVE", "ورود به بیشه");
+        SetLangFa("EMBARK ONLINE", "آغاز آنلاین");
+        SetLangFa("GATHER TRIBE", "ایجاد لابی");
+
+        SetLangFa("TREE PROTECTORS", "محافظان درخت");
+        SetLangFa("TREE DESTROYERS", "نابودکنندگان درخت");
+        SetLangFa("GUARDIANS OF LIFE", "نگهبانان زندگی");
+        SetLangFa("AXEMEN OF CHAOS", "تبرداران آشوب");
+        SetLangFa("BECOME A PROTECTOR", "پیوستن به محافظان");
+        SetLangFa("BECOME A DESTROYER", "پیوستن به نابودکنندگان");
+        SetLangFa("SACRED ALLEGIANCE: CHOOSE THY PATH", "وفاداری مقدس: مسیر خود را برگزینید");
+
+        SetLangFa("FOREST GOLIATH [LV 1]", "غول جنگل [سطح ۱]");
+        SetLangFa("INFERNO TITAN [LV 2]", "تایتان دوزخ [سطح ۲]");
+        SetLangFa("ANCIENT OVERLORD [LV 3]", "فرمانروای باستانی [سطح ۳]");
+
+        SetLangFa("ALL 3 GUARDIAN BOSSES HAVE BEEN DEFEATED!", "هر ۳ غول نگهبان کاملاً شکست خوردند!");
+        SetLangFa("YOU CAN NOW DESTROY THE SACRED TREE!", "اکنون می‌توانید درخت مقدس را نابود کنید!");
+        SetLangFa("THE CRYSTAL IS READY — YOU CAN TAKE IT NOW!", "بلور آماده است — اکنون می‌توانید آن را بردارید!");
+        SetLangFa("TREE SHIELD ACTIVE", "سپر محافظ درخت فعال است");
+
+        SetLangFa("START GAME", "شروع بازی");
+        SetLangFa("CLOSE", "بستن");
+        SetLangFa("BATTLE AGAIN", "نبرد دوباره");
+        SetLangFa("RETURN TO GROVE", "بازگشت به بیشه");
+        SetLangFa("COMMENCE EXPEDITION", "آغاز ماجراجویی");
+        SetLangFa("CONFIRM HERO", "تأیید قهرمان");
+        SetLangFa("EQUIP", "تجهیز");
+        SetLangFa("EQUIPPED", "مجهز شد");
+        SetLangFa("CLAIM", "دریافت");
+        SetLangFa("SELECT", "انتخاب");
+        SetLangFa("SELECTED", "انتخاب شد");
+        SetLangFa("PREVIOUS", "قبلی");
+        SetLangFa("NEXT", "بعدی");
+
+        SetLangFa("Warrior", "جنگجو");
+        SetLangFa("Mage", "جادوگر");
+        SetLangFa("Archer", "کماندار");
+        SetLangFa("Tank", "زره‌پوش");
+        SetLangFa("Assassin", "قاتل");
+        SetLangFa("Bomber", "بمب‌انداز");
+        SetLangFa("Druid", "دروید");
+        SetLangFa("Berserker", "جنگجوی خشمگین");
+        SetLangFa("Paladin", "شوالیه مقدس");
+        SetLangFa("Ranger", "تکاور جنگل");
+        SetLangFa("Necromancer", "احضارگر ارواح");
+        SetLangFa("Shaman", "شمن");
+        SetLangFa("Rogue", "راه‌زن");
+        SetLangFa("Cleric", "روحانی");
+        SetLangFa("Elementalist", "استاد عناصر");
+        SetLangFa("Barbarian", "بربر");
+        SetLangFa("Enchantress", "افسونگر");
+        SetLangFa("Knight", "شوالیه");
+        SetLangFa("Alchemist", "کیمیاگر");
+        SetLangFa("Summoner", "احضارکننده");
+        SetLangFa("Beastmaster", "رام‌کننده هیولا");
+        SetLangFa("Templar", "شوالیه معبد");
+        SetLangFa("Shadowblade", "تیغه سایه");
+        SetLangFa("Windwalker", "بادپیما");
+        SetLangFa("Ironclad", "پولادین");
+
+        SetLangFa("TANK", "زره‌پوش");
+        SetLangFa("DAMAGE", "حمله");
+        SetLangFa("SUPPORT", "پشتیبان");
+        SetLangFa("CONTROL", "مهارکننده");
+        SetLangFa("SPECIALIST", "متخصص");
+        SetLangFa("HERO", "قهرمان");
+        SetLangFa("HP", "سلامت");
+        SetLangFa("ATK", "حمله");
+        SetLangFa("SPD", "سرعت");
+        SetLangFa("RNG", "برد");
+        SetLangFa("COOLDOWN", "زمان بازیابی");
+        SetLangFa("JUMP", "پرش");
+        SetLangFa("Close-Range Melee", "نبرد نزدیک");
+        SetLangFa("Ranged Projectile", "پرتاب از دور");
+
+        SetLangFa("Acorns", "بلوط‌ها");
+        SetLangFa("Gems", "گوهرها");
+        SetLangFa("Emporium", "فروشگاه");
+        SetLangFa("Gift", "هدیه");
+        SetLangFa("BACK", "بازگشت");
+        SetLangFa("BACK TO MODES", "بازگشت به حالت‌ها");
+        SetLangFa("BACK TO TEAMS", "بازگشت به تیم‌ها");
+        SetLangFa("LEAVE LOBBY", "ترک لابی");
+        SetLangFa("CHANGE LANGUAGE", "تغییر زبان");
+        SetLangFa("RESUME MATCH", "ادامه نبرد");
+        SetLangFa("PAUSE & SETTINGS", "توقف و تنظیمات");
+        SetLangFa("AUDIO & SOUND", "صدا و جلوه‌ها");
+        SetLangFa("SOUND: ON", "صدا: روشن");
+        SetLangFa("SOUND: MUTED", "صدا: خاموش");
+        SetLangFa("RETURN TO MAIN MENU", "بازگشت به منوی اصلی");
+        SetLangFa("QUIT GAME", "خروج از بازی");
+
+        SetLangFa("SACRED ALTAR", "محراب مقدس");
+        SetLangFa("✦ SACRED ALTAR ✦", "✦ محراب مقدس ✦");
+        SetLangFa("ALTAR", "محراب");
+        SetLangFa("Protector", "حامی");
+        SetLangFa("Destroyer", "نابودکننده");
+        SetLangFa("HERO & CLASS", "قهرمان و رده");
+        SetLangFa("TEAM", "تیم");
+        SetLangFa("KILLS", "کشته‌ها");
+        SetLangFa("DEATHS", "مرگ‌ها");
+        SetLangFa("DAMAGE", "آسیب");
+        SetLangFa("BOSS", "غول");
+        SetLangFa("CRYSTAL", "بلور");
+        SetLangFa("SCORE", "امتیاز");
+        SetLangFa("⭐ YES", "⭐ بله");
     }
 
     #endregion
@@ -749,32 +871,49 @@ public class LanguageSelectionUI : MonoBehaviour
                 }
                 break;
 
-            case "en": // English / UK & US (Red & White stripes with Navy canton)
+            case "en": // United Kingdom / British Union Jack
             default:
-                Color usNavy = new Color(0.05f, 0.12f, 0.38f);
-                Color usRed = new Color(0.85f, 0.12f, 0.15f);
-                Color usWhite = Color.white;
+                Color ukBlue = new Color(0.01f, 0.14f, 0.42f);   // Deep Navy / Royal Blue
+                Color ukRed = new Color(0.82f, 0.11f, 0.15f);    // St. George & St. Patrick Red
+                Color ukWhite = Color.white;                     // St. Andrew & Cross White
+
                 for (int y = 0; y < h; y++)
                 {
-                    Color stripe = (y % 4 < 2) ? usRed : usWhite;
                     for (int x = 0; x < w; x++)
                     {
-                        if (x < 15 && y >= 11)
+                        Color c = ukBlue;
+
+                        // Diagonals: aspect ratio is 36 / 24 = 3 / 2
+                        // Diagonal 1: 2*x - 3*y - 0.5 = 0
+                        // Diagonal 2: 2*x + 3*y - 69.5 = 0
+                        float d1 = Mathf.Abs(2f * x - 3f * y - 0.5f);
+                        float d2 = Mathf.Abs(2f * x + 3f * y - 69.5f);
+
+                        // White Saltire (St. Andrew)
+                        if (d1 <= 6.5f || d2 <= 6.5f)
                         {
-                            // Canton with star pinpoints
-                            if ((x % 3 == 1) && (y % 3 == 1))
-                            {
-                                pixels[y * w + x] = usWhite;
-                            }
-                            else
-                            {
-                                pixels[y * w + x] = usNavy;
-                            }
+                            c = ukWhite;
                         }
-                        else
+
+                        // Red Saltire (St. Patrick)
+                        if (d1 <= 2.8f || d2 <= 2.8f)
                         {
-                            pixels[y * w + x] = stripe;
+                            c = ukRed;
                         }
+
+                        // St. George's White Cross (border)
+                        if ((x >= 14 && x <= 21) || (y >= 8 && y <= 15))
+                        {
+                            c = ukWhite;
+                        }
+
+                        // St. George's Red Cross (center)
+                        if ((x >= 16 && x <= 19) || (y >= 10 && y <= 13))
+                        {
+                            c = ukRed;
+                        }
+
+                        pixels[y * w + x] = c;
                     }
                 }
                 break;

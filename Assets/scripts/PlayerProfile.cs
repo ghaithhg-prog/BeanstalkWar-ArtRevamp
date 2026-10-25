@@ -108,7 +108,17 @@ public class PlayerProfile : MonoBehaviour
         SaveProfile();
         if (!string.IsNullOrEmpty(reason))
         {
-            OnRewardNotification?.Invoke($"+{amount} 🪙 Coins ({reason})");
+            OnRewardNotification?.Invoke($"+{amount} 🌰 Acorns ({reason})");
+        }
+    }
+
+    public void DeductCoins(int amount, string reason = "")
+    {
+        Coins = Mathf.Max(0, Coins - amount);
+        SaveProfile();
+        if (!string.IsNullOrEmpty(reason))
+        {
+            OnRewardNotification?.Invoke($"-{amount} 🌰 Acorns ({reason})");
         }
     }
 

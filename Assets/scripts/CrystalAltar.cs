@@ -782,26 +782,9 @@ public class CrystalAltar : NetworkBehaviour
             Debug.LogWarning($"[CrystalAltar] TriggerCelebratoryExplosiveGrowth exception: {ex}");
         }
 
-        // 4. Notify GameStateManager immediately
-        try
-        {
-            if (GameStateManager.Instance != null)
-            {
-                GameStateManager.Instance.EndGame("Protectors");
-            }
-            else
-            {
-                MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogWarning($"[CrystalAltar] EndGame exception: {ex}");
-            MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
-        }
-
-        // 5. Show Post-Match Statistics Screen after brief celebration
-        StartCoroutine(ShowVictoryScreenDelayed(3.2f));
+        // 4. Begin Grand 5.2-Second Divine Victory Celebration (Sky Pillars, Golden Petals Raining, Flowers Blooming, Butterflies)
+        // Only AFTER the full celebration completes will GameStateManager and the Scoreboard be shown!
+        StartCoroutine(ProtectorVictoryCelebrationRoutine(carrier));
     }
 
     void OnGUI()
@@ -886,16 +869,211 @@ public class CrystalAltar : NetworkBehaviour
         GUI.Label(new Rect(boxX, boxY + 46f, boxW, 18f), sub, subStyle);
     }
 
-    IEnumerator ShowVictoryScreenDelayed(float delay)
+    IEnumerator ProtectorVictoryCelebrationRoutine(GameObject carrier)
     {
-        yield return new WaitForSeconds(delay);
+        Vector3 altarPos = transform.position;
+
+        // 1. Massive Holy Sky Light Pillar
+        GameObject skyPillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        skyPillar.name = "VictoryHolyLightPillar";
+        DestroyCollider(skyPillar);
+        skyPillar.transform.position = altarPos + Vector3.up * 40f;
+        skyPillar.transform.localScale = new Vector3(9f, 40f, 9f);
+
+        Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit") 
+                          ?? Shader.Find("Unlit/Transparent") 
+                          ?? Shader.Find("Standard");
+        Material pillarMat = new Material(unlitShader);
+        pillarMat.color = new Color(1.0f, 0.92f, 0.40f, 0.45f);
+        skyPillar.GetComponent<Renderer>().material = pillarMat;
+
+        GameObject holyLightObj = new GameObject("VictoryHeavenlyLight");
+        Light holyLight = holyLightObj.AddComponent<Light>();
+        holyLight.type = LightType.Point;
+        holyLight.color = new Color(1.0f, 0.95f, 0.65f);
+        holyLight.intensity = 14.0f;
+        holyLight.range = 85f;
+        holyLightObj.transform.position = altarPos + Vector3.up * 10f;
+
+        // 2. Blooming Floral Meadow: 20 blooming colorful flowers sprouting out of the earth
+        GameObject flowerGroup = new GameObject("CelebratoryBloomingMeadow");
+        flowerGroup.transform.position = altarPos;
+        List<Transform> flowers = new List<Transform>();
+
+        Color[] flowerColors = new Color[]
+        {
+            new Color(1f, 0.22f, 0.38f),  // Rose
+            new Color(1f, 0.88f, 0.12f),  // Golden buttercup
+            new Color(0.35f, 0.82f, 1f),  // Sky blue orchid
+            new Color(0.92f, 0.45f, 1f),  // Violet lily
+            new Color(1f, 0.55f, 0.12f)   // Bright marigold
+        };
+
+        Material stemMat = new Material(unlitShader);
+        stemMat.color = new Color(0.18f, 0.72f, 0.22f);
+
+        for (int i = 0; i < 20; i++)
+        {
+            float ang = (float)i / 20f * Mathf.PI * 2f;
+            float r = Random.Range(3.2f, 7.5f);
+            Vector3 fPos = altarPos + new Vector3(Mathf.Cos(ang) * r, 0f, Mathf.Sin(ang) * r);
+
+            GameObject flower = new GameObject($"Flower_{i}");
+            flower.transform.SetParent(flowerGroup.transform);
+            flower.transform.position = fPos;
+            flower.transform.localScale = Vector3.zero;
+
+            GameObject stem = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            DestroyCollider(stem);
+            stem.transform.SetParent(flower.transform);
+            stem.transform.localPosition = new Vector3(0, 0.45f, 0);
+            stem.transform.localScale = new Vector3(0.08f, 0.45f, 0.08f);
+            stem.GetComponent<Renderer>().material = stemMat;
+
+            Material petalMat = new Material(unlitShader);
+            petalMat.color = flowerColors[i % flowerColors.Length];
+
+            GameObject petalSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            DestroyCollider(petalSphere);
+            petalSphere.transform.SetParent(flower.transform);
+            petalSphere.transform.localPosition = new Vector3(0, 0.95f, 0);
+            petalSphere.transform.localScale = new Vector3(0.48f, 0.38f, 0.48f);
+            petalSphere.GetComponent<Renderer>().material = petalMat;
+
+            flowers.Add(flower.transform);
+        }
+
+        // 3. Falling Golden Motes & Shimmering Flower Petals from Sky
+        GameObject petalGroup = new GameObject("CelebratoryFallingPetals");
+        petalGroup.transform.position = altarPos;
+        List<Transform> petals = new List<Transform>();
+        List<float> petalSpeeds = new List<float>();
+
+        for (int i = 0; i < 30; i++)
+        {
+            GameObject petal = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            DestroyCollider(petal);
+            petal.transform.SetParent(petalGroup.transform);
+            float px = Random.Range(-14f, 14f);
+            float pz = Random.Range(-14f, 14f);
+            float py = Random.Range(18f, 40f);
+            petal.transform.position = altarPos + new Vector3(px, py, pz);
+            petal.transform.localScale = new Vector3(Random.Range(0.28f, 0.52f), Random.Range(0.28f, 0.52f), 1f);
+            petal.transform.rotation = Quaternion.Euler(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
+
+            Material pMat = new Material(unlitShader);
+            pMat.color = (i % 2 == 0) ? new Color(1.0f, 0.92f, 0.35f, 0.88f) : new Color(1.0f, 0.60f, 0.80f, 0.88f);
+            petal.GetComponent<Renderer>().material = pMat;
+
+            petals.Add(petal.transform);
+            petalSpeeds.Add(Random.Range(3.8f, 6.5f));
+        }
+
+        // 4. Fluttering Glowing Butterflies Spiraling Upwards
+        GameObject butterflyGroup = new GameObject("CelebratoryButterflies");
+        butterflyGroup.transform.position = altarPos;
+        List<Transform> butterflies = new List<Transform>();
+        List<float> bPhases = new List<float>();
+        List<float> bRadii = new List<float>();
+
+        for (int i = 0; i < 12; i++)
+        {
+            GameObject bObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            DestroyCollider(bObj);
+            bObj.transform.SetParent(butterflyGroup.transform);
+            bObj.transform.position = altarPos + Vector3.up * 1f;
+            bObj.transform.localScale = new Vector3(0.35f, 0.22f, 0.35f);
+
+            Material bMat = new Material(unlitShader);
+            bMat.color = flowerColors[i % flowerColors.Length];
+            bObj.GetComponent<Renderer>().material = bMat;
+
+            butterflies.Add(bObj.transform);
+            bPhases.Add((float)i / 12f * Mathf.PI * 2f);
+            bRadii.Add(Random.Range(2.2f, 5.0f));
+        }
+
+        float celebrationDuration = 5.2f;
+        float elapsed = 0f;
+
+        while (elapsed < celebrationDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / celebrationDuration;
+
+            if (skyPillar != null)
+            {
+                skyPillar.transform.Rotate(0f, 25f * Time.deltaTime, 0f);
+                float alphaPulse = 0.35f + Mathf.Sin(elapsed * 4.5f) * 0.15f;
+                pillarMat.color = new Color(1.0f, 0.92f, 0.40f, alphaPulse);
+            }
+
+            if (holyLight != null)
+            {
+                holyLight.intensity = 11f + Mathf.Sin(elapsed * 5f) * 4f;
+            }
+
+            float bloomT = Mathf.Clamp01(elapsed / 1.8f);
+            float smoothBloom = Mathf.SmoothStep(0f, 1f, bloomT);
+            for (int i = 0; i < flowers.Count; i++)
+            {
+                if (flowers[i] != null)
+                {
+                    flowers[i].localScale = Vector3.one * (smoothBloom * 1.15f);
+                }
+            }
+
+            for (int i = 0; i < petals.Count; i++)
+            {
+                if (petals[i] != null)
+                {
+                    petals[i].position += Vector3.down * petalSpeeds[i] * Time.deltaTime;
+                    petals[i].Rotate(45f * Time.deltaTime, 60f * Time.deltaTime, 30f * Time.deltaTime);
+                    if (petals[i].position.y < altarPos.y)
+                    {
+                        petals[i].position = altarPos + new Vector3(Random.Range(-14f, 14f), Random.Range(28f, 38f), Random.Range(-14f, 14f));
+                    }
+                }
+            }
+
+            for (int i = 0; i < butterflies.Count; i++)
+            {
+                if (butterflies[i] != null)
+                {
+                    float angle = bPhases[i] + elapsed * 2.2f;
+                    float bY = altarPos.y + 0.8f + (elapsed * 3.4f) + Mathf.Sin(elapsed * 6f + i) * 0.4f;
+                    float bx = altarPos.x + Mathf.Cos(angle) * bRadii[i];
+                    float bz = altarPos.z + Mathf.Sin(angle) * bRadii[i];
+                    butterflies[i].position = new Vector3(bx, bY, bz);
+                    float flap = 0.22f + Mathf.Abs(Mathf.Sin(elapsed * 20f + i)) * 0.22f;
+                    butterflies[i].localScale = new Vector3(flap, 0.2f, flap);
+                }
+            }
+
+            yield return null;
+        }
+
+        if (skyPillar != null) Destroy(skyPillar);
+        if (holyLightObj != null) Destroy(holyLightObj);
+        if (flowerGroup != null) Destroy(flowerGroup);
+        if (petalGroup != null) Destroy(petalGroup);
+        if (butterflyGroup != null) Destroy(butterflyGroup);
+
         try
         {
-            MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
+            if (GameStateManager.Instance != null)
+            {
+                GameStateManager.Instance.EndGame("Protectors");
+            }
+            else
+            {
+                MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
+            }
         }
         catch (System.Exception ex)
         {
-            Debug.LogWarning($"[CrystalAltar] ShowVictoryScreen exception: {ex}");
+            Debug.LogWarning($"[CrystalAltar] EndGame exception: {ex}");
+            MatchEndStatsUI.Instance?.ShowVictoryScreen("Protectors");
         }
     }
 

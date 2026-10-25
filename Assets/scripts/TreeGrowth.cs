@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class TreeGrowth : MonoBehaviour
 {
@@ -587,8 +588,8 @@ public class TreeGrowth : MonoBehaviour
         SpawnGroundImpactShockwave(pivot.position, 90f);
         SpawnCollapseDebris(pivot.position + fallAxis * 20f, 25);
 
-        // وقفة سينمائية قصيرة لمشاهدة ركام الشجرة الهائلة
-        yield return new WaitForSeconds(0.9f);
+        // وقفة سينمائية مهيبة: الاحتفال الكارثي بسقوط الشجرة، أمطار النيازك والنيران المشتعلة (5.2 ثوانٍ)
+        yield return StartCoroutine(ApocalypticDestructionCelebrationRoutine(pivot.position, fallAxis));
 
         isCollapsingBannerActive = false;
 
@@ -601,6 +602,107 @@ public class TreeGrowth : MonoBehaviour
         {
             MatchEndStatsUI.Instance?.ShowVictoryScreen("Destroyers");
         }
+    }
+
+    System.Collections.IEnumerator ApocalypticDestructionCelebrationRoutine(Vector3 treePos, Vector3 fallAxis)
+    {
+        // 1. Spooky Chaotic Dark Hellfire Light over Fallen Tree
+        GameObject voidLightObj = new GameObject("ApocalypticVoidLight");
+        Light voidLight = voidLightObj.AddComponent<Light>();
+        voidLight.type = LightType.Point;
+        voidLight.color = new Color(1.0f, 0.22f, 0.08f);
+        voidLight.intensity = 13.0f;
+        voidLight.range = 85f;
+        voidLightObj.transform.position = treePos + Vector3.up * 8f;
+
+        Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit") 
+                          ?? Shader.Find("Unlit/Transparent") 
+                          ?? Shader.Find("Standard");
+
+        // 2. Chaotic Fire clusters along fallen trunk
+        GameObject flameGroup = new GameObject("ApocalypticChaosFlames");
+        flameGroup.transform.position = treePos;
+        List<Transform> flameEmberList = new List<Transform>();
+
+        Material flameMat = new Material(unlitShader);
+        flameMat.color = new Color(1f, 0.35f, 0.05f, 0.9f);
+
+        for (int i = 0; i < 18; i++)
+        {
+            GameObject fObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Collider c = fObj.GetComponent<Collider>();
+            if (c != null) Destroy(c);
+            fObj.transform.SetParent(flameGroup.transform);
+            Vector3 flamePos = treePos + fallAxis * (i * 2.2f) + new Vector3(Random.Range(-2.2f, 2.2f), Random.Range(0.5f, 3.5f), Random.Range(-2.2f, 2.2f));
+            fObj.transform.position = flamePos;
+            fObj.transform.localScale = Vector3.one * Random.Range(0.6f, 1.4f);
+            fObj.GetComponent<Renderer>().material = flameMat;
+            flameEmberList.Add(fObj.transform);
+        }
+
+        Material meteorMat = new Material(unlitShader);
+        meteorMat.color = new Color(1.0f, 0.45f, 0.1f);
+
+        float celebrationDuration = 5.2f;
+        float elapsed = 0f;
+        float nextMeteorTime = 0.1f;
+
+        while (elapsed < celebrationDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            if (voidLight != null)
+            {
+                voidLight.intensity = 9f + Mathf.Sin(elapsed * 6f) * 4f;
+                voidLight.color = Color.Lerp(new Color(1f, 0.2f, 0.05f), new Color(0.85f, 0.05f, 0.4f), Mathf.PingPong(elapsed * 2f, 1f));
+            }
+
+            for (int i = 0; i < flameEmberList.Count; i++)
+            {
+                if (flameEmberList[i] != null)
+                {
+                    float s = 0.8f + Mathf.Sin(elapsed * 12f + i) * 0.4f;
+                    flameEmberList[i].localScale = new Vector3(s, s * 1.5f, s);
+                }
+            }
+
+            if (elapsed >= nextMeteorTime)
+            {
+                nextMeteorTime = elapsed + Random.Range(0.25f, 0.48f);
+                Vector3 targetLand = treePos + fallAxis * Random.Range(0f, 35f) + new Vector3(Random.Range(-15f, 15f), 0f, Random.Range(-15f, 15f));
+                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-12f, -4f), Random.Range(35f, 55f), Random.Range(-12f, -4f));
+                StartCoroutine(SingleMeteorRoutine(meteorSpawn, targetLand, meteorMat));
+            }
+
+            yield return null;
+        }
+
+        if (voidLightObj != null) Destroy(voidLightObj);
+        if (flameGroup != null) Destroy(flameGroup);
+    }
+
+    System.Collections.IEnumerator SingleMeteorRoutine(Vector3 from, Vector3 to, Material mat)
+    {
+        GameObject mObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        Collider c = mObj.GetComponent<Collider>();
+        if (c != null) Destroy(c);
+        mObj.GetComponent<Renderer>().material = mat;
+        mObj.transform.position = from;
+        mObj.transform.localScale = Vector3.one * Random.Range(1.1f, 1.8f);
+
+        float flyTime = Random.Range(0.42f, 0.65f);
+        float t = 0f;
+
+        while (t < flyTime)
+        {
+            t += Time.deltaTime;
+            mObj.transform.position = Vector3.Lerp(from, to, t / flyTime);
+            yield return null;
+        }
+
+        ThirdPersonCamera.Shake(0.55f, 0.4f);
+        SpawnCollapseDebris(to, 6);
+        Destroy(mObj);
     }
 
     void SpawnGroundImpactShockwave(Vector3 center, float treeHeight)

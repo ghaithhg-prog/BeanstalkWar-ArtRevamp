@@ -42,6 +42,7 @@ public class MatchEndStatsUI : MonoBehaviour
     private string winningTeamName = "Protectors";
     private float gameOverTime = 0f;
     private Vector2 scrollPos = Vector2.zero;
+    private bool isLocalPlayerWinner = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
@@ -108,14 +109,18 @@ public class MatchEndStatsUI : MonoBehaviour
     PlayerMatchStat GetOrCreateStat(GameObject go)
     {
         if (go == null) return null;
+
+        PlayerMovement pm = go.GetComponent<PlayerMovement>();
+        BotController bot = go.GetComponent<BotController>();
+
+        // STRICT FILTER: Bosses and non-hero world entities MUST NEVER appear on player scoreboard!
+        if (pm == null && bot == null) return null;
+
         int id = go.GetInstanceID();
         if (!stats.TryGetValue(id, out PlayerMatchStat s))
         {
             s = new PlayerMatchStat();
             s.entityId = id;
-
-            PlayerMovement pm = go.GetComponent<PlayerMovement>();
-            BotController bot = go.GetComponent<BotController>();
             CharacterCombat combat = go.GetComponent<CharacterCombat>();
 
             if (pm != null)
@@ -137,12 +142,6 @@ public class MatchEndStatsUI : MonoBehaviour
 
                 CharacterData cd = combat != null ? combat.characterData : null;
                 s.characterClass = cd != null ? cd.characterName : "Champion";
-            }
-            else
-            {
-                s.team = combat != null ? combat.team : PlayerMovement.TeamType.Protector;
-                s.heroName = go.name.Replace("(Clone)", "").Trim();
-                s.characterClass = "Warrior";
             }
 
             stats[id] = s;
@@ -170,17 +169,49 @@ public class MatchEndStatsUI : MonoBehaviour
             if (b != null) GetOrCreateStat(b.gameObject);
         }
 
-        // Award match victory bonuses to local player profile
-        if (PlayerProfile.Instance != null)
+        // Determine if local player won
+        bool isProtWin = winner.ToLower().Contains("protector");
+        PlayerMovement.TeamType winningTeam = isProtWin ? PlayerMovement.TeamType.Protector : PlayerMovement.TeamType.Destroyer;
+
+        isLocalPlayerWinner = false;
+        foreach (var stat in stats.Values)
         {
-            bool isProtectorWin = winner.ToLower().Contains("protector");
-            int xpReward = isProtectorWin ? 500 : 250;
-            int coinReward = isProtectorWin ? 250 : 120;
-            PlayerProfile.Instance.AddCoins(coinReward);
-            PlayerProfile.Instance.AddAccountXP(xpReward);
+            if (stat != null && stat.isLocalPlayer)
+            {
+                isLocalPlayerWinner = (stat.team == winningTeam);
+                break;
+            }
         }
 
-        Debug.Log($"🏆 [MatchEndStatsUI] Victory sequence active for: {winner}!");
+        // Fallback search directly on player gameobjects if not found in dictionary
+        if (!isLocalPlayerWinner)
+        {
+            foreach (var p in allPlayers)
+            {
+                if (p != null && p.IsOwner && p.team == winningTeam)
+                {
+                    isLocalPlayerWinner = true;
+                    break;
+                }
+            }
+        }
+
+        // Award match victory bounties or deduct match stake
+        if (PlayerProfile.Instance != null)
+        {
+            if (isLocalPlayerWinner)
+            {
+                PlayerProfile.Instance.AddCoins(350, "Match Victory Bounty");
+                PlayerProfile.Instance.AddAccountXP(500);
+            }
+            else
+            {
+                PlayerProfile.Instance.DeductCoins(60, "Match Defeat Stake");
+                PlayerProfile.Instance.AddAccountXP(100);
+            }
+        }
+
+        Debug.Log($"🏆 [MatchEndStatsUI] Victory sequence active for: {winner}! Local player won: {isLocalPlayerWinner}");
     }
 
     void OnGUI()
@@ -197,9 +228,11 @@ public class MatchEndStatsUI : MonoBehaviour
         float startX = (Screen.width - boxWidth) / 2f;
         float startY = (Screen.height - boxHeight) / 2f;
 
-        // 1. Ancient Parchment Background Frame
+        // 1. Ancient Parchment Background Frame with Radiant Pulsing Border
+        float glowPulse = (Mathf.Sin(Time.time * 3.5f) + 1f) * 0.5f;
+        Color glowingBorder = Color.Lerp(new Color(0.88f, 0.72f, 0.28f, 0.95f), new Color(1f, 0.95f, 0.55f, 1f), glowPulse);
         Rect mainRect = new Rect(startX, startY, boxWidth, boxHeight);
-        EnchantedNatureGUI.DrawLeafPlaque(mainRect, new Color(0.12f, 0.18f, 0.12f, 0.95f), new Color(0.85f, 0.72f, 0.32f, 0.9f));
+        EnchantedNatureGUI.DrawLeafPlaque(mainRect, new Color(0.10f, 0.16f, 0.10f, 0.97f), glowingBorder);
 
         // 2. Victory Header Banner with 10-Language Support
         bool isProt = winningTeamName.ToLower().Contains("protector");
@@ -273,7 +306,7 @@ public class MatchEndStatsUI : MonoBehaviour
         subStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
         GUI.Label(subRect, subtitleText, subStyle);
 
-        // Match Reward Note with 10-Language Support
+        // Match Stakes & Rewards Banner with 13-Language Support
         Rect rewardRect = new Rect(startX + 20f, startY + 82f, boxWidth - 40f, 22f);
         GUIStyle rewardStyle = new GUIStyle(GUI.skin.label)
         {
@@ -281,23 +314,46 @@ public class MatchEndStatsUI : MonoBehaviour
             fontSize = 12,
             fontStyle = FontStyle.Italic
         };
-        rewardStyle.normal.textColor = new Color(0.8f, 1f, 0.8f);
-        GUI.Label(rewardRect, LanguageSelectionUI.Localize(
-            "✨ Rewards Granted: +500 Account XP & +250 Acorn Coins! ✨",
-            "✨ المكافآت الممنوحة: +500 خبرة الحساب و +250 عملة بلوط! ✨",
-            "✨ Награды: +500 Опыта аккаунта и +250 Желудей! ✨",
-            "✨ Recompensas: +500 EXP de cuenta y +250 Monedas Bellota! ✨",
-            "✨ Récompenses : +500 EXP de compte & +250 Pièces Gland ! ✨",
-            "✨ Belohnungen: +500 Konto-EP & +250 Eichel-Münzen! ✨",
-            "✨ पुरस्कार दिए गए: +500 खाता अनुभव और +250 बलूत के सिक्के! ✨",
-            "✨ 获得奖励：+500 账号经验值与 +250 橡果金币！✨",
-            "✨ 獲得報酬：+500 アカウント経験値 ＆ +250 ドングリコイン！✨",
-            "✨ Recompensas: +500 XP de conta & +250 Moedas de Bolota! ✨"), rewardStyle);
+        rewardStyle.normal.textColor = isLocalPlayerWinner ? new Color(0.85f, 1f, 0.85f) : new Color(1f, 0.85f, 0.65f);
 
-        // 3. Stats Table Header
+        string rewardStr = isLocalPlayerWinner
+            ? LanguageSelectionUI.Localize(
+                "✨ VICTORY BOUNTY: +350 Acorn Coins & +500 Account XP Awarded! ✨",
+                ar: "✨ مكافأة الفوز: تم منحك +350 عملة بلوط و +500 خبرة حساب! ✨",
+                ru: "✨ НАГРАДА ЗА ПОБЕДУ: +350 Желудей и +500 Опыта! ✨",
+                fr: "✨ RÉCOMPENSE DE VICTOIRE : +350 Pièces Gland & +500 EXP ! ✨",
+                es: "✨ ¡RECOMPENSA DE VICTORIA: +350 Monedas Bellota y +500 EXP! ✨",
+                de: "✨ SIEGESPRÄMIE: +350 Eichel-Münzen & +500 Konto-EP! ✨",
+                hi: "✨ विजय पुरस्कार: +350 बलूत के सिक्के और +500 अनुभव! ✨",
+                zh: "✨ 胜利赏金：获得 +350 橡果金币与 +500 经验值！✨",
+                ja: "✨ 勝利報酬：+350 ドングリコイン ＆ +500 経験値を獲得！✨",
+                pt: "✨ RECOMPENSA DE VITÓRIA: +350 Moedas de Bolota & +500 XP! ✨",
+                fa: "✨ پاداش پیروزی: دریافت +۳۵۰ سکه بلوط و +۵۰۰ تجربه! ✨",
+                it: "✨ PREMIO VITTORIA: +350 Monete Ghianda & +500 ESP! ✨",
+                tr: "✨ ZAFER ÖDÜLÜ: +350 Palamut Parası & +500 DP! ✨"
+            )
+            : LanguageSelectionUI.Localize(
+                "⚔️ DEFEAT: -60 Acorn Match Stake Deducted (+100 XP Consolidation) ⚔️",
+                ar: "⚔️ الهزيمة: تم خصم -60 عملة بلوط رهان اللقاء (+100 خبرة ترضية) ⚔️",
+                ru: "⚔️ ПОРАЖЕНИЕ: Списана ставка -60 Желудей (+100 Опыта) ⚔️",
+                fr: "⚔️ DÉFAITE : -60 Pièces Gland déduites (+100 EXP) ⚔️",
+                es: "⚔️ DERROTA: Se dedujo la apuesta de -60 Bellotas (+100 EXP) ⚔️",
+                de: "⚔️ NIEDERLAGE: -60 Eichel-Einsatz abgezogen (+100 EP) ⚔️",
+                hi: "⚔️ पराजय: -60 बलूत दांव काटा गया (+100 अनुभव) ⚔️",
+                zh: "⚔️ 战败：扣除 -60 橡果参赛费 (+100 经验慰藉) ⚔️",
+                ja: "⚔️ 敗北：-60 ドングリ賭け金を消費 (+100 経験値) ⚔️",
+                pt: "⚔️ DERROTA: -60 Moedas de aposta deduzidas (+100 XP) ⚔️",
+                fa: "⚔️ شکست: کسر -۶۰ سکه بلوط هزینه نبرد (+۱۰۰ تجربه دلجویی) ⚔️",
+                it: "⚔️ SCONFITTA: -60 Monete Ghianda detratte (+100 ESP) ⚔️",
+                tr: "⚔️ YENİLGİ: -60 Palamut bahis bedeli kesildi (+100 DP) ⚔️"
+            );
+        GUI.Label(rewardRect, rewardStr, rewardStyle);
+
+        // 3. Stats Table Header with Radiant Golden Polish
         float tableY = startY + 112f;
         Rect headerRect = new Rect(startX + 20f, tableY, boxWidth - 40f, 28f);
-        EnchantedNatureGUI.DrawWoodPlate(headerRect, new Color(0.22f, 0.16f, 0.10f, 0.95f), new Color(0.65f, 0.50f, 0.25f, 0.8f));
+        Color headerBorder = Color.Lerp(new Color(0.65f, 0.50f, 0.25f, 0.85f), new Color(1f, 0.85f, 0.35f, 1f), glowPulse);
+        EnchantedNatureGUI.DrawWoodPlate(headerRect, new Color(0.22f, 0.16f, 0.10f, 0.98f), headerBorder);
 
         GUIStyle colHeaderStyle = new GUIStyle(GUI.skin.label)
         {
@@ -324,13 +380,14 @@ public class MatchEndStatsUI : MonoBehaviour
         colX += 62f;
         GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("SCORE", "نقاط", "СЧЕТ", "PUNTOS", "SCORE", "PUNKTE", "स्कोर", "积分", "スコア", "PONTUAÇÃO"), colHeaderStyle);
 
-        // 4. Scrollable Stats Rows
+        // 4. Scrollable Stats Rows (Strictly 10 Players & Bots - Bosses Excluded)
         float listY = tableY + 32f;
-        float listHeight = boxHeight - 210f;
+        float listHeight = boxHeight - 245f;
         Rect listRect = new Rect(startX + 20f, listY, boxWidth - 40f, listHeight);
 
-        // Sort stats by score
+        // Sort stats by score and purge any non-player boss entities
         List<PlayerMatchStat> sortedList = new List<PlayerMatchStat>(stats.Values);
+        sortedList.RemoveAll(s => s == null || s.heroName.Contains("Goliath") || s.heroName.Contains("Titan") || s.heroName.Contains("Overlord") || s.heroName.Contains("Boss") || s.heroName.Contains("Tree") || s.heroName.Contains("Altar"));
         sortedList.Sort((a, b) => b.CalculateScore().CompareTo(a.CalculateScore()));
 
         float rowHeight = 32f;
@@ -399,7 +456,87 @@ public class MatchEndStatsUI : MonoBehaviour
 
         GUI.EndScrollView();
 
-        // 5. Action Buttons at the Bottom
+        // 5. Economy & Wallet Status / Instant Top-Up Buttons
+        float economyBarY = startY + boxHeight - 98f;
+        int playerCoins = (PlayerProfile.Instance != null) ? PlayerProfile.Instance.Coins : 0;
+
+        if (playerCoins <= 120)
+        {
+            float halfW = (boxWidth - 50f) * 0.5f;
+            Rect adBtnRect = new Rect(startX + 20f, economyBarY, halfW, 32f);
+            string adBtnText = LanguageSelectionUI.Localize(
+                "📺 WATCH AD (+100 🌰)",
+                ar: "📺 شاهد إعلاناً (+100 🌰)",
+                ru: "📺 СМОТРЕТЬ РЕКЛАМУ (+100 🌰)",
+                fr: "📺 REGARDER PUB (+100 🌰)",
+                es: "📺 VER ANUNCIO (+100 🌰)",
+                de: "📺 WERBUNG SCHAUEN (+100 🌰)",
+                hi: "📺 विज्ञापन देखें (+100 🌰)",
+                zh: "📺 观看短片 (+100 🌰)",
+                ja: "📺 広告を見る (+100 🌰)",
+                pt: "📺 ASSISTIR ANÚNCIO (+100 🌰)",
+                fa: "📺 تماشای آگهی (+۱۰۰ 🌰)",
+                it: "📺 GUARDA PUBBLICITÀ (+100 🌰)",
+                tr: "📺 REKLAM İZLE (+100 🌰)"
+            );
+            if (EnchantedNatureGUI.DrawWoodButton(adBtnRect, adBtnText))
+            {
+                PlayerProfile.Instance?.WatchRewardedAd(success =>
+                {
+                    if (success) Debug.Log("Rewarded ad watched!");
+                });
+            }
+
+            Rect buyBtnRect = new Rect(startX + 30f + halfW, economyBarY, halfW, 32f);
+            string buyBtnText = LanguageSelectionUI.Localize(
+                "💳 BUY 1,000 🌰 ($0.99)",
+                ar: "💳 شراء 1000 🌰 ($0.99)",
+                ru: "💳 1000 🌰 ($0.99)",
+                fr: "💳 ACHETER 1000 🌰 ($0.99)",
+                es: "💳 COMPRAR 1000 🌰 ($0.99)",
+                de: "💳 1000 🌰 KAUFEN ($0.99)",
+                hi: "💳 1000 🌰 खरीदें ($0.99)",
+                zh: "💳 购买 1000 🌰 ($0.99)",
+                ja: "💳 1000 🌰 を購入 ($0.99)",
+                pt: "💳 COMPRAR 1000 🌰 ($0.99)",
+                fa: "💳 خرید ۱۰۰۰ 🌰 ($۰.۹۹)",
+                it: "💳 ACQUISTA 1000 🌰 ($0.99)",
+                tr: "💳 1000 🌰 SATIN AL ($0.99)"
+            );
+            if (EnchantedNatureGUI.DrawWoodButton(buyBtnRect, buyBtnText))
+            {
+                PlayerProfile.Instance?.PurchaseCoinPackage(1000, "Acorn Pouch ($0.99)");
+            }
+        }
+        else
+        {
+            Rect walletRect = new Rect(startX + 20f, economyBarY, boxWidth - 40f, 32f);
+            string walletStr = LanguageSelectionUI.Localize(
+                $"🌰 Your Acorn Purse: {playerCoins} Acorns",
+                ar: $"🌰 محفظة البلوط الخاصة بك: {playerCoins} بلوطة",
+                ru: $"🌰 Ваш кошелёк: {playerCoins} Желудей",
+                fr: $"🌰 Votre bourse : {playerCoins} Glands",
+                es: $"🌰 Tu monedero: {playerCoins} Bellotas",
+                de: $"🌰 Dein Eichel-Beutel: {playerCoins} Eicheln",
+                hi: $"🌰 आपकी बलूत थैली: {playerCoins} बलूत",
+                zh: $"🌰 你的橡果钱袋：{playerCoins} 橡果",
+                ja: $"🌰 所持ドングリ袋：{playerCoins} ドングリ",
+                pt: $"🌰 Sua bolsa: {playerCoins} Bolotas",
+                fa: $"🌰 کیسه بلوط شما: {playerCoins} بلوط",
+                it: $"🌰 La tua borsa: {playerCoins} Ghiande",
+                tr: $"🌰 Palamut Keseniz: {playerCoins} Palamut"
+            );
+            GUIStyle walletStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 13,
+                fontStyle = FontStyle.Bold
+            };
+            walletStyle.normal.textColor = new Color(1f, 0.9f, 0.45f);
+            GUI.Label(walletRect, walletStr, walletStyle);
+        }
+
+        // 6. Action Buttons at the Bottom
         float btnY = boxHeight + startY - 55f;
         float btnWidth = 200f;
         float btnHeight = 40f;
