@@ -243,7 +243,9 @@ public class BossTombstone : MonoBehaviour
             hi: $"👑 युद्ध की लूट: {bossTitle}",
             zh: $"👑 战利品: {bossTitle}",
             ja: $"👑 戦利品: {bossTitle}",
-            pt: $"👑 ESPÓLIOS: {bossTitle}"
+            pt: $"👑 ESPÓLIOS: {bossTitle}",
+            it: $"👑 BOTTINO: {bossTitle}",
+            tr: $"👑 SAVAŞ GANİMETİ: {bossTitle}"
         );
 
         GUIStyle titleShadow = new GUIStyle(GUI.skin.label);
@@ -272,7 +274,9 @@ public class BossTombstone : MonoBehaviour
                 hi: $"🌿 इनाम पाने के लिए पास जाएं (+{bonusCoins} 🪙 | +{bonusXP} XP)",
                 zh: $"🌿 靠近领取奖励 (+{bonusCoins} 🪙 | +{bonusXP} XP)",
                 ja: $"🌿 近づいて報酬を獲得 (+{bonusCoins} 🪙 | +{bonusXP} XP)",
-                pt: $"🌿 Aproxime-se para resgatar (+{bonusCoins} 🪙 | +{bonusXP} XP)"
+                pt: $"🌿 Aproxime-se para resgatar (+{bonusCoins} 🪙 | +{bonusXP} XP)",
+                it: $"🌿 Avvicinati per riscattare (+{bonusCoins} 🪙 | +{bonusXP} XP)",
+                tr: $"🌿 Ödülü almak için yaklaşın (+{bonusCoins} 🪙 | +{bonusXP} XP)"
               )
             : LanguageSelectionUI.Localize(
                 "⚔️ Reserved for opposing champions",
@@ -284,7 +288,9 @@ public class BossTombstone : MonoBehaviour
                 hi: "⚔️ विपक्षी टीम के लिए आरक्षित",
                 zh: "⚔️ 属于对手团队的战利品",
                 ja: "⚔️ 敵チーム専用の戦利品",
-                pt: "⚔️ Reservado para a equipe adversária"
+                pt: "⚔️ Reservado para a equipe adversária",
+                it: "⚔️ Riservato ai campioni avversari",
+                tr: "⚔️ Rakip takım şampiyonlarına ayrılmıştır"
               );
 
         GUIStyle subShadow = new GUIStyle(GUI.skin.label);

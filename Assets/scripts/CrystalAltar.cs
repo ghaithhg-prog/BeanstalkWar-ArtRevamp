@@ -51,6 +51,8 @@ public class CrystalAltar : NetworkBehaviour
     private Transform skyBeacon;
     private Transform floatingCrystal;
     private Transform labelTransform;
+    private TextMesh altarLabelTextMesh;
+    private string lastAltarLanguage = "";
     private Light heartLight;
 
     private List<Transform> primaryOrbitOrbs = new List<Transform>();
@@ -428,24 +430,50 @@ public class CrystalAltar : NetworkBehaviour
         beaconLight.intensity = 3.5f;
 
         // =========================================================================
-        // 6. 3D FLOATING BANNER (يافطة نصية ثلاثية الأبعاد واضحة من بعيد)
+        // 6. 3D FLOATING BANNER (يافطة نصية ثلاثية الأبعاد واضحة من بعيد تلتزم بلغة اللعبة المختارة فقط)
         // =========================================================================
         GameObject labelObj = new GameObject("AltarLabelText");
         labelObj.transform.SetParent(sanctuaryVisuals.transform, false);
         labelObj.transform.localPosition = new Vector3(0f, 3.2f, 0f);
-        TextMesh tm = labelObj.AddComponent<TextMesh>();
-        tm.text = "✦ SACRED ALTAR ✦\nالمذبح المقدس";
-        tm.fontSize = 28;
-        tm.characterSize = 0.08f;
-        tm.alignment = TextAlignment.Center;
-        tm.anchor = TextAnchor.MiddleCenter;
-        tm.color = new Color(0.45f, 0.95f, 1.0f);
+        altarLabelTextMesh = labelObj.AddComponent<TextMesh>();
+        altarLabelTextMesh.fontSize = 28;
+        altarLabelTextMesh.characterSize = 0.08f;
+        altarLabelTextMesh.alignment = TextAlignment.Center;
+        altarLabelTextMesh.anchor = TextAnchor.MiddleCenter;
+        altarLabelTextMesh.color = new Color(0.45f, 0.95f, 1.0f);
         labelTransform = labelObj.transform;
+        UpdateAltarLabelText();
+    }
+
+    void UpdateAltarLabelText()
+    {
+        if (altarLabelTextMesh == null) return;
+        string currentLang = LanguageSelectionUI.CurrentLanguageCode;
+        if (lastAltarLanguage == currentLang) return;
+        lastAltarLanguage = currentLang;
+
+        altarLabelTextMesh.text = LanguageSelectionUI.Localize(
+            "✦ SACRED ALTAR ✦",
+            ar: "✦ المذبح المقدس ✦",
+            ru: "✦ СВЯЩЕННЫЙ АЛТАРЬ ✦",
+            fr: "✦ AUTEL SACRÉ ✦",
+            es: "✦ ALTAR SAGRADO ✦",
+            de: "✦ HEILIGER ALTAR ✦",
+            hi: "✦ पवित्र वेदी ✦",
+            zh: "✦ 神圣祭坛 ✦",
+            ja: "✦ 聖なる祭壇 ✦",
+            pt: "✦ ALTAR SAGRADO ✦",
+            fa: "✦ محراب مقدس ✦",
+            it: "✦ ALTARE SACRO ✦",
+            tr: "✦ KUTSAL SUNAK ✦"
+        );
     }
 
     void Update()
     {
         if (gameWon) return;
+
+        UpdateAltarLabelText();
 
         float t = Time.time;
 
@@ -606,7 +634,9 @@ public class CrystalAltar : NetworkBehaviour
             zh: $"⚡ {cName} 已将水晶放入圣坛！坚守3秒即可获胜！⚡",
             ja: $"⚡ {cName}が水晶を祭壇に設置！3秒間維持せよ！⚡",
             pt: $"⚡ {cName.ToUpper()} COLOCOU O CRISTAL! SEGURE POR 3 SEGUNDOS! ⚡",
-            fa: $"⚡ {cName} بلور را در محراب قرار داد! 3 ثانیه مقاومت کنید! ⚡"
+            fa: $"⚡ {cName} بلور را در محراب قرار داد! 3 ثانیه مقاومت کنید! ⚡",
+            it: $"⚡ {cName.ToUpper()} HA MESSO IL CRISTALLO SULL'ALTARE! RESISTI 3 SECONDI! ⚡",
+            tr: $"⚡ {cName.ToUpper()} KRİSTALİ SUNAĞA YERLEŞTİRDİ! 3 SANİYE DAYANIN! ⚡"
         );
         PlayerProgressionAndShopUI.Instance?.ShowNotification(msg);
     }
@@ -704,7 +734,9 @@ public class CrystalAltar : NetworkBehaviour
             zh: "🌟 水晶已送达圣坛，守护者获胜！🌟",
             ja: "🌟 水晶が祭壇に到達した、守護者の勝利！🌟",
             pt: "🌟 O CRISTAL CHEGOU AO ALTAR, OS PROTETORES VENCERAM! 🌟",
-            fa: "🌟 بلور به محراب رسید، حامیان پیروز شدند! 🌟"
+            fa: "🌟 بلور به محراب رسید، حامیان پیروز شدند! 🌟",
+            it: "🌟 IL CRISTALLO SACRO HA RAGGIUNTO L'ALTARE! I PROTETTORI HANNO VINTO! 🌟",
+            tr: "🌟 KUTSAL KRİSTAL SUNAĞA ULAŞTI! KORUYUCULAR KAZANDI! 🌟"
         );
         PlayerProgressionAndShopUI.Instance?.ShowNotification(victoryAnnouncement);
 
@@ -809,7 +841,9 @@ public class CrystalAltar : NetworkBehaviour
             zh: $"⚡ 正在圣坛注入神圣水晶：{remTime:F1}秒 ⚡",
             ja: $"⚡ 聖なる水晶の奉納中: {remTime:F1}秒 ⚡",
             pt: $"⚡ CONSAGRANDO O CRISTAL: {remTime:F1}s ⚡",
-            fa: $"⚡ تقدیس بلور مقدس در محراب: {remTime:F1} ثانیه ⚡"
+            fa: $"⚡ تقدیس بلور مقدس در محراب: {remTime:F1} ثانیه ⚡",
+            it: $"⚡ CONSACRAZIONE DEL CRISTALLO: {remTime:F1}s ⚡",
+            tr: $"⚡ KRİSTAL KUTSANMASI: {remTime:F1}sn ⚡"
         );
         GUI.Label(new Rect(boxX, boxY + 6f, boxW, 22f), title, titleStyle);
 
@@ -845,7 +879,9 @@ public class CrystalAltar : NetworkBehaviour
             zh: "🛡️ 在神圣圆圈内保护水晶守护者！",
             ja: "🛡️ 聖なる円の中で運び手を守れ！",
             pt: "🛡️ Proteja o portador dentro do círculo sagrado!",
-            fa: "🛡️ از حامل در داخل دایره مقدس محافظت کنید!"
+            fa: "🛡️ از حامل در داخل دایره مقدس محافظت کنید!",
+            it: "🛡️ Proteggi il portatore all'interno del cerchio sacro!",
+            tr: "🛡️ Kutsal çemberin içindeki taşıyıcıyı koruyun!"
         );
         GUI.Label(new Rect(boxX, boxY + 46f, boxW, 18f), sub, subStyle);
     }

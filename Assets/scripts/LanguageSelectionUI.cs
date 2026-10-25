@@ -52,7 +52,9 @@ public class LanguageSelectionUI : MonoBehaviour
     public static readonly LanguageOption[] AvailableLanguages = new LanguageOption[]
     {
         new LanguageOption("en", "English", "English", "🇬🇧", "Global / North America & Europe", true),
-        new LanguageOption("ar", "Arabic", "العربية", "🇹🇳", "تونس والوطن العربي / Middle East & North Africa", true),
+        new LanguageOption("ar", "Arabic", "العربية", "🇸🇦", "المملكة العربية السعودية والوطن العربي / Saudi Arabia & Arab World", true),
+        new LanguageOption("it", "Italian", "Italiano", "🇮🇹", "Italia / Italy & Europe", true),
+        new LanguageOption("tr", "Turkish", "Türkçe", "🇹🇷", "Türkiye / Turkey & Eurasia", true),
         new LanguageOption("fa", "Persian", "فارسی", "🇮🇷", "ایران و خاورمیانه / Iran & Middle East", true),
         new LanguageOption("ru", "Russian", "Русский", "🇷🇺", "Россия / Eastern Europe & Central Asia", true),
         new LanguageOption("fr", "French", "Français", "🇫🇷", "France & Monde Francophone", true),
@@ -86,7 +88,8 @@ public class LanguageSelectionUI : MonoBehaviour
     /// Arabic strings are automatically shaped and reversed via ArabicFixer for Unity IMGUI.
     /// </summary>
     public static string Localize(string en, string ar = null, string ru = null, string es = null, string fr = null,
-                                  string de = null, string hi = null, string zh = null, string ja = null, string pt = null, string fa = null)
+                                  string de = null, string hi = null, string zh = null, string ja = null, string pt = null, string fa = null,
+                                  string it = null, string tr = null)
     {
         if (string.IsNullOrEmpty(en)) return "";
 
@@ -98,6 +101,16 @@ public class LanguageSelectionUI : MonoBehaviour
                 if (!string.IsNullOrEmpty(ar)) return ArabicFixer.Fix(ar);
                 string dictAr = LookupDictionary(en, "ar");
                 return !string.IsNullOrEmpty(dictAr) ? ArabicFixer.Fix(dictAr) : ArabicFixer.Fix(en);
+
+            case "it":
+                if (!string.IsNullOrEmpty(it)) return it;
+                string dictIt = LookupDictionary(en, "it");
+                return !string.IsNullOrEmpty(dictIt) ? dictIt : en;
+
+            case "tr":
+                if (!string.IsNullOrEmpty(tr)) return tr;
+                string dictTr = LookupDictionary(en, "tr");
+                return !string.IsNullOrEmpty(dictTr) ? dictTr : en;
 
             case "fa":
                 if (!string.IsNullOrEmpty(fa)) return ArabicFixer.Fix(fa);
@@ -184,7 +197,7 @@ public class LanguageSelectionUI : MonoBehaviour
     {
         masterDict = new Dictionary<string, Dictionary<string, string>>(System.StringComparer.OrdinalIgnoreCase);
 
-        void Add(string en, string ar, string ru, string fr, string es, string de, string hi, string zh, string ja, string pt, string fa = null)
+        void Add(string en, string ar, string ru, string fr, string es, string de, string hi, string zh, string ja, string pt, string it = null, string tr = null, string fa = null)
         {
             var dict = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase)
             {
@@ -198,9 +211,20 @@ public class LanguageSelectionUI : MonoBehaviour
                 { "zh", zh },
                 { "ja", ja },
                 { "pt", pt },
+                { "it", string.IsNullOrEmpty(it) ? en : it },
+                { "tr", string.IsNullOrEmpty(tr) ? en : tr },
                 { "en", en }
             };
             masterDict[en] = dict;
+        }
+
+        void SetLang(string en, string it, string tr)
+        {
+            if (masterDict.TryGetValue(en, out var dict))
+            {
+                dict["it"] = it;
+                dict["tr"] = tr;
+            }
         }
 
         // --- Core Game Titles & Menus ---
@@ -311,6 +335,110 @@ public class LanguageSelectionUI : MonoBehaviour
         Add("SOUND: MUTED", "الصوت: مكتوم", "ЗВУК: ВЫКЛ", "SON : COUPÉ", "SONIDO: SILENCIADO", "SOUND: AUS", "ध्वनि: मौन", "音效: 静音", "サウンド: ミュート", "SOM: MUTADO");
         Add("RETURN TO MAIN MENU", "العودة إلى القائمة الرئيسية", "ГЛАВНОЕ МЕНЮ", "RETOUR AU MENU PRINCIPAL", "VOLVER AL MENÚ", "ZUM HAUPTMENÜ", "मुख्य मेनू पर वापस जाएं", "返回主菜单", "メインメニューへ", "VOLTAR AO MENU");
         Add("QUIT GAME", "الخروج من اللعبة", "ВЫЙТИ ИЗ ИГРЫ", "QUITTER LE JEU", "SALIR DEL JUEGO", "SPIEL BEENDEN", "खेल से बाहर निकलें", "退出游戏", "ゲームを終了", "SAIR DO JOGO");
+
+        // --- Altar Translations ---
+        Add("SACRED ALTAR", "المذبح المقدس", "СВЯЩЕННЫЙ АЛТАРЬ", "AUTEL SACRÉ", "ALTAR SAGRADO", "HEILIGER ALTAR", "पवित्र वेदी", "神圣祭坛", "聖なる祭壇", "ALTAR SAGRADO", it: "ALTARE SACRO", tr: "KUTSAL SUNAK");
+        Add("✦ SACRED ALTAR ✦", "✦ المذبح المقدس ✦", "✦ СВЯЩЕННЫЙ АЛТАРЬ ✦", "✦ AUTEL SACRÉ ✦", "✦ ALTAR SAGRADO ✦", "✦ HEILIGER ALTAR ✦", "✦ पवित्र वेदी ✦", "✦ 神圣祭坛 ✦", "✦ 聖なる祭壇 ✦", "✦ ALTAR SAGRADO ✦", it: "✦ ALTARE SACRO ✦", tr: "✦ KUTSAL SUNAK ✦");
+        Add("ALTAR", "المذبح", "АЛТАРЬ", "AUTEL", "ALTAR", "ALTAR", "वेदी", "祭坛", "祭壇", "ALTAR", it: "ALTARE", tr: "SUNAK");
+
+        // --- Comprehensive Italian (it) & Turkish (tr) Dictionary Enrichment ---
+        SetLang("THE SACRED BEANSTALK: FOREST WAR", "LA GUERRA DEL FAGIOLO SACRO: BATTAGLIA DELLA FORESTA", "KUTSAL FASULYE SIRIĞI: ORMAN SAVAŞI");
+        SetLang("Inscribed on Ancient Oak Bark Two Millennia Past", "Inciso sulla corteccia di quercia antica due millenni fa", "İki bin yıl önce kadim meşe kabuğuna kazınmış");
+        SetLang("OFFLINE EXPEDITION (SOLO vs BOTS)", "SPEDIZIONE OFFLINE (SOLO vs BOT)", "ÇEVRİMDIŞI SEFER (BOTLARA KARŞI TEK BAŞINA)");
+        SetLang("REALM EXPEDITION (ONLINE MULTIPLAYER)", "SPEDIZIONE DEL REGNO (MULTIGIOCATORE ONLINE)", "DİYAR SEFERİ (ÇEVRİMİÇİ ÇOK OYUNCULU)");
+        SetLang("TRIBE SANCTUARY (FRIENDLY LOBBY)", "SANTUARIO DELLA TRIBÙ (LOBBY PRIVATA)", "KABİLE SIĞINAĞI (DOST LOBİSİ)");
+        SetLang("ENTER GROVE", "ENTRA NEL BOSCO", "KORULUĞA GİR");
+        SetLang("EMBARK ONLINE", "GIOCA ONLINE", "ÇEVRİMİÇİ BAŞLA");
+        SetLang("GATHER TRIBE", "RADUNA LA TRIBÙ", "KABİLEYİ TOPLA");
+
+        SetLang("TREE PROTECTORS", "PROTETTORI DELL'ALBERO", "AĞAÇ KORUYUCULARI");
+        SetLang("TREE DESTROYERS", "DISTRUTTORI DELL'ALBERO", "AĞAÇ YOK EDİCİLERİ");
+        SetLang("GUARDIANS OF LIFE", "GUARDIANI DELLA VITA", "HAYAT MUHAFIZLARI");
+        SetLang("AXEMEN OF CHAOS", "BOSCAIOLI DEL CAOS", "KAOS BALTACILARI");
+        SetLang("BECOME A PROTECTOR", "DIVENTA UN PROTETTORE", "KORUYUCU OL");
+        SetLang("BECOME A DESTROYER", "DIVENTA UN DISTRUTTORE", "YOK EDİCİ OL");
+        SetLang("SACRED ALLEGIANCE: CHOOSE THY PATH", "LEALTÀ SACRA: SCEGLI IL TUO CAMMINO", "KUTSAL BAĞLILIK: YOLUNU SEÇ");
+
+        SetLang("FOREST GOLIATH [LV 1]", "GOLIA DELLA FORESTA [LV 1]", "ORMAN GOLYATI [SEV 1]");
+        SetLang("INFERNO TITAN [LV 2]", "TITANO DELL'INFERNO [LV 2]", "CEHENNEM TİTANI [SEV 2]");
+        SetLang("ANCIENT OVERLORD [LV 3]", "SIGNORE ANCESTRALE [LV 3]", "KADİM HÜKÜMDAR [SEV 3]");
+
+        SetLang("ALL 3 GUARDIAN BOSSES HAVE BEEN DEFEATED!", "TUTTI E 3 I BOSS GUARDIANI SONO STATI SCONFITTI!", "3 MUHAFIZ PATRONUN HEPSİ YENİLDİ!");
+        SetLang("YOU CAN NOW DESTROY THE SACRED TREE!", "ORA PUOI DISTRUGGERE L'ALBERO SACRO!", "ARTIK KUTSAL AĞACI YOK EDEBİLİRSİNİZ!");
+        SetLang("THE CRYSTAL IS READY — YOU CAN TAKE IT NOW!", "IL CRISTALLO È PRONTO — PUOI PRENDERLO ORA!", "KRİSTAL HAZIR — ŞİMDİ ALABİLİRSİNİZ!");
+        SetLang("TREE SHIELD ACTIVE", "SCUDO DELL'ALBERO ATTIVO", "AĞAÇ KALKANI AKTİF");
+
+        SetLang("START GAME", "INIZIA GIOCO", "OYUNU BAŞLAT");
+        SetLang("CLOSE", "CHIUDI", "KAPAT");
+        SetLang("BATTLE AGAIN", "GIOCA DI NUOVO", "TEKRAR SAVAŞ");
+        SetLang("RETURN TO GROVE", "TORNA AL BOSCO", "KORULUĞA DÖN");
+        SetLang("COMMENCE EXPEDITION", "INIZIA SPEDIZIONE", "SEFERİ BAŞLAT");
+        SetLang("CONFIRM HERO", "CONFERMA EROE", "KAHRAMANI ONAYLA");
+        SetLang("EQUIP", "EQUIPAGGIA", "KUŞAN");
+        SetLang("EQUIPPED", "EQUIPAGGIATO", "KUŞANILDI");
+        SetLang("CLAIM", "RISCATTA", "AL");
+        SetLang("SELECT", "SELEZIONA", "SEÇ");
+        SetLang("SELECTED", "SELEZIONATO", "SEÇİLDİ");
+        SetLang("PREVIOUS", "PRECEDENTE", "ÖNCEKİ");
+        SetLang("NEXT", "SUCCESSIVO", "SONRAKİ");
+
+        SetLang("Warrior", "Guerriero", "Savaşçı");
+        SetLang("Mage", "Mago", "Büyücü");
+        SetLang("Archer", "Arciere", "Okçu");
+        SetLang("Tank", "Corazzato", "Tank");
+        SetLang("Assassin", "Assassino", "Suikastçı");
+        SetLang("Bomber", "Bombardiere", "Bombacı");
+        SetLang("Druid", "Druido", "Druid");
+        SetLang("Berserker", "Berserker", "Çılgın Savaşçı");
+        SetLang("Paladin", "Paladino", "Paladin");
+        SetLang("Ranger", "Guardaboschi", "Kolcu");
+        SetLang("Necromancer", "Negromante", "Ölüm Büyücüsü");
+        SetLang("Shaman", "Sciamano", "Şaman");
+        SetLang("Rogue", "Ladro", "Haydut");
+        SetLang("Cleric", "Chierico", "Rahip");
+        SetLang("Elementalist", "Elementalista", "Element Uzmanı");
+        SetLang("Barbarian", "Barbaro", "Barbar");
+        SetLang("Enchantress", "Incantatrice", "Büyücü Kadın");
+        SetLang("Knight", "Cavaliere", "Şövalye");
+        SetLang("Alchemist", "Alchimista", "Simyacı");
+        SetLang("Summoner", "Evocatore", "Çağırıcı");
+        SetLang("Beastmaster", "Signore delle Bestie", "Canavar Terbiyecisi");
+        SetLang("Templar", "Templare", "Tapınakçı");
+        SetLang("Shadowblade", "Lama dell'Ombra", "Gölge Bıçağı");
+        SetLang("Windwalker", "Camminatore del Vento", "Rüzgar Gezgini");
+        SetLang("Ironclad", "Corazzato di Ferro", "Demir Zırhlı");
+
+        SetLang("TANK", "TANK", "TANK");
+        SetLang("DAMAGE", "DANNO", "HASAR");
+        SetLang("SUPPORT", "SUPPORTO", "DESTEK");
+        SetLang("CONTROL", "CONTROLLO", "KONTROL");
+        SetLang("SPECIALIST", "SPECIALISTA", "UZMAN");
+        SetLang("HERO", "EROE", "KAHRAMAN");
+        SetLang("HP", "SALUTE", "CAN");
+        SetLang("ATK", "ATTACCO", "SALDIRI");
+        SetLang("SPD", "VELOCITÀ", "HIZ");
+        SetLang("RNG", "GITTATA", "MENZİL");
+        SetLang("COOLDOWN", "RICARICA", "BEKLEME SÜRESİ");
+        SetLang("JUMP", "SALTO", "ZIPLAMA");
+        SetLang("Close-Range Melee", "Mischia ravvicinata", "Yakın Dövüş");
+        SetLang("Ranged Projectile", "Proiettile a distanza", "Menzilli Fırlatma");
+
+        SetLang("Acorns", "Ghiande", "Palamutlar");
+        SetLang("Gems", "Gemme", "Mücevherler");
+        SetLang("Emporium", "Emporio", "Mağaza");
+        SetLang("Gift", "Regalo", "Hediye");
+        SetLang("BACK", "INDIETRO", "GERİ");
+        SetLang("BACK TO MODES", "TORNA ALLE MODALITÀ", "MODLARA DÖN");
+        SetLang("BACK TO TEAMS", "TORNA ALLE SQUADRE", "TAKIMLARA DÖN");
+        SetLang("LEAVE LOBBY", "LASCIA LA STANZA", "LOBİDEN AYRIL");
+        SetLang("CHANGE LANGUAGE", "CAMBIA LINGUA", "DİLİ DEĞİŞTİR");
+        SetLang("RESUME MATCH", "RIPRENDI PARTITA", "OYUNA DEVAM ET");
+        SetLang("PAUSE & SETTINGS", "PAUSA E IMPOSTAZIONI", "DURAKLAT & AYARLAR");
+        SetLang("AUDIO & SOUND", "AUDIO E SUONO", "SES VE MÜZİK");
+        SetLang("SOUND: ON", "SUONO: ATTIVO", "SES: AÇIK");
+        SetLang("SOUND: MUTED", "SUONO: MUTO", "SES: KAPALI");
+        SetLang("RETURN TO MAIN MENU", "TORNA AL MENU PRINCIPALE", "ANA MENÜYE DÖN");
+        SetLang("QUIT GAME", "ESCI DAL GIOCO", "OYUNDAN ÇIK");
     }
 
     #endregion
@@ -351,46 +479,91 @@ public class LanguageSelectionUI : MonoBehaviour
 
         switch (code)
         {
-            case "ar": // Tunisia (علم تونس - أحمر مع قرص أبيض وهلال ونجمة)
-                Color tnRed = new Color(0.89f, 0.05f, 0.12f);
-                Color tnWhite = Color.white;
+            case "ar": // Saudi Arabia (علم المملكة العربية السعودية - أخضر زاهٍ مع السيف والشهادة باللون الأبيض)
+                Color saGreen = new Color(0.0f, 0.45f, 0.22f);
+                Color saWhite = Color.white;
                 for (int y = 0; y < h; y++)
                 {
                     for (int x = 0; x < w; x++)
                     {
-                        Color c = tnRed;
-                        float dx = x - 18f;
-                        float dy = y - 12f;
-                        float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                        Color c = saGreen;
 
-                        // White central disk
-                        if (dist <= 6.5f)
+                        // السيف الأبيض في الجزء السفلي (y = 6..8, x = 9..27)
+                        // نصل السيف الأفقي
+                        if (y == 7 && x >= 12 && x <= 27)
                         {
-                            c = tnWhite;
+                            c = saWhite;
+                        }
+                        // مقبض وقبضة السيف على اليسار
+                        if ((x == 11 && y >= 6 && y <= 8) || (x == 9 && y == 7))
+                        {
+                            c = saWhite;
+                        }
 
-                            // Red crescent inside white disk
-                            float cDx1 = x - 18.5f;
-                            float cDy1 = y - 12f;
-                            float distOuter = Mathf.Sqrt(cDx1 * cDx1 + cDy1 * cDy1);
-
-                            float cDx2 = x - 20.0f;
-                            float cDy2 = y - 12f;
-                            float distInner = Mathf.Sqrt(cDx2 * cDx2 + cDy2 * cDy2);
-
-                            if (distOuter <= 4.5f && distInner >= 3.3f)
+                        // نقش الشهادة بالخط العربي الأبيض في المنتصف (y = 11..16, x = 7..28)
+                        if (y >= 11 && y <= 16 && x >= 8 && x <= 28)
+                        {
+                            bool isLetterStroke = (y == 12 || y == 15) && (x % 2 == 0);
+                            bool isVerticalStem = (x == 10 || x == 14 || x == 18 || x == 22 || x == 26) && (y >= 12 && y <= 16);
+                            bool isDot = (y == 16 && (x == 12 || x == 16 || x == 20 || x == 24));
+                            if (isLetterStroke || isVerticalStem || isDot)
                             {
-                                c = tnRed;
-                            }
-
-                            // Red 5-point star inside crescent
-                            float sDx = x - 16.2f;
-                            float sDy = y - 12f;
-                            float sDist = Mathf.Sqrt(sDx * sDx + sDy * sDy);
-                            if (sDist <= 1.8f)
-                            {
-                                c = tnRed;
+                                c = saWhite;
                             }
                         }
+
+                        pixels[y * w + x] = c;
+                    }
+                }
+                break;
+
+            case "it": // Italy (Green, White, Red vertical tricolor)
+                Color itGreen = new Color(0.0f, 0.57f, 0.27f);
+                Color itWhite = Color.white;
+                Color itRed = new Color(0.81f, 0.17f, 0.17f);
+                for (int y = 0; y < h; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color stripe = (x < 12) ? itGreen : ((x < 24) ? itWhite : itRed);
+                        pixels[y * w + x] = stripe;
+                    }
+                }
+                break;
+
+            case "tr": // Turkey (Red background with White Crescent and 5-pointed Star)
+                Color trRed = new Color(0.89f, 0.05f, 0.12f);
+                Color trWhite = Color.white;
+                for (int y = 0; y < h; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color c = trRed;
+
+                        // Crescent outer circle centered at (14.5, 12) radius 5.2
+                        float dx1 = x - 14.5f;
+                        float dy1 = y - 12.0f;
+                        float distOuter = Mathf.Sqrt(dx1 * dx1 + dy1 * dy1);
+
+                        // Crescent inner circle centered at (16.2, 12) radius 4.1
+                        float dx2 = x - 16.2f;
+                        float dy2 = y - 12.0f;
+                        float distInner = Mathf.Sqrt(dx2 * dx2 + dy2 * dy2);
+
+                        if (distOuter <= 5.2f && distInner >= 4.0f)
+                        {
+                            c = trWhite;
+                        }
+
+                        // Star centered at (21.5, 12) radius 2.2
+                        float sx = x - 21.5f;
+                        float sy = y - 12.0f;
+                        float sDist = Mathf.Sqrt(sx * sx + sy * sy);
+                        if (sDist <= 2.2f)
+                        {
+                            c = trWhite;
+                        }
+
                         pixels[y * w + x] = c;
                     }
                 }
@@ -807,6 +980,14 @@ public class LanguageSelectionUI : MonoBehaviour
                 headerTitle = "🌐 SELECIONE O IDIOMA DO JOGO / GAME LANGUAGE";
                 headerSubtitle = "Escolha seu idioma favorito. Todo o jogo, heróis e tutoriais mudarão instantaneamente (L)";
                 break;
+            case "it":
+                headerTitle = "🌐 SELEZIONA LA LINGUA DEL GIOCO / GAME LANGUAGE";
+                headerSubtitle = "Scegli la tua lingua preferita. Tutti i menu, nomi e guide si aggiorneranno immediatamente (L)";
+                break;
+            case "tr":
+                headerTitle = "🌐 OYUN DİLİNİ SEÇİN / GAME LANGUAGE";
+                headerSubtitle = "Tercih ettiğiniz dili seçin. Tüm menüler, isimler ve rehberler anında güncellenecektir (L)";
+                break;
             default:
                 headerTitle = "🌐 SELECT GAME LANGUAGE / CHOISIR LA LANGUE";
                 headerSubtitle = "Select your preferred language. All game menus, names, and briefings will update immediately (L)";
@@ -847,7 +1028,13 @@ public class LanguageSelectionUI : MonoBehaviour
         switch (activeOpt.code)
         {
             case "ar":
-                bannerMsg = ArabicFixer.Fix($"اللغة المختارة: العربية (تونس والوطن العربي)  —  [كامل اللعبة باللغة العربية مع دعم الخط المتصل]");
+                bannerMsg = ArabicFixer.Fix($"اللغة المختارة: العربية (المملكة العربية السعودية والوطن العربي)  —  [كامل اللعبة باللغة العربية مع دعم الخط المتصل]");
+                break;
+            case "it":
+                bannerMsg = $"LINGUA ATTIVA: Italiano (Italia)  —  [TRADUZIONE COMPLETA DEI MENU E GUIDA]";
+                break;
+            case "tr":
+                bannerMsg = $"AKTİF DİL: Türkçe (Türkiye)  —  [MENÜLER VE KILAVUZLAR TAMAMEN TÜRKÇE]";
                 break;
             case "fa":
                 bannerMsg = ArabicFixer.Fix($"زبان انتخاب‌شده: فارسی (ایران و خاورمیانه)  —  [پشتیبانی کامل از زبان فارسی]");
@@ -1008,6 +1195,12 @@ public class LanguageSelectionUI : MonoBehaviour
                 case "pt":
                     actionBtnText = "▶ CONTINUAR JOGO EM PORTUGUÊS";
                     break;
+                case "it":
+                    actionBtnText = "▶ CONTINUA A GIOCARE IN ITALIANO";
+                    break;
+                case "tr":
+                    actionBtnText = "▶ TÜRKÇE OYNAMAYA DEVAM ET";
+                    break;
                 default:
                     actionBtnText = "▶ CONTINUE PLAYING IN ENGLISH";
                     break;
@@ -1046,6 +1239,12 @@ public class LanguageSelectionUI : MonoBehaviour
                     break;
                 case "pt":
                     actionBtnText = "▶ INICIAR JOGO EM PORTUGUÊS";
+                    break;
+                case "it":
+                    actionBtnText = "▶ INIZIA IL GIOCO IN ITALIANO";
+                    break;
+                case "tr":
+                    actionBtnText = "▶ OYUNU TÜRKÇE BAŞLAT";
                     break;
                 default:
                     actionBtnText = "▶ START GAME IN ENGLISH";
@@ -1094,6 +1293,12 @@ public class LanguageSelectionUI : MonoBehaviour
                 break;
             case "pt":
                 closeBtnText = "❌ FECHAR (ESC)";
+                break;
+            case "it":
+                closeBtnText = "❌ CHIUDI (ESC)";
+                break;
+            case "tr":
+                closeBtnText = "❌ KAPAT (ESC)";
                 break;
             default:
                 closeBtnText = "❌ CLOSE (ESC)";
