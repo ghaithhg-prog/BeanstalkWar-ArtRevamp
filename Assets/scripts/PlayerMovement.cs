@@ -925,12 +925,13 @@ public class PlayerMovement : NetworkBehaviour
     private float lastJumpTime = -10f;
     private bool wasAirborne = false;
     private float highestFallY = float.MinValue;
+    private bool isCurrentlyGrounded = false;
 
     void CheckGroundedRaycast()
     {
-        bool isCurrentlyGrounded = false;
-        Vector3 origin = transform.position + Vector3.up * 0.25f;
-        if (Physics.SphereCast(origin, 0.30f, Vector3.down, out RaycastHit hit, 0.50f, ~LayerMask.GetMask("Ignore Raycast")))
+        isCurrentlyGrounded = false;
+        Vector3 origin = transform.position + Vector3.up * 0.15f;
+        if (Physics.SphereCast(origin, 0.30f, Vector3.down, out RaycastHit hit, 1.10f, ~LayerMask.GetMask("Ignore Raycast")))
         {
             if (!hit.collider.isTrigger && hit.collider.gameObject != gameObject && !hit.collider.transform.IsChildOf(transform))
             {
@@ -1070,11 +1071,17 @@ public class PlayerMovement : NetworkBehaviour
 
         Vector3 inputDirection = new Vector3(h, 0f, v);
 
-        // فحص الأرضية والمنحدرات تحت قدم اللاعب مباشرة بدقة تامة لمنع الطفو في الهواء
+        // فحص الأرضية والمنحدرات تحت قدم اللاعب مباشرة بدقة تامة لمنع الطفو أو القفز اللاإرادي
         RaycastHit hit;
         bool hasHit = false;
-        // فحص قريب جداً من أسفل القدم (0.45م) حتى تسقط الشخصية فوراً عند الخروج عن الممر
-        if (Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, out hit, 0.45f, ~LayerMask.GetMask("Ignore Raycast")))
+        if (Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, out hit, 1.35f, ~LayerMask.GetMask("Ignore Raycast")))
+        {
+            if (!hit.collider.isTrigger && hit.collider.gameObject != gameObject && !hit.collider.transform.IsChildOf(transform))
+            {
+                hasHit = true;
+            }
+        }
+        if (!hasHit && Physics.SphereCast(transform.position + Vector3.up * 0.2f, 0.25f, Vector3.down, out hit, 1.15f, ~LayerMask.GetMask("Ignore Raycast")))
         {
             if (!hit.collider.isTrigger && hit.collider.gameObject != gameObject && !hit.collider.transform.IsChildOf(transform))
             {
@@ -1088,15 +1095,17 @@ public class PlayerMovement : NetworkBehaviour
         {
             if (rb != null && !rb.isKinematic)
             {
-                if (isGroundedSlope)
+                if (isGroundedSlope || isCurrentlyGrounded)
                 {
-                    // على الأرضية أو المنحدر: نثبت السرعة لمنع الانزلاق العشوائي
+                    // على الأرضية أو المنحدر: نثبت السرعة تماماً لمنع الانزلاق والقفز اللاإرادي
                     rb.linearVelocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
                 }
                 else
                 {
-                    // في الهواء: نوقف الحركة الأفقية فقط ونبقي سرعة السقوط Y لتعمل الجاذبية ويسقط اللاعب فوراً بشكل طبيعي!
-                    rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+                    // في الهواء: نوقف الحركة الأفقية فقط ونمنع القفز اللاإرادي الصاعد إذا لم تكن قفزة متعمدة
+                    float yVel = (Time.time - lastJumpTime < 0.30f) ? rb.linearVelocity.y : Mathf.Min(0f, rb.linearVelocity.y);
+                    rb.linearVelocity = new Vector3(0f, yVel, 0f);
                 }
             }
             return;
@@ -1140,15 +1149,11 @@ public class PlayerMovement : NetworkBehaviour
             Vector3 vel = targetMove * currentSpeed;
             if (isGroundedSlope)
             {
-                // ضبط السرعة الرأسية على المنحدرات لمنع الطيران في الهواء عند حواف المربعات
-                float targetY = Mathf.Clamp(vel.y, -12f, 3.5f);
-                rb.linearVelocity = new Vector3(vel.x, targetY, vel.z);
+                // حركة موجهة بدقة بمحاذاة سطح المنحدر
+                rb.linearVelocity = vel;
 
-                // قوة التصاق سطحية لطيفة تثبت اللاعب على مسار المنحدر المنحني وتمنع القفز التلقائي
-                if (targetY > 0f)
-                {
-                    rb.AddForce(-hit.normal * 12f, ForceMode.Acceleration);
-                }
+                // قوة التصاق سطحية تثبت اللاعب على مسار المنحدر المنحني وتمنع القفز أو الارتداد
+                rb.AddForce(-hit.normal * 16f, ForceMode.Acceleration);
             }
             else
             {
