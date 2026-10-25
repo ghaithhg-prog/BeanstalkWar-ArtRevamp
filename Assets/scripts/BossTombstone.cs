@@ -236,6 +236,7 @@ public class BossTombstone : MonoBehaviour
         string localizedTitle = LanguageSelectionUI.Localize(
             $"👑 SPOILS: {bossTitle}",
             ar: $"👑 غنائم المعركة: {bossTitle}",
+            fa: $"👑 غنائم نبرد: {bossTitle}",
             ru: $"👑 ТРОФЕИ: {bossTitle}",
             fr: $"👑 BUTIN : {bossTitle}",
             es: $"👑 BOTÍN: {bossTitle}",
@@ -267,6 +268,7 @@ public class BossTombstone : MonoBehaviour
             ? LanguageSelectionUI.Localize(
                 $"🌿 Step near to claim reward (+{bonusCoins} 🪙 | +{bonusXP} XP)",
                 ar: $"🌿 اقترب لاستلام المكافأة (+{bonusCoins} 🪙 | +{bonusXP} XP)",
+                fa: $"🌿 برای دریافت پاداش نزدیک شوید (+{bonusCoins} 🪙 | +{bonusXP} XP)",
                 ru: $"🌿 Подойдите для награды (+{bonusCoins} 🪙 | +{bonusXP} XP)",
                 fr: $"🌿 Approchez pour récupérer (+{bonusCoins} 🪙 | +{bonusXP} XP)",
                 es: $"🌿 Acércate para reclamar (+{bonusCoins} 🪙 | +{bonusXP} XP)",
@@ -281,6 +283,7 @@ public class BossTombstone : MonoBehaviour
             : LanguageSelectionUI.Localize(
                 "⚔️ Reserved for opposing champions",
                 ar: "⚔️ غنائم مخصصة للفريق المنافس",
+                fa: "⚔️ ویژه قهرمانان تیم حریف",
                 ru: "⚔️ Трофеи команды противника",
                 fr: "⚔️ Réservé aux champions adverses",
                 es: "⚔️ Reservado para el equipo rival",

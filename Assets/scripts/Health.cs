@@ -237,10 +237,13 @@ public class Health : MonoBehaviour
                     respawnText.text = LanguageSelectionUI.Localize(
                         $"Respawning in {secInt}s",
                         ar: $"العودة للحياة بعد {secInt} ثوانٍ",
+                        fa: $"بازگشت به زندگی پس از {secInt} ثانیه",
+                        de: $"Wiederbelebung in {secInt}s",
+                        it: $"Rientro in gioco in {secInt}s",
+                        tr: $"{secInt}sn içinde yeniden doğuş",
                         ru: $"Возрождение через {secInt} с",
                         fr: $"Réapparition dans {secInt}s",
                         es: $"Reapareciendo en {secInt}s",
-                        de: $"Wiederbelebung in {secInt}s",
                         hi: $"{secInt} सेकंड में पुनर्जन्म",
                         zh: $"{secInt} 秒后复活",
                         ja: $"{secInt} 秒後に復活",
@@ -368,8 +371,36 @@ public class Health : MonoBehaviour
             : new Color(1f, 0.28f, 0.15f);
 
         string teamLabel = currentTeam == PlayerMovement.TeamType.Protector 
-            ? LanguageSelectionUI.Localize("🛡️ PROTECTOR", ar: "🛡️ حامي الشجرة", ru: "🛡️ ЗАЩИТНИК", es: "🛡️ PROTECTOR", fr: "🛡️ PROTECTEUR") 
-            : LanguageSelectionUI.Localize("⚔️ DESTROYER", ar: "⚔️ مدمر الشجرة", ru: "⚔️ РАЗРУШИТЕЛЬ", es: "⚔️ DESTRUCTOR", fr: "⚔️ DESTRUCTEUR");
+            ? LanguageSelectionUI.Localize(
+                "🛡️ PROTECTOR",
+                ar: "🛡️ حامي الشجرة",
+                fa: "🛡️ محافظ درخت",
+                de: "🛡️ BESCHÜTZER",
+                it: "🛡️ PROTETTORE",
+                tr: "🛡️ KORUYUCU",
+                ru: "🛡️ ЗАЩИТНИК",
+                fr: "🛡️ PROTECTEUR",
+                es: "🛡️ PROTECTOR",
+                hi: "🛡️ रक्षक",
+                zh: "🛡️ 守护者",
+                ja: "🛡️ 守護者",
+                pt: "🛡️ PROTETOR"
+            )
+            : LanguageSelectionUI.Localize(
+                "⚔️ DESTROYER",
+                ar: "⚔️ مدمر الشجرة",
+                fa: "⚔️ نابودکننده",
+                de: "⚔️ ZERSTÖRER",
+                it: "⚔️ DISTRUTTORE",
+                tr: "⚔️ YOK EDİCİ",
+                ru: "⚔️ РАЗРУШИТЕЛЬ",
+                fr: "⚔️ DESTRUCTEUR",
+                es: "⚔️ DESTRUCTOR",
+                hi: "⚔️ विनाशक",
+                zh: "⚔️ 破坏者",
+                ja: "⚔️ 破壊者",
+                pt: "⚔️ DESTRUIDOR"
+            );
 
         // موقع فوق رأس اللاعب
         Vector3 headPos = transform.position + Vector3.up * 2.3f;
@@ -449,10 +480,13 @@ public class Health : MonoBehaviour
         string titleStr = LanguageSelectionUI.Localize(
             "☠️ YOU HAVE FALLEN IN BATTLE ☠️",
             ar: "☠️ سقطت في المعركة ☠️",
+            fa: "☠️ در میدان نبرد سقوط کردید ☠️",
+            de: "☠️ DU BIST IM KAMPF GEFALLEN ☠️",
+            it: "☠️ SEI CADUTO IN BATTAGLIA ☠️",
+            tr: "☠️ SAVAŞTA YENİLDİNİZ ☠️",
             ru: "☠️ ВЫ ПАЛИ В БОЮ ☠️",
             fr: "☠️ VOUS ÊTES TOMBÉ AU COMBAT ☠️",
             es: "☠️ HAS CAÍDO EN COMBATE ☠️",
-            de: "☠️ DU BIST IM KAMPF GEFALLEN ☠️",
             hi: "☠️ आप युद्ध में वीरगति को प्राप्त हुए ☠️",
             zh: "☠️ 你已在战斗中阵亡 ☠️",
             ja: "☠️ 戦闘不能になりました ☠️",
@@ -476,10 +510,13 @@ public class Health : MonoBehaviour
         string countdownMsg = LanguageSelectionUI.Localize(
             $"⚡ Respawning in {secondsLeft} seconds...",
             ar: $"⚡ ستعود للحياة بعد {secondsLeft} ثوانٍ...",
+            fa: $"⚡ بازگشت به زندگی در {secondsLeft} ثانیه...",
+            de: $"⚡ Wiederbelebung in {secondsLeft} Sekunden...",
+            it: $"⚡ Rientro in battaglia in {secondsLeft} secondi...",
+            tr: $"⚡ {secondsLeft} saniye içinde yeniden doğuş...",
             ru: $"⚡ Возрождение через {secondsLeft} сек...",
             fr: $"⚡ Réapparition dans {secondsLeft} secondes...",
             es: $"⚡ Volverás a la vida en {secondsLeft} segundos...",
-            de: $"⚡ Wiederbelebung in {secondsLeft} Sekunden...",
             hi: $"⚡ {secondsLeft} सेकंड में पुनर्जीवन...",
             zh: $"⚡ 将在 {secondsLeft} 秒后复活...",
             ja: $"⚡ {secondsLeft} 秒後に復活...",
@@ -526,10 +563,13 @@ public class Health : MonoBehaviour
         string hintStr = LanguageSelectionUI.Localize(
             "🌿 Preparing safe respawn at your team's sanctuary",
             ar: "🌿 جاري تجهيز إحيائك عند ملاذ فريقك المخصص",
+            fa: "🌿 آماده‌سازی برای احیا در پناهگاه امن تیم شما",
+            de: "🌿 Wiederbelebung am Heiligtum deines Teams",
+            it: "🌿 Preparazione al rientro nel santuario della tua squadra",
+            tr: "🌿 Takımınızın sığınağında yeniden doğuş hazırlanıyor",
             ru: "🌿 Подготовка к возрождению на базе команды",
             fr: "🌿 Réapparition au sanctuaire de votre équipe",
             es: "🌿 Preparando reaparición en el santuario de tu equipo",
-            de: "🌿 Wiederbelebung am Heiligtum deines Teams",
             hi: "🌿 आपकी टीम के अभयारण्य में पुनर्जीवन की तैयारी",
             zh: "🌿 正在团队圣地准备重生",
             ja: "🌿 拠点で復活準備中",

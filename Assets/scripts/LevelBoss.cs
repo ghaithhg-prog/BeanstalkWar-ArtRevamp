@@ -503,15 +503,18 @@ public class LevelBoss : NetworkBehaviour
         {
             string notifMsg = LanguageSelectionUI.Localize(
                 $"⚠️ WARNING: {bossTitle} HAS AWAKENED ON LEVEL {levelNumber}!",
-                $"⚠️ تنبيه: استيقظ زعيم الطابق {levelNumber} ({bossTitle})!",
-                $"⚠️ ВНИМАНИЕ: {bossTitle} ПРОБУДИЛСЯ НА УРОВНЕ {levelNumber}!",
-                $"⚠️ ¡ADVERTENCIA: {bossTitle} HA DESPERTADO EN EL NIVEL {levelNumber}!",
-                $"⚠️ ATTENTION : {bossTitle} S'EST ÉVEILLÉ AU NIVEAU {levelNumber} !",
-                $"⚠️ WARNUNG: {bossTitle} IST AUF EBENE {levelNumber} ERWACHT!",
-                $"⚠️ चेतावनी: {bossTitle} स्तर {levelNumber} पर जाग गया है!",
-                $"⚠️ 警告：{bossTitle} 已在第 {levelNumber} 层苏醒！",
-                $"⚠️ 警告：{bossTitle} が第 {levelNumber} レベルで目覚めました！",
-                $"⚠️ AVISO: {bossTitle} DESPERTOU NO NÍVEL {levelNumber}!"
+                ar: $"⚠️ تنبيه: استيقظ زعيم الطابق {levelNumber} ({bossTitle})!",
+                fa: $"⚠️ هشدار: {bossTitle} در طبقه {levelNumber} بیدار شد!",
+                de: $"⚠️ WARNUNG: {bossTitle} IST AUF EBENE {levelNumber} ERWACHT!",
+                it: $"⚠️ ATTENZIONE: {bossTitle} SI È RISVEGLIATO AL LIVELLO {levelNumber}!",
+                tr: $"⚠️ UYARI: {bossTitle} {levelNumber}. SEVİYEDE UYANDI!",
+                ru: $"⚠️ ВНИМАНИЕ: {bossTitle} ПРОБУДИЛСЯ НА УРОВНЕ {levelNumber}!",
+                fr: $"⚠️ ATTENTION : {bossTitle} S'EST ÉVEILLÉ AU NIVEAU {levelNumber} !",
+                es: $"⚠️ ¡ADVERTENCIA: {bossTitle} HA DESPERTADO EN EL NIVEL {levelNumber}!",
+                hi: $"⚠️ चेतावनी: {bossTitle} स्तर {levelNumber} पर जाग गया है!",
+                zh: $"⚠️ 警告：{bossTitle} 已在第 {levelNumber} 层苏醒！",
+                ja: $"⚠️ 警告：{bossTitle} が第 {levelNumber} レベルで目覚めました！",
+                pt: $"⚠️ AVISO: {bossTitle} DESPERTOU NO NÍVEL {levelNumber}!"
             );
             PlayerProgressionAndShopUI.Instance?.ShowNotification(notifMsg);
         }
@@ -1046,15 +1049,57 @@ public class LevelBoss : NetworkBehaviour
     {
         if (levelNumber == 1)
         {
-            return LanguageSelectionUI.Localize("FOREST GOLIATH [LV 1]", ar: "عملاق الغابة [مستوى 1]", ru: "ЛЕСНОЙ ГОЛИАФ [УР 1]", es: "GOLIAT DEL BOSQUE [NV 1]", fr: "GOLIATH DES BOIS [NV 1]");
+            return LanguageSelectionUI.Localize(
+                "FOREST GOLIATH [LV 1]",
+                ar: "جالوت الغابة [طابق 1]",
+                fa: "جالوت جنگل [طبقه ۱]",
+                de: "WALDGOLIATH [STUFE 1]",
+                it: "GOLIA DELLA FORESTA [LIV 1]",
+                tr: "ORMAN GOLYATI [SEV 1]",
+                ru: "ГОЛИАФ ЛЕСА [УР 1]",
+                fr: "GOLIATH DES BOIS [NV 1]",
+                es: "GOLIAT DEL BOSQUE [NV 1]",
+                hi: "वन गोलियत [स्तर 1]",
+                zh: "森林歌利亚 [第1阶]",
+                ja: "森のゴライアス [第1層]",
+                pt: "GOLIAS DA FLORESTA [NÍV 1]"
+            );
         }
         else if (levelNumber == 2)
         {
-            return LanguageSelectionUI.Localize("INFERNO TITAN [LV 2]", ar: "تيتان الحمم [مستوى 2]", ru: "ОГНЕННЫЙ ТИТАН [УР 2]", es: "TITÁN INFERNAL [NV 2]", fr: "TITAN DE FEU [NV 2]");
+            return LanguageSelectionUI.Localize(
+                "INFERNO TITAN [LV 2]",
+                ar: "عملاق الجحيم [طابق 2]",
+                fa: "تایتان دوزخ [طبقه ۲]",
+                de: "INFERNO-TITAN [STUFE 2]",
+                it: "TITANO INFERNALE [LIV 2]",
+                tr: "CEHENNEM TİTANI [SEV 2]",
+                ru: "ОГНЕННЫЙ ТИТАН [УР 2]",
+                fr: "TITAN DE FEU [NV 2]",
+                es: "TITÁN INFERNAL [NV 2]",
+                hi: "पाताल टाइटन [स्तर 2]",
+                zh: "炼狱泰坦 [第2阶]",
+                ja: "業火のタイタン [第2層]",
+                pt: "TITÃ INFERNAL [NÍV 2]"
+            );
         }
         else
         {
-            return LanguageSelectionUI.Localize("ANCIENT OVERLORD [LV 3]", ar: "الحاكم القديم [مستوى 3]", ru: "ДРЕВНИЙ ПОВЕЛИТЕЛЬ [УР 3]", es: "SEÑOR ANCESTRAL [NV 3]", fr: "SEIGNEUR ANCESTRAL [NV 3]");
+            return LanguageSelectionUI.Localize(
+                "ANCIENT OVERLORD [LV 3]",
+                ar: "الطاغية القديم [طابق 3]",
+                fa: "فرمانروای باستانی [طبقه ۳]",
+                de: "URALTER HERRSCHER [STUFE 3]",
+                it: "SOVRANO ANCESTRALE [LIV 3]",
+                tr: "ANTİK HÜKÜMDAR [SEV 3]",
+                ru: "ДРЕВНИЙ ПОВЕЛИТЕЛЬ [УР 3]",
+                fr: "SEIGNEUR ANCESTRAL [NV 3]",
+                es: "SEÑOR ANCESTRAL [NV 3]",
+                hi: "प्राचीन अधिपति [स्तर 3]",
+                zh: "远古霸主 [第3阶]",
+                ja: "古代の覇王 [第3層]",
+                pt: "SOBERANO ANCESTRAL [NÍV 3]"
+            );
         }
     }
 }

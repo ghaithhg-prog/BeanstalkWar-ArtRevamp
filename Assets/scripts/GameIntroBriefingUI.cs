@@ -94,17 +94,33 @@ public class GameIntroBriefingUI : MonoBehaviour
         bannerHeader = LanguageSelectionUI.Localize(
             $"👑 BOSS DEFEATED ({defeatedCount} / {LevelBossManager.TotalBossCount} SEALS BROKEN) 👑",
             ar: $"👑 تم القضاء على الزعيم ({defeatedCount} / {LevelBossManager.TotalBossCount} أختام كُسرت) 👑",
+            fa: $"👑 غول شکست خورد ({defeatedCount} / {LevelBossManager.TotalBossCount} مهر شکسته شد) 👑",
+            de: $"👑 BOSS BESIEGT ({defeatedCount} / {LevelBossManager.TotalBossCount} SIEGEL GEBROCHEN) 👑",
+            it: $"👑 BOSS SCONFITTO ({defeatedCount} / {LevelBossManager.TotalBossCount} SIGILLI SPEZZATI) 👑",
+            tr: $"👑 PATRON YENİLDİ ({defeatedCount} / {LevelBossManager.TotalBossCount} MÜHÜR KIRILDI) 👑",
             ru: $"👑 БОСС ПОВЕРЖЕН ({defeatedCount} / {LevelBossManager.TotalBossCount} ПЕЧАТЕЙ СНЯТО) 👑",
+            fr: $"👑 BOSS VAINCU ({defeatedCount} / {LevelBossManager.TotalBossCount} SCEAUX BRISÉS) 👑",
             es: $"👑 ¡JEFE DERROTADO ({defeatedCount} / {LevelBossManager.TotalBossCount} SELLOS ROTOS)! 👑",
-            fr: $"👑 BOSS VAINCU ({defeatedCount} / {LevelBossManager.TotalBossCount} SCEAUX BRISÉS) 👑"
+            hi: $"👑 बॉस पराजित ({defeatedCount} / {LevelBossManager.TotalBossCount} सील टूटी) 👑",
+            zh: $"👑 守护领主已被击败（{defeatedCount} / {LevelBossManager.TotalBossCount} 封印解除）👑",
+            ja: $"👑 ボス討伐成功！（封印解除: {defeatedCount} / {LevelBossManager.TotalBossCount}）👑",
+            pt: $"👑 CHEFE DERROTADO ({defeatedCount} / {LevelBossManager.TotalBossCount} SELOS QUEBRADOS) 👑"
         );
 
         bannerMainText = LanguageSelectionUI.Localize(
             $"{bossTitle} WAS SLAIN BY {killerName.ToUpper()}!",
             ar: $"تمت هزيمة {bossTitle} بواسطة {killerName.ToUpper()}!",
+            fa: $"{bossTitle} توسط {killerName.ToUpper()} نابود شد!",
+            de: $"{bossTitle} WURDE VON {killerName.ToUpper()} BESIEGT!",
+            it: $"{bossTitle} È STATO SCONFITTO DA {killerName.ToUpper()}!",
+            tr: $"{bossTitle}, {killerName.ToUpper()} TARAFINDAN KATLEDİLDİ!",
             ru: $"{bossTitle} ПОВЕРЖЕН ИГРОКОМ {killerName.ToUpper()}!",
+            fr: $"{bossTitle} A ÉTÉ VAINCU PAR {killerName.ToUpper()} !",
             es: $"¡{bossTitle} DERROTADO POR {killerName.ToUpper()}!",
-            fr: $"{bossTitle} A ÉTÉ VAINCU PAR {killerName.ToUpper()} !"
+            hi: $"{bossTitle} को {killerName.ToUpper()} द्वारा मार गिराया गया!",
+            zh: $"{bossTitle} 已被 {killerName.ToUpper()} 斩杀！",
+            ja: $"{bossTitle} は {killerName.ToUpper()} に討伐された！",
+            pt: $"{bossTitle} FOI DERROTADO POR {killerName.ToUpper()}!"
         );
 
         int remaining = LevelBossManager.TotalBossCount - defeatedCount;
@@ -112,16 +128,32 @@ public class GameIntroBriefingUI : MonoBehaviour
             ? LanguageSelectionUI.Localize(
                 $"PROTECTORS BLESSING: Sacred Tree Healed +350 HP! ({remaining} Boss{(remaining > 1 ? "es" : "")} Remaining)",
                 ar: $"بركة الحماة: تم شفاء الشجرة +350 نقطة! (متبقي {remaining} زعيم)",
+                fa: $"برکت محافظان: درخت مقدس +350 واحد درمان شد! ({remaining} غول باقی‌مانده)",
+                de: $"SEGEN DER BESCHÜTZER: Heiliger Baum +350 HP geheilt! ({remaining} verbleibend)",
+                it: $"BENEDIZIONE DEI PROTETTORI: Albero Sacro guarito +350 HP! ({remaining} rimasti)",
+                tr: $"KORUYUCU LÜTFU: Kutsal Ağaç +350 Can İyileşti! ({remaining} Patron kaldı)",
                 ru: $"БЛАГОСЛОВЕНИЕ: Дерево исцелено на +350 HP! (Осталось {remaining} босс)",
+                fr: $"BÉNÉDICTION : L'Arbre Sacré a récupéré +350 PV ! ({remaining} restants)",
                 es: $"BENDICIÓN PROTECTORA: ¡Árbol curado +350 HP! (Quedan {remaining} jefes)",
-                fr: $"BÉNÉDICTION : L'Arbre Sacré a récupéré +350 PV ! ({remaining} restants)"
+                hi: $"रक्षकों का आशीर्वाद: पवित्र वृक्ष को +350 स्वास्थ्य मिला! ({remaining} बॉस शेष)",
+                zh: $"守护者神恩降临：神圣巨树生命恢复+350！（还剩{remaining}个守护领主）",
+                ja: $"守護者の恩寵：神聖な巨木が+350回復！（残り{remaining}体のボス）",
+                pt: $"BÊNÇÃO DOS PROTETORES: Árvore Sagrada curada em +350 PV! ({remaining} restantes)"
             )
             : LanguageSelectionUI.Localize(
                 $"DESTROYERS SHOCKWAVE: Sacred Tree Damaged -260 HP! ({remaining} Boss{(remaining > 1 ? "es" : "")} Remaining)",
                 ar: $"ضربة المدمرين: تضررت الشجرة -260 نقطة! (متبقي {remaining} زعيم)",
+                fa: $"موج تخریب نابودکنندگان: درخت مقدس -260 واحد آسیب دید! ({remaining} غول باقی‌مانده)",
+                de: $"SCHOCKWELLE DER ZERSTÖRER: Heiliger Baum erlitt -260 Schaden! ({remaining} verbleibend)",
+                it: $"ONDA D'URTO DEI DISTRUTTORI: Albero Sacro danneggiato -260 HP! ({remaining} rimasti)",
+                tr: $"YOK EDİCİ ŞOKU: Kutsal Ağaç -260 Hasar Aldı! ({remaining} Patron kaldı)",
                 ru: $"УДАРНАЯ ВОЛНА: Дерево получило -260 урона! (Осталось {remaining} босс)",
+                fr: $"ONDE DE CHOC : L'Arbre Sacré a subi -260 dégâts ! ({remaining} restants)",
                 es: $"ONDA DESTRUCTIVA: ¡Árbol dañado -260 HP! (Quedan {remaining} jefes)",
-                fr: $"ONDE DE CHOC : L'Arbre Sacré a subi -260 dégâts ! ({remaining} restants)"
+                hi: $"विनाशक प्रहार: पवित्र वृक्ष को -260 क्षति! ({remaining} बॉस शेष)",
+                zh: $"毁灭冲击：神圣巨树受到-260伤害！（还剩{remaining}个守护领主）",
+                ja: $"破壊の衝撃波：巨樹に-260のダメージ！（残り{remaining}体のボス）",
+                pt: $"ONDA DESTRUIDORA: Árvore Sagrada sofreu -260 de dano! ({remaining} restantes)"
             );
 
         bannerPrimaryColor = killerTeam == PlayerMovement.TeamType.Destroyer
@@ -352,9 +384,17 @@ public class GameIntroBriefingUI : MonoBehaviour
                 string text = LanguageSelectionUI.Localize(
                     "🔥 ALL 3 BOSSES SLAIN! TREE SHIELD BROKEN — DESTROY THE TREE! 🔥",
                     ar: "🔥 تم القضاء على الزعماء الثلاثة! سقط الدرع — دمروا الشجرة الآن! 🔥",
+                    fa: "🔥 هر ۳ غول نابود شدند! سپر درخت شکست — اکنون درخت را نابود کنید! 🔥",
+                    de: "🔥 ALLE 3 BOSSE BESIEGT! SCHILD GEBROCHEN — ZERSTÖRT DEN BAUM! 🔥",
+                    it: "🔥 TUTTI E 3 I BOSS SCONFITTI! SCUDO SPEZZATO — DISTRUGGI L'ALBERO! 🔥",
+                    tr: "🔥 3 PATRON DA YENİLDİ! KALKAN KIRILDI — AĞACI YOK EDİN! 🔥",
                     ru: "🔥 ВСЕ 3 БОССА ПОВЕРЖЕНЫ! ЩИТ СНЯТ — СРУБИТЕ ДЕРЕВО! 🔥",
+                    fr: "🔥 LES 3 BOSS SONT VAINCUS ! BOUCLIER BRISÉ — DÉTRUISEZ L'ARBRE ! 🔥",
                     es: "🔥 ¡LOS 3 JEFES HAN CAÍDO! ESCUDO ROTO — ¡DESTRUYE EL ÁRBOL! 🔥",
-                    fr: "🔥 LES 3 BOSS SONT VAINCUS ! BOUCLIER BRISÉ — DÉTRUISEZ L'ARBRE ! 🔥"
+                    hi: "🔥 तीनों बॉस मारे गए! ढाल टूट गई — अब पेड़ को नष्ट करें! 🔥",
+                    zh: "🔥 全部3位领主已被斩杀！神树护盾粉碎 — 立即摧毁神树！🔥",
+                    ja: "🔥 3大ボス討伐完了！シールド崩壊 — 神木を伐採せよ！🔥",
+                    pt: "🔥 TODOS OS 3 CHEFES DERROTADOS! ESCUDO QUEBRADO — DESTRUA A ÁRVORE! 🔥"
                 );
                 GUI.Label(new Rect(x, y, w, h), text, style);
             }
@@ -364,9 +404,17 @@ public class GameIntroBriefingUI : MonoBehaviour
                 string text = LanguageSelectionUI.Localize(
                     "💎 ALL 3 BOSSES SLAIN! CRYSTAL IS READY — DELIVER IT TO THE ALTAR! 💎",
                     ar: "💎 تم القضاء على الزعماء الثلاثة! الكريستالة جاهزة — أوصلوها إلى المذبح! 💎",
+                    fa: "💎 هر ۳ غول نابود شدند! بلور آماده است — آن را به محراب برسانید! 💎",
+                    de: "💎 ALLE 3 BOSSE BESIEGT! KRISTALL BEREIT — ZUM ALTAR BRINGEN! 💎",
+                    it: "💎 TUTTI E 3 I BOSS SCONFITTI! IL CRISTALLO È PRONTO — PORTALO ALL'ALTARE! 💎",
+                    tr: "💎 3 PATRON DA YENİLDİ! KRİSTAL HAZIR — SUNAĞA TAŞIYIN! 💎",
                     ru: "💎 ВСЕ 3 БОССА ПОВЕРЖЕНЫ! КРИСТАЛЛ ГОТОВ — ДОСТАВЬТЕ ЕГО К АЛТАРЮ! 💎",
+                    fr: "💎 LES 3 BOSS SONT VAINCUS ! LE CRISTAL EST PRÊT — LIVREZ-LE À L'AUTEL ! 💎",
                     es: "💎 ¡LOS 3 JEFES HAN CAÍDO! CRISTAL DISPONIBLE — ¡LLÉVALO AL ALTAR! 💎",
-                    fr: "💎 LES 3 BOSS SONT VAINCUS ! LE CRISTAL EST PRÊT — LIVREZ-LE À L'AUTEL ! 💎"
+                    hi: "💎 तीनों बॉस मारे गए! क्रिस्टल तैयार है — इसे वेदी तक पहुँचाएँ! 💎",
+                    zh: "💎 全部3位领主已被斩杀！神圣水晶现世 — 立即送往圣坛！💎",
+                    ja: "💎 3大ボス討伐完了！水晶出現 — 祭壇へ奉納せよ！💎",
+                    pt: "💎 TODOS OS 3 CHEFES DERROTADOS! O CRISTAL ESTÁ PRONTO — LEVE AO ALTAR! 💎"
                 );
                 GUI.Label(new Rect(x, y, w, h), text, style);
             }
@@ -378,10 +426,10 @@ public class GameIntroBriefingUI : MonoBehaviour
         float alpha = Mathf.Clamp01(bigBannerTimer / 0.6f);
         float pulse = 1f + Mathf.Sin(Time.time * 6f) * 0.03f;
 
-        float w = Mathf.Min(840f, Screen.width * 0.88f) * pulse;
-        float h = isUltimateThreeBossBanner ? 165f : 125f;
+        float w = Mathf.Min(680f, Screen.width * 0.85f) * pulse;
+        float h = isUltimateThreeBossBanner ? 92f : 68f;
         float x = (Screen.width - w) / 2f;
-        float y = Screen.height * 0.24f;
+        float y = 52f; // Near top of screen, far away from crosshair and center combat
 
         PlayerMovement.TeamType localTeam = GetLocalPlayerTeam();
 
@@ -395,53 +443,137 @@ public class GameIntroBriefingUI : MonoBehaviour
             if (localTeam == PlayerMovement.TeamType.Destroyer)
             {
                 frameColor = new Color(1f, 0.28f, 0.15f, alpha);
-                head = LanguageSelectionUI.Localize("🔥 ALL 3 GUARDIAN BOSSES HAVE BEEN DEFEATED! 🔥", ar: "🔥 تم القضاء على الزعماء الحراس الثلاثة بالكامل! 🔥", ru: "🔥 ВСЕ 3 БОССА ПОВЕРЖЕНЫ! 🔥", es: "🔥 ¡LOS 3 JEFES GUARDIANES HAN CAÍDO! 🔥", fr: "🔥 LES 3 BOSS GARDIENS ONT ÉTÉ VAINCUS ! 🔥");
-                main = LanguageSelectionUI.Localize("YOU CAN NOW DESTROY THE SACRED TREE!", ar: "يمكنك الآن تدمير الشجرة المقدسة!", ru: "ТЕПЕРЬ ВЫ МОЖЕТЕ СРУБИТЬ ДЕРЕВО!", es: "¡AHORA PUEDES DESTRUIR EL ÁRBOL SAGRADO!", fr: "VOUS POUVEZ MAINTENANT DÉTRUIRE L'ARBRE SACRÉ !");
-                sub = LanguageSelectionUI.Localize("10-Second Divine Shield Countdown active! Position yourselves — Tree becomes vulnerable in 10s!", ar: "العد التنازلي لدرع الصمود المقدس بدأ (10 ثوانٍ)! خذوا مواقعكم — الشجرة ستصبح مكشوفة بالكامل بعد 10 ثوانٍ!", ru: "ОТСЧЕТ 10 СЕКУНД ДО СНЯТИЯ ЩИТА! Займите позиции — Дерево станет уязвимым через 10 сек!", es: "¡CUENTA ATRÁS DE 10S DEL ESCUDO DIVINO! ¡El Árbol será vulnerable en 10s!", fr: "COMPTE À REBOURS DE 10S DU BOUCLIER DIVIN ! L'Arbre sera vulnérable dans 10s !");
+                head = LanguageSelectionUI.Localize(
+                    "🔥 ALL 3 GUARDIAN BOSSES HAVE BEEN DEFEATED! 🔥",
+                    ar: "🔥 تم القضاء على الزعماء الحراس الثلاثة بالكامل! 🔥",
+                    fa: "🔥 هر ۳ غول نگهبان کاملاً نابود شدند! 🔥",
+                    de: "🔥 ALLE 3 WÄCHTER-BOSSE WURDEN BESIEGT! 🔥",
+                    it: "🔥 TUTTI E 3 I BOSS GUARDIANI SONO STATI SCONFITTI! 🔥",
+                    tr: "🔥 3 MUHAFIZ PATRONUN TAMAMI KATLEDİLDİ! 🔥",
+                    ru: "🔥 ВСЕ 3 БОССА ПОВЕРЖЕНЫ! 🔥",
+                    fr: "🔥 LES 3 BOSS GARDIENS ONT ÉTÉ VAINCUS ! 🔥",
+                    es: "🔥 ¡LOS 3 JEFES GUARDIANES HAN CAÍDO! 🔥",
+                    hi: "🔥 तीनों अभिभावक बॉस पराजित हो गए! 🔥",
+                    zh: "🔥 全部3位守护首领已被彻底击溃！🔥",
+                    ja: "🔥 3体の守護ボスを全て討伐完了！🔥",
+                    pt: "🔥 TODOS OS 3 CHEFES GUARDIÕES FORAM DERROTADOS! 🔥"
+                );
+                main = LanguageSelectionUI.Localize(
+                    "YOU CAN NOW DESTROY THE SACRED TREE!",
+                    ar: "يمكنك الآن تدمير الشجرة المقدسة!",
+                    fa: "اکنون می‌توانید درخت مقدس را نابود کنید!",
+                    de: "IHR KÖNNT NUN DEN HEILIGEN BAUM ZERSTÖREN!",
+                    it: "ORA PUOI DISTRUGGERE IL SACRO ALBERO!",
+                    tr: "ARTIK KUTSAL AĞACI YOK EDEBİLİRSİNİZ!",
+                    ru: "ТЕПЕРЬ ВЫ МОЖЕТЕ СРУБИТЬ ДЕРЕВО!",
+                    fr: "VOUS POUVEZ MAINTENANT DÉTRUIRE L'ARBRE SACRÉ !",
+                    es: "¡AHORA PUEDES DESTRUIR EL ÁRBOL SAGRADO!",
+                    hi: "अब आप पवित्र वृक्ष को नष्ट कर सकते हैं!",
+                    zh: "神圣巨树护盾已卸下，即刻伐倒它！",
+                    ja: "今こそ聖なる巨木を伐採せよ！",
+                    pt: "AGORA VOCÊ PODE DESTRUIR A ÁRVORE SAGRADA!"
+                );
+                sub = LanguageSelectionUI.Localize(
+                    "10-Second Divine Shield Countdown active! Position yourselves — Tree becomes vulnerable in 10s!",
+                    ar: "العد التنازلي لدرع الصمود المقدس بدأ (10 ثوانٍ)! خذوا مواقعكم — الشجرة ستصبح مكشوفة بالكامل بعد 10 ثوانٍ!",
+                    fa: "شمارش معکوس سپر مقدس ۱۰ ثانیه‌ای آغاز شد! جای‌گیری کنید — درخت پس از ۱۰ ثانیه آسیب‌پذیر می‌شود!",
+                    de: "10-Sekunden-Göttlicher-Schild aktiv! Geht in Stellung — Baum in 10s verwundbar!",
+                    it: "Conto alla rovescia Scudo Divino di 10s attivo! Posizionatevi — L'albero sarà vulnerabile tra 10s!",
+                    tr: "10 Saniyelik İlahi Kalkan Geri Sayımı başladı! Konum alın — Ağaç 10 sn içinde savunmasız kalacak!",
+                    ru: "ОТСЧЕТ 10 СЕКУНД ДО СНЯТИЯ ЩИТА! Займите позиции — Дерево станет уязвимым через 10 сек!",
+                    fr: "COMPTE À REBOURS DE 10S DU BOUCLIER DIVIN ! Prenez position — L'Arbre sera vulnérable dans 10s !",
+                    es: "¡CUENTA ATRÁS DE 10S DEL ESCUDO DIVINO! ¡El Árbol será vulnerable en 10s!",
+                    hi: "१० सेकंड दिव्य ढाल उलटी गिनती सक्रिय! स्थान लें — पेड़ १० सेकंड में असुरक्षित हो जाएगा!",
+                    zh: "10秒神圣圣树护盾倒计时已启动！就位迎战 — 古树将在10秒后失去免疫！",
+                    ja: "神聖シールドの10秒カウントダウン開始！配置につけ — 10秒後に神木の無敵が解除される！",
+                    pt: "CONTAGEM REGRESSIVA DE 10S DO ESCUDO DIVINO! Posicione-se — Árvore vulnerável em 10s!"
+                );
             }
             else
             {
                 frameColor = new Color(0.18f, 0.88f, 1f, alpha);
-                head = LanguageSelectionUI.Localize("💎 ALL 3 GUARDIAN BOSSES HAVE BEEN DEFEATED! 💎", ar: "💎 تم القضاء على الزعماء الحراس الثلاثة بالكامل! 💎", ru: "💎 ВСЕ 3 БОССА ПОВЕРЖЕНЫ! 💎", es: "💎 ¡LOS 3 JEFES GUARDIANES HAN CAÍDO! 💎", fr: "💎 LES 3 BOSS GARDIENS ONT ÉTÉ VAINCUS ! 💎");
-                main = LanguageSelectionUI.Localize("THE CRYSTAL IS READY — YOU CAN TAKE IT NOW!", ar: "الكريستالة جاهزة — يمكنك أخذها الآن!", ru: "КРИСТАЛЛ ГОТОВ — ЗАБЕРИТЕ ЕГО!", es: "¡EL CRISTAL ESTÁ LISTO — PUEDES TOMARLO AHORA!", fr: "LE CRISTAL EST PRÊT — PRENEZ-LE MAINTENANT !");
-                sub = LanguageSelectionUI.Localize("The Sacred Crystal has appeared! Grab the Crystal and deliver it to the Sacred Altar to WIN!", ar: "ظهرت الكريستالة المقدسة! احمل الكريستالة وأوصلها إلى المذبح المقدس للفوز بالمعركة!", ru: "Священный кристалл появился! Отнесите его к алтарю для победы!", es: "¡El Cristal Sagrado ha aparecido! ¡Llévalo al Altar para ganar!", fr: "Le Cristal Sacré est apparu ! Portez-le à l'Autel pour gagner !");
+                head = LanguageSelectionUI.Localize(
+                    "💎 ALL 3 GUARDIAN BOSSES HAVE BEEN DEFEATED! 💎",
+                    ar: "💎 تم القضاء على الزعماء الحراس الثلاثة بالكامل! 💎",
+                    fa: "💎 هر ۳ غول نگهبان کاملاً نابود شدند! 💎",
+                    de: "💎 ALLE 3 WÄCHTER-BOSSE WURDEN BESIEGT! 💎",
+                    it: "💎 TUTTI E 3 I BOSS GUARDIANI SONO STATI SCONFITTI! 💎",
+                    tr: "💎 3 MUHAFIZ PATRONUN TAMAMI KATLEDİLDİ! 💎",
+                    ru: "💎 ВСЕ 3 БОССА ПОВЕРЖЕНЫ! 💎",
+                    fr: "💎 LES 3 BOSS GARDIENS ONT ÉTÉ VAINCUS ! 💎",
+                    es: "💎 ¡LOS 3 JEFES GUARDIANES HAN CAÍDO! 💎",
+                    hi: "💎 तीनों अभिभावक बॉस पराजित हो गए! 💎",
+                    zh: "💎 全部3位守护首领已被彻底击溃！💎",
+                    ja: "💎 3体の守護ボスを全て討伐完了！💎",
+                    pt: "💎 TODOS OS 3 CHEFES GUARDIÕES FORAM DERROTADOS! 💎"
+                );
+                main = LanguageSelectionUI.Localize(
+                    "THE CRYSTAL IS READY — YOU CAN TAKE IT NOW!",
+                    ar: "الكريستالة جاهزة — يمكنك أخذها الآن!",
+                    fa: "بلور مقدس آماده است — اکنون می‌توانید آن را بردارید!",
+                    de: "DER KRISTALL IST BEREIT — IHR KÖNNT IHN JETZT NEHMEN!",
+                    it: "IL CRISTALLO È PRONTO — PUOI PRENDERLO ORA!",
+                    tr: "KRİSTAL HAZIR — ARTIK ONI ALABİLİRSİNİZ!",
+                    ru: "КРИСТАЛЛ ГОТОВ — ЗАБЕРИТЕ ЕГО!",
+                    fr: "LE CRISTAL EST PRÊT — PRENEZ-LE MAINTENANT !",
+                    es: "¡EL CRISTAL ESTÁ LISTO — PUEDES TOMARLO AHORA!",
+                    hi: "क्रिस्टल तैयार है — अब आप इसे ले सकते हैं!",
+                    zh: "圣域水晶已凝结 — 立即夺取水晶！",
+                    ja: "聖なる水晶が解放された — 今すぐ手に入れよ！",
+                    pt: "O CRISTAL ESTÁ PRONTO — VOCÊ PODE PEGÁ-LO AGORA!"
+                );
+                sub = LanguageSelectionUI.Localize(
+                    "The Sacred Crystal has appeared! Grab the Crystal and deliver it to the Sacred Altar to WIN!",
+                    ar: "ظهرت الكريستالة المقدسة! احمل الكريستالة وأوصلها إلى المذبح المقدس للفوز بالمعركة!",
+                    fa: "بلور مقدس ظاهر شد! بلور را بردارید و برای پیروزی به محراب مقدس برسانید!",
+                    de: "Der heilige Kristall ist erschienen! Tragt ihn zum Altar, um zu GEWINNEN!",
+                    it: "Il Cristallo Sacro è apparso! Portalo all'Altare Sacro per VINCERE!",
+                    tr: "Kutsal Kristal belirdi! Kristali alıp Kutsal Sunak'a taşıyarak KAZANIN!",
+                    ru: "Священный кристалл появился! Отнесите его к алтарю для победы!",
+                    fr: "Le Cristal Sacré est apparu ! Portez-le à l'Autel pour GAGNER !",
+                    es: "¡El Cristal Sagrado ha aparecido! ¡Llévalo al Altar para ganar!",
+                    hi: "पवित्र क्रिस्टल प्रकट हुआ है! जीतने के लिए इसे पवित्र वेदी तक पहुँचाएँ!",
+                    zh: "神圣水晶已降世！夺取水晶并护送至圣坛即可夺取全盘胜利！",
+                    ja: "聖なる水晶が出現した！水晶を運んで聖なる祭壇へ奉納し、勝利を掴め！",
+                    pt: "O Cristal Sagrado apareceu! Leve-o ao Altar Sagrado para VENCER!"
+                );
             }
         }
 
-        // Deep dramatic backdrop
-        GUI.color = new Color(0.04f, 0.06f, 0.08f, 0.94f * alpha);
+        // Translucent glass backdrop that never obscures gameplay or crosshairs
+        GUI.color = new Color(0.02f, 0.04f, 0.05f, 0.45f * alpha);
         GUI.DrawTexture(new Rect(x, y, w, h), Texture2D.whiteTexture);
 
-        // Glowing top & bottom borders
-        GUI.color = new Color(frameColor.r, frameColor.g, frameColor.b, alpha);
-        GUI.DrawTexture(new Rect(x, y, w, 5f), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(x, y + h - 5f, w, 5f), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(x, y, 5f, h), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(x + w - 5f, y, 5f, h), Texture2D.whiteTexture);
+        // Sleek glowing neon border
+        GUI.color = new Color(frameColor.r, frameColor.g, frameColor.b, 0.85f * alpha);
+        GUI.DrawTexture(new Rect(x, y, w, 1.5f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(x, y + h - 1.5f, w, 1.5f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(x, y, 1.5f, h), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(x + w - 1.5f, y, 1.5f, h), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
         GUIStyle headStyle = new GUIStyle(GUI.skin.label);
-        headStyle.fontSize = isUltimateThreeBossBanner ? 18 : 15;
+        headStyle.fontSize = isUltimateThreeBossBanner ? 13 : 11;
         headStyle.fontStyle = FontStyle.Bold;
         headStyle.alignment = TextAnchor.MiddleCenter;
         headStyle.normal.textColor = new Color(1f, 0.88f, 0.28f, alpha);
 
         GUIStyle mainStyle = new GUIStyle(GUI.skin.label);
-        mainStyle.fontSize = isUltimateThreeBossBanner ? 26 : 21;
+        mainStyle.fontSize = isUltimateThreeBossBanner ? 17 : 14;
         mainStyle.fontStyle = FontStyle.Bold;
         mainStyle.alignment = TextAnchor.MiddleCenter;
         mainStyle.normal.textColor = new Color(frameColor.r, frameColor.g, frameColor.b, alpha);
 
         GUIStyle subStyle = new GUIStyle(GUI.skin.label);
-        subStyle.fontSize = 14;
+        subStyle.fontSize = isUltimateThreeBossBanner ? 11 : 10;
         subStyle.fontStyle = FontStyle.Bold;
         subStyle.alignment = TextAnchor.MiddleCenter;
         subStyle.wordWrap = true;
         subStyle.normal.textColor = new Color(0.95f, 0.97f, 1f, alpha);
 
-        GUI.Label(new Rect(x + 16f, y + 12f, w - 32f, 28f), head, headStyle);
-        GUI.Label(new Rect(x + 16f, y + 44f, w - 32f, 44f), main, mainStyle);
-        GUI.Label(new Rect(x + 24f, y + 92f, w - 48f, 52f), sub, subStyle);
+        GUI.Label(new Rect(x + 10f, y + 4f, w - 20f, 18f), head, headStyle);
+        GUI.Label(new Rect(x + 10f, y + 22f, w - 20f, 22f), main, mainStyle);
+        GUI.Label(new Rect(x + 12f, y + 44f, w - 24f, isUltimateThreeBossBanner ? 40f : 20f), sub, subStyle);
     }
 
     private void DrawInteractiveBriefingModal()

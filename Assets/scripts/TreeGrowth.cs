@@ -1045,15 +1045,18 @@ public class TreeGrowth : MonoBehaviour
 
             string collapseText = LanguageSelectionUI.Localize(
                 "🔥 THE SACRED TREE IS COLLAPSING! 🔥",
-                "🔥 الشجرة المقدسة تنهار وتسقط الآن! 🔥",
-                "🔥 СВЯЩЕННОЕ ДЕРЕВО ПАДАЕТ! 🔥",
-                "🔥 ¡EL ÁRBOL SAGRADO SE DERRUMBA! 🔥",
-                "🔥 L'ARBRE SACRÉ S'EFFONDRE ! 🔥",
-                "🔥 DER HEILIGE BAUM STÜRZT EIN! 🔥",
-                "🔥 पवित्र वृक्ष गिर रहा है! 🔥",
-                "🔥 神圣巨树正在倾覆倒塌！🔥",
-                "🔥 聖なる巨木が倒壊している！🔥",
-                "🔥 A ÁRVORE SAGRADA ESTÁ DESABANDO! 🔥"
+                ar: "🔥 الشجرة المقدسة تنهار وتسقط الآن! 🔥",
+                fa: "🔥 درخت مقدس در حال سرنگونی است! 🔥",
+                de: "🔥 DER HEILIGE BAUM STÜRZT EIN! 🔥",
+                it: "🔥 IL SACRO ALBERO STA CROLLANDO! 🔥",
+                tr: "🔥 KUTSAL AĞAÇ ÇÖKÜYOR! 🔥",
+                ru: "🔥 СВЯЩЕННОЕ ДЕРЕВО ПАДАЕТ! 🔥",
+                fr: "🔥 L'ARBRE SACRÉ S'EFFONDRE ! 🔥",
+                es: "🔥 ¡EL ÁRBOL SAGRADO SE DERRUMBA! 🔥",
+                hi: "🔥 पवित्र वृक्ष गिर रहा है! 🔥",
+                zh: "🔥 神圣巨树正在倾覆倒塌！🔥",
+                ja: "🔥 聖なる巨木が倒壊している！🔥",
+                pt: "🔥 A ÁRVORE SAGRADA ESTÁ DESABANDO! 🔥"
             );
 
             GUI.Label(bannerRect, collapseText, collapseStyle);
@@ -1069,10 +1072,13 @@ public class TreeGrowth : MonoBehaviour
         string treeTitle = LanguageSelectionUI.Localize(
             "🌳 GREAT BEANSTALK HEALTH",
             ar: "🌳 صحة شجرة الفاصولياء العظيمة",
-            ru: "🌳 ЗДОРОВЬЕ ВЕЛИКОГО СТЕБЛЯ",
-            es: "🌳 SALUD DEL GRAN TALLO SAGRADO",
-            fr: "🌳 SANTÉ DU GRAND HARICOT SACRÉ",
+            fa: "🌳 سلامت ساقه لوبیای مقدس",
             de: "🌳 GESUNDHEIT DER RIESENBOHNE",
+            it: "🌳 SALUTE DEL SACRO FAGIOLO",
+            tr: "🌳 BÜYÜK FASULYE SIRIĞI SAĞLIĞI",
+            ru: "🌳 ЗДОРОВЬЕ ВЕЛИКОГО СТЕБЛЯ",
+            fr: "🌳 SANTÉ DU GRAND HARICOT SACRÉ",
+            es: "🌳 SALUD DEL GRAN TALLO SAGRADO",
             hi: "🌳 महा बीनस्टॉक स्वास्थ्य",
             zh: "🌳 巨藤神树生命值",
             ja: "🌳 巨木の聖なる生命力",
@@ -1103,9 +1109,17 @@ public class TreeGrowth : MonoBehaviour
             shieldStatus = LanguageSelectionUI.Localize(
                 $"🛡️ DIVINE SHIELD ACTIVE ({deadCount}/3 BOSS SEALS BROKEN)",
                 ar: $"🛡️ الدرع الإلهي مفعل ({deadCount}/3 أختام مكسورة - اقتل كل الزعماء لإسقاطه)",
+                fa: $"🛡️ سپر مقدس فعال است ({deadCount}/۳ مهر شکسته شد - برای شکستن سپر همه غول‌ها را نابود کنید)",
+                de: $"🛡️ GÖTTLICHER SCHILD AKTIV ({deadCount}/3 BOSSSIEGEL GEBROCHEN)",
+                it: $"🛡️ SCUDO DIVINO ATTIVO ({deadCount}/3 SIGILLI DEI BOSS SPEZZATI)",
+                tr: $"🛡️ İLAHİ KALKAN AKTİF ({deadCount}/3 PATRON MÜHRÜ KIRILDI)",
                 ru: $"🛡️ БОЖЕСТВЕННЫЙ ЩИТ АКТИВЕН ({deadCount}/3 СНЯТО)",
+                fr: $"🛡️ BOUCLIER SACRÉ ACTIF ({deadCount}/3 SCEAUX BRISÉS)",
                 es: $"🛡️ ESCUDO SAGRADO ACTIVO ({deadCount}/3 SELLOS ROTOS)",
-                fr: $"🛡️ BOUCLIER SACRÉ ACTIF ({deadCount}/3 SCEAUX BRISÉS)"
+                hi: $"🛡️ दिव्य ढाल सक्रिय ({deadCount}/3 बॉस सील टूट गईं)",
+                zh: $"🛡️ 神圣护盾生效中 ({deadCount}/3 领主封印已破)",
+                ja: $"🛡️ 神聖シールド展開中 (ボス封印解除: {deadCount}/3)",
+                pt: $"🛡️ ESCUDO DIVINO ATIVO ({deadCount}/3 SELOS DE CHEFES QUEBRADOS)"
             );
             shieldColor = new Color(1f, 0.85f, 0.25f);
         }
@@ -1117,9 +1131,17 @@ public class TreeGrowth : MonoBehaviour
             shieldStatus = LanguageSelectionUI.Localize(
                 $"⚠️ SACRED SHIELD COLLAPSING IN: {sec}s!",
                 ar: $"⚠️ الدرع الإلهي ينهار خلال: {sec} ثوانٍ!",
+                fa: $"⚠️ سپر مقدس در حال فروپاشی: {sec} ثانیه!",
+                de: $"⚠️ HEILIGER SCHILD BRICHT ZUSAMMEN IN: {sec}s!",
+                it: $"⚠️ LO SCUDO SACRO STA CROLLANDO IN: {sec}s!",
+                tr: $"⚠️ KUTSAL KALKAN ÇÖKÜYOR: {sec}sn!",
                 ru: $"⚠️ ЩИТ РУШИТСЯ ЧЕРЕЗ: {sec} с!",
+                fr: $"⚠️ LE BOUCLIER S'EFFONDRE DANS : {sec}s !",
                 es: $"⚠️ ¡EL ESCUDO SE DERRUMBA EN: {sec}s!",
-                fr: $"⚠️ LE BOUCLIER S'EFFONDRE DANS : {sec}s !"
+                hi: $"⚠️ पवित्र ढाल ढहने में समय: {sec} सेकंड!",
+                zh: $"⚠️ 神圣护盾即将在 {sec} 秒内崩溃！",
+                ja: $"⚠️ 神聖シールド崩壊まであと: {sec}秒！",
+                pt: $"⚠️ ESCUDO SAGRADO EM COLAPSO EM: {sec}s!"
             );
         }
         else
@@ -1128,9 +1150,17 @@ public class TreeGrowth : MonoBehaviour
             shieldStatus = LanguageSelectionUI.Localize(
                 "⚔️ SHIELD BROKEN! THE TREE IS FULLY VULNERABLE!",
                 ar: "⚔️ سقط الدرع! الشجرة معرضة للتدمير بالكامل!",
+                fa: "⚔️ سپر شکسته شد! درخت کاملاً آسیب‌پذیر است!",
+                de: "⚔️ SCHILD GEBROCHEN! DER BAUM IST VOLLSTÄNDIG VERWUNDBAR!",
+                it: "⚔️ SCUDO SPEZZATO! L'ALBERO È COMPLETAMENTE VULNERABILE!",
+                tr: "⚔️ KALKAN KIRILDI! AĞAÇ TAMAMEN SAVUNMASIZ!",
                 ru: "⚔️ ЩИТ СЛОМАН! ДЕРЕВО УЯЗВИМО!",
+                fr: "⚔️ BOUCLIER BRISÉ ! L'ARBRE EST VULNÉRABLE !",
                 es: "⚔️ ¡ESCUDO ROTO! ¡EL ÁRBOL ESTÁ VULNERABLE!",
-                fr: "⚔️ BOUCLIER BRISÉ ! L'ARBRE EST VULNÉRABLE !"
+                hi: "⚔️ ढाल टूट गई! वृक्ष पूरी तरह से असुरक्षित है!",
+                zh: "⚔️ 护盾已破！神树现已完全暴露，发起总攻！",
+                ja: "⚔️ シールド崩壊！今すぐ神木を伐採せよ！",
+                pt: "⚔️ ESCUDO QUEBRADO! A ÁRVORE ESTÁ TOTALMENTE VULNERÁVEL!"
             );
         }
 
