@@ -199,12 +199,12 @@ public class TreeLevelManager : MonoBehaviour
     public void UnlockLevel(int index)
     {
         // =========================
-        // فتح المستوى
+        // فتح المستوى بسلاسة ونمو طبيعي رويداً رويداً
         // =========================
 
         if (index < levels.Length && levels[index] != null)
         {
-            levels[index].SetActive(true);
+            SmoothRevealLevel(levels[index]);
         }
 
         unlocked[index] = true;
@@ -224,11 +224,11 @@ public class TreeLevelManager : MonoBehaviour
         }
 
         // =========================
-        // بناء وتحديث شبكة الملاحة NavMesh فوراً
+        // بناء وتحديث شبكة الملاحة NavMesh بهدوء وسلاسة
         // =========================
         if (LevelBossManager.Instance != null)
         {
-            LevelBossManager.Instance.Invoke("RebuildNavigationMesh", 0.05f);
+            LevelBossManager.Instance.RebuildNavigationMesh();
         }
 
         // =========================
@@ -257,8 +257,43 @@ public class TreeLevelManager : MonoBehaviour
 
         if (navMeshUpdater != null)
         {
-            // نُؤخر إعادة بناء NavMesh قليلًا لإعطاء الممرات وقتًا لتُفعَّل بالكامل
-            StartCoroutine(RebuildNavMeshDelayed(0.5f));
+            StartCoroutine(RebuildNavMeshDelayed(1.2f));
+        }
+    }
+
+    private void SmoothRevealLevel(GameObject levelObj)
+    {
+        if (levelObj == null) return;
+        levelObj.SetActive(true);
+        StartCoroutine(AnimateLevelEmergenceRoutine(levelObj));
+    }
+
+    private System.Collections.IEnumerator AnimateLevelEmergenceRoutine(GameObject levelObj)
+    {
+        if (levelObj == null) yield break;
+        Transform tr = levelObj.transform;
+        Vector3 targetScale = tr.localScale;
+        if (targetScale.sqrMagnitude < 0.01f) targetScale = Vector3.one;
+
+        Vector3 startScale = new Vector3(targetScale.x * 0.95f, 0.02f, targetScale.z * 0.95f);
+        tr.localScale = startScale;
+
+        float duration = 1.15f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            if (tr != null)
+            {
+                tr.localScale = Vector3.Lerp(startScale, targetScale, t);
+            }
+            yield return null;
+        }
+
+        if (tr != null)
+        {
+            tr.localScale = targetScale;
         }
     }
 

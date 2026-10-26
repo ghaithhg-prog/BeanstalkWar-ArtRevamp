@@ -925,8 +925,8 @@ public class LevelBoss : NetworkBehaviour
 
     void CreateDeathImpactShockwave(Vector3 groundPos)
     {
-        // هزة كاميرا حماسية عند ارتطام الزعيم بالأرض
-        ThirdPersonCamera.Shake(0.55f, 0.4f);
+        // هزة كاميرا ناعمة وسلسة عند ارتطام الزعيم بالأرض دون تجميد أو إرباك للشاشة
+        ThirdPersonCamera.Shake(0.25f, 0.035f);
 
         GameObject shockObj = new GameObject("BossDeathShockwave");
         shockObj.transform.position = groundPos + Vector3.up * 0.15f;

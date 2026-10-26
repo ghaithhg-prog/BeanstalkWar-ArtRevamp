@@ -655,23 +655,24 @@ public class CrystalAltar : NetworkBehaviour
 
     void ApplyChannellingDynamicVisuals(float progress)
     {
-        // 1. تصاعد قوة إضاءة عمود النور والانتقال للون الذهبي الساطع
+        // 1. Soft Celestial Nature Aura (Cyan/Aquamarine to Vibrant Emerald - No harsh yellow light!)
         if (beaconLight != null)
         {
-            float pulse = Mathf.PingPong(Time.time * 8f, 2.5f);
-            beaconLight.intensity = Mathf.Lerp(4.0f, 11.0f, progress) + pulse;
-            beaconLight.range = Mathf.Lerp(15f, 32f, progress);
-            beaconLight.color = Color.Lerp(new Color(0.22f, 0.88f, 1.0f), new Color(1.0f, 0.85f, 0.20f), progress);
+            float pulse = Mathf.PingPong(Time.time * 4f, 0.8f);
+            beaconLight.intensity = Mathf.Lerp(3.2f, 4.8f, progress) + pulse;
+            beaconLight.range = Mathf.Lerp(14f, 20f, progress);
+            beaconLight.color = Color.Lerp(new Color(0.22f, 0.88f, 1.0f), new Color(0.20f, 0.95f, 0.75f), progress);
         }
 
-        // 2. إضاءة قلب المذبح الكريستالي تتوهج بنبض سريع متصاعد
+        // 2. Crystal Heart Glimmer (Gentle, elegant celestial pulse)
         if (heartLight != null)
         {
-            heartLight.intensity = Mathf.Lerp(5.0f, 15.0f, progress) + Mathf.PingPong(Time.time * 10f, 3f);
-            heartLight.color = Color.Lerp(new Color(0.40f, 0.95f, 1.0f), new Color(1.0f, 0.95f, 0.40f), progress);
+            heartLight.intensity = Mathf.Lerp(3.8f, 5.5f, progress) + Mathf.PingPong(Time.time * 5f, 1.0f);
+            heartLight.range = Mathf.Lerp(10f, 15f, progress);
+            heartLight.color = Color.Lerp(new Color(0.35f, 0.90f, 1.0f), new Color(0.25f, 0.98f, 0.85f), progress);
         }
 
-        // 3. تسارع دوران الحلقات الرونية وعمود النور لـ 4 أضعاف السرعة
+        // 3. تسارع دوران الحلقات الرونية وعمود النور
         if (groundRuneRing != null)
         {
             groundRuneRing.Rotate(Vector3.up, -120f * Time.deltaTime, Space.World);
@@ -873,27 +874,38 @@ public class CrystalAltar : NetworkBehaviour
     {
         Vector3 altarPos = transform.position;
 
-        // 1. Massive Holy Sky Light Pillar
-        GameObject skyPillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        skyPillar.name = "VictoryHolyLightPillar";
-        DestroyCollider(skyPillar);
-        skyPillar.transform.position = altarPos + Vector3.up * 40f;
-        skyPillar.transform.localScale = new Vector3(9f, 40f, 9f);
+        // 1. Soft Celestial Ambient Glow (No blinding yellow screen or giant cylinders!)
+        GameObject celestialLightObj = new GameObject("VictoryCelestialLight");
+        Light celestialLight = celestialLightObj.AddComponent<Light>();
+        celestialLight.type = LightType.Point;
+        celestialLight.color = new Color(0.25f, 0.90f, 1.0f);
+        celestialLight.intensity = 2.4f;
+        celestialLight.range = 16f;
+        celestialLightObj.transform.position = altarPos + Vector3.up * 2.2f;
 
         Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit") 
                           ?? Shader.Find("Unlit/Transparent") 
                           ?? Shader.Find("Standard");
-        Material pillarMat = new Material(unlitShader);
-        pillarMat.color = new Color(1.0f, 0.92f, 0.40f, 0.45f);
-        skyPillar.GetComponent<Renderer>().material = pillarMat;
 
-        GameObject holyLightObj = new GameObject("VictoryHeavenlyLight");
-        Light holyLight = holyLightObj.AddComponent<Light>();
-        holyLight.type = LightType.Point;
-        holyLight.color = new Color(1.0f, 0.95f, 0.65f);
-        holyLight.intensity = 14.0f;
-        holyLight.range = 85f;
-        holyLightObj.transform.position = altarPos + Vector3.up * 10f;
+        // Expanding Ethereal Nature Aurora Rings on ground
+        GameObject auroraRingGroup = new GameObject("CelebratoryAuroraRings");
+        auroraRingGroup.transform.position = altarPos + Vector3.up * 0.05f;
+        List<Transform> auroraRings = new List<Transform>();
+        List<Material> auroraMats = new List<Material>();
+        for (int r = 0; r < 3; r++)
+        {
+            GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            DestroyCollider(ring);
+            ring.transform.SetParent(auroraRingGroup.transform);
+            ring.transform.position = altarPos + Vector3.up * (0.04f + r * 0.02f);
+            ring.transform.localScale = new Vector3(2.5f, 0.02f, 2.5f);
+
+            Material ringMat = new Material(unlitShader);
+            ringMat.color = new Color(0.25f, 0.88f, 1.0f, 0.35f);
+            ring.GetComponent<Renderer>().material = ringMat;
+            auroraRings.Add(ring.transform);
+            auroraMats.Add(ringMat);
+        }
 
         // 2. Blooming Floral Meadow: 20 blooming colorful flowers sprouting out of the earth
         GameObject flowerGroup = new GameObject("CelebratoryBloomingMeadow");
@@ -1001,16 +1013,21 @@ public class CrystalAltar : NetworkBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / celebrationDuration;
 
-            if (skyPillar != null)
+            if (celestialLight != null)
             {
-                skyPillar.transform.Rotate(0f, 25f * Time.deltaTime, 0f);
-                float alphaPulse = 0.35f + Mathf.Sin(elapsed * 4.5f) * 0.15f;
-                pillarMat.color = new Color(1.0f, 0.92f, 0.40f, alphaPulse);
+                celestialLight.intensity = 2.4f + Mathf.Sin(elapsed * 4f) * 0.5f;
             }
 
-            if (holyLight != null)
+            for (int r = 0; r < auroraRings.Count; r++)
             {
-                holyLight.intensity = 11f + Mathf.Sin(elapsed * 5f) * 4f;
+                if (auroraRings[r] != null)
+                {
+                    float ringPhase = Mathf.Repeat(elapsed * 0.45f + (float)r / 3f, 1.0f);
+                    float ringScale = Mathf.Lerp(2.5f, 13f, ringPhase);
+                    auroraRings[r].localScale = new Vector3(ringScale, 0.02f, ringScale);
+                    float ringAlpha = (1f - ringPhase) * 0.40f;
+                    auroraMats[r].color = new Color(0.25f, 0.88f, 1.0f, ringAlpha);
+                }
             }
 
             float bloomT = Mathf.Clamp01(elapsed / 1.8f);
@@ -1053,8 +1070,8 @@ public class CrystalAltar : NetworkBehaviour
             yield return null;
         }
 
-        if (skyPillar != null) Destroy(skyPillar);
-        if (holyLightObj != null) Destroy(holyLightObj);
+        if (celestialLightObj != null) Destroy(celestialLightObj);
+        if (auroraRingGroup != null) Destroy(auroraRingGroup);
         if (flowerGroup != null) Destroy(flowerGroup);
         if (petalGroup != null) Destroy(petalGroup);
         if (butterflyGroup != null) Destroy(butterflyGroup);
@@ -1093,9 +1110,9 @@ public class CrystalAltar : NetworkBehaviour
 
         if (beaconLight != null)
         {
-            beaconLight.color = new Color(1f, 0.85f, 0.25f);
-            beaconLight.intensity = 5.0f;
-            beaconLight.range = 28f;
+            beaconLight.color = new Color(0.25f, 0.90f, 1.0f);
+            beaconLight.intensity = 3.0f;
+            beaconLight.range = 18f;
         }
 
         PlayerProgressionAndShopUI.Instance?.ShowNotification($"🌟 {heroName.ToUpper()} PLACED THE SACRED CRYSTAL! THE FOREST SURGES WITH ETERNAL LIFE!");

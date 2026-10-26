@@ -305,11 +305,11 @@ public class CharacterCombat : NetworkBehaviour
                 }
             }
         }
-        else if (target != null && attackType == AttackType.Melee)
+        else if (target != null)
         {
-            // ضمان إلحاق الضرر بالعدو المستهدف في القتال القريب بين البوتات واللاعبين
-            float maxMeleeReach = attackRange + 2.5f;
-            if (Vector3.Distance(transform.position, target.position) <= maxMeleeReach)
+            // ضمان إلحاق الضرر بالعدو المستهدف في قتال البوتات واللاعبين (سواء قتال قريب أو بعيد المدى)
+            float maxReach = (attackType == AttackType.Ranged) ? Mathf.Max(14f, attackRange + 3.0f) : (attackRange + 2.5f);
+            if (Vector3.Distance(transform.position, target.position) <= maxReach)
             {
                 Health targetHp = target.GetComponent<Health>() ?? target.GetComponentInParent<Health>();
                 CharacterCombat targetCombat = target.GetComponent<CharacterCombat>() ?? target.GetComponentInParent<CharacterCombat>() ?? (targetHp != null ? targetHp.GetComponent<CharacterCombat>() : null);

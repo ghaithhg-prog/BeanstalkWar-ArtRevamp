@@ -764,20 +764,22 @@ public class BotController : NetworkBehaviour
             return;
         }
 
+        if (!IsEnemyStillValid())
+        {
+            LeaveFight();
+            return;
+        }
+
         float distance = Vector3.Distance(transform.position, enemyTarget.position);
 
-        // إذا كان هناك زعيم مستيقظ في طابق علوي والهدف الحالي ليس هو الزعيم، ننسحب من القتال الجانبي لنصعد للزعيم فوراً
+        // إذا كان هناك زعيم مستيقظ في طابق علوي، الأولوية الحاسمة هي الصعود له وليس البقاء في شجار أرضي
         if (targetBoss == null && LevelBossManager.Instance != null && !LevelBossManager.Instance.AreAllBossesDefeated)
         {
             LevelBoss awakenedBoss = LevelBossManager.Instance.GetActiveAwakenedBoss();
-            if (awakenedBoss != null && (awakenedBoss.transform.position.y - transform.position.y) > 2.5f)
+            if (awakenedBoss != null && (awakenedBoss.transform.position.y - transform.position.y) > 2.0f)
             {
-                // إذا لم يكن العدو ملاصقاً تماماً (أقل من 2.0م) أو مر على القتال أكثر من 1.8 ثانية، نترك القتال ونصعد للزعيم فوراً
-                if (distance > 2.0f || (Time.time - fightStartTime) > 1.8f)
-                {
-                    LeaveFightAndAdvance();
-                    return;
-                }
+                LeaveFightAndAdvance();
+                return;
             }
         }
 

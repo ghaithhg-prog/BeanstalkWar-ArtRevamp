@@ -14,6 +14,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private static ThirdPersonCamera instance;
     private float shakeTimer = 0f;
+    private float totalShakeDuration = 0.001f;
     private float shakeMagnitude = 0f;
 
     void Awake()
@@ -23,10 +24,12 @@ public class ThirdPersonCamera : MonoBehaviour
 
     public static void Shake(float duration, float magnitude)
     {
+        float cappedMag = Mathf.Clamp(magnitude, 0.005f, 0.055f);
         if (instance != null)
         {
             instance.shakeTimer = Mathf.Max(instance.shakeTimer, duration);
-            instance.shakeMagnitude = Mathf.Max(instance.shakeMagnitude, magnitude);
+            instance.totalShakeDuration = Mathf.Max(instance.totalShakeDuration, duration);
+            instance.shakeMagnitude = Mathf.Max(instance.shakeMagnitude, cappedMag);
         }
         else
         {
@@ -35,7 +38,8 @@ public class ThirdPersonCamera : MonoBehaviour
             {
                 instance = cam;
                 instance.shakeTimer = Mathf.Max(instance.shakeTimer, duration);
-                instance.shakeMagnitude = Mathf.Max(instance.shakeMagnitude, magnitude);
+                instance.totalShakeDuration = Mathf.Max(instance.totalShakeDuration, duration);
+                instance.shakeMagnitude = Mathf.Max(instance.shakeMagnitude, cappedMag);
             }
         }
     }
@@ -45,13 +49,18 @@ public class ThirdPersonCamera : MonoBehaviour
         Camera mainCam = GetComponent<Camera>();
         if (mainCam != null)
         {
-            mainCam.targetDisplay = 0; // Display 1 only
-        }
+            mainCam.targetDisplay = 0; // Primary Display 1
 
-        Transform aux = transform.Find("AuxDisplay2Camera");
-        if (aux != null)
-        {
-            Destroy(aux.gameObject);
+            // Ensure Display 2 also has a seamless rendering camera if the user selects Display 2 in Unity Editor
+            Transform aux = transform.Find("AuxDisplay2Camera");
+            if (aux == null)
+            {
+                GameObject auxObj = new GameObject("AuxDisplay2Camera");
+                auxObj.transform.SetParent(transform, false);
+                Camera auxCam = auxObj.AddComponent<Camera>();
+                auxCam.CopyFrom(mainCam);
+                auxCam.targetDisplay = 1; // Display 2 in Unity
+            }
         }
     }
 
@@ -146,8 +155,15 @@ public class ThirdPersonCamera : MonoBehaviour
         if (shakeTimer > 0f)
         {
             shakeTimer -= Time.deltaTime;
-            Vector3 shakeOffset = Random.insideUnitSphere * shakeMagnitude;
+            float decay = Mathf.Clamp01(shakeTimer / Mathf.Max(0.001f, totalShakeDuration));
+            decay = decay * decay; // Smooth quadratic falloff
+            Vector3 shakeOffset = Random.insideUnitSphere * (shakeMagnitude * decay);
             transform.position += shakeOffset;
+        }
+        else
+        {
+            shakeMagnitude = 0f;
+            totalShakeDuration = 0.001f;
         }
 
         transform.LookAt(

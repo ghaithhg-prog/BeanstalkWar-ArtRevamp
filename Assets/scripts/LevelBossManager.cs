@@ -340,8 +340,20 @@ public class LevelBossManager : MonoBehaviour
         RebuildNavigationMesh();
     }
 
-    private void RebuildNavigationMesh()
+    private float lastNavMeshRebuildTime = -10f;
+
+    public void RebuildNavigationMesh()
     {
+        // تأجيل وتجميع طلبات بناء NavMesh لمنع التجميد المفاجئ للشاشة أو اهتزاز الكاميرا
+        CancelInvoke(nameof(DoRebuildNavigationMesh));
+        Invoke(nameof(DoRebuildNavigationMesh), 0.85f);
+    }
+
+    private void DoRebuildNavigationMesh()
+    {
+        if (Time.time - lastNavMeshRebuildTime < 1.2f) return;
+        lastNavMeshRebuildTime = Time.time;
+
         Unity.AI.Navigation.NavMeshSurface surface = FindAnyObjectByType<Unity.AI.Navigation.NavMeshSurface>();
         if (surface == null)
         {

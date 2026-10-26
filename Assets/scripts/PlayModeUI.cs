@@ -191,7 +191,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "~ विशाल वृक्ष और प्रतिद्वंद्वी गुटों की गाथा ~",
             zh: "~ 巨树与敌对阵营之神圣史诗 ~",
             ja: "~ 巨木の聖樹と覇を競う部族たちの年代記 ~",
-            pt: "~ Crônicas da Árvore Colossal e Facções Rivais ~"
+            pt: "~ Crônicas da Árvore Colossal e Facções Rivais ~",
+            fa: "~ شرح وقایع درخت غول‌پیکر و قبایل رقیب ~",
+            it: "~ Cronache dell'Albero Colossale e delle Fazioni Rivali ~",
+            tr: "~ Devasa Ağacın ve Rakip Kabilelerin Kutsal Tarihi ~"
         );
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -243,7 +246,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🍃 पवित्र परीक्षण",
             zh: "🍃 神圣试炼",
             ja: "🍃 聖なる試練",
-            pt: "🍃 PROVA SAGRADA");
+            pt: "🍃 PROVA SAGRADA",
+            fa: "🍃 آزمون مقدس",
+            it: "🍃 PROVA SACRA",
+            tr: "🍃 KUTSAL İMTİHAN");
 
         string c1Title = LanguageSelectionUI.Localize("SOLO EXPEDITION",
             ar: "الحملة الفردية",
@@ -254,7 +260,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "एकल अभियान",
             zh: "单人离线远征",
             ja: "ソロ遠征",
-            pt: "EXPEDIÇÃO INDIVIDUAL");
+            pt: "EXPEDIÇÃO INDIVIDUAL",
+            fa: "اکسپدیشن انفرادی",
+            it: "SPEDIZIONE INDIVIDUALE",
+            tr: "TEK KİŞİLİK SEFER");
 
         string c1Sub = LanguageSelectionUI.Localize("Vs Forest Bot Guardians",
             ar: "ضد حراس الغابة الآليين",
@@ -265,14 +274,17 @@ public class PlayModeUI : MonoBehaviour
             hi: "बॉट अभिभावकों के विरुद्ध",
             zh: "对阵森林人机守卫",
             ja: "ボットの守護者と対戦",
-            pt: "Contra bots guardiões");
+            pt: "Contra bots guardiões",
+            fa: "در برابر نگهبانان بات بیشه",
+            it: "Contro guardiani bot",
+            tr: "Orman Bot Muhafızlarına Karşı");
 
         string[] c1Highlights = new string[]
         {
-            LanguageSelectionUI.Localize("⚔️ 3 Guardian Titans", ar: "⚔️ ٣ زعماء عمالقة", ru: "⚔️ 3 титана-босса", es: "⚔️ 3 jefes titanes", fr: "⚔️ 3 titans gardiens", de: "⚔️ 3 Titanen-Bosse", hi: "⚔️ ३ अभिभावक टाइटन", zh: "⚔️ 三大森林巨像Boss", ja: "⚔️ 3体の守護タイタン", pt: "⚔️ 3 chefes titãs"),
-            LanguageSelectionUI.Localize("🌲 Chop Tree or Take Crystal", ar: "🌲 اسقط الشجرة أو خذ الكريستال", ru: "🌲 Срубите древо или кристалл", es: "🌲 Tala el árbol o toma el cristal", fr: "🌲 Abattez l'arbre ou cristal", de: "🌲 Baum fällen oder Kristall", hi: "🌲 पेड़ काटें या क्रिस्टल लें", zh: "🌲 伐倒古树或争夺水晶", ja: "🌲 神木伐採または水晶奪回", pt: "🌲 Derrube a árvore ou cristal"),
-            LanguageSelectionUI.Localize("🛡️ Master 25 Hero Classes", ar: "🛡️ تدرّب على ٢٥ بطلاً", ru: "🛡️ 25 классов героев", es: "🛡️ Domina 25 héroes", fr: "🛡️ Maîtrisez 25 héros", de: "🛡️ Meistert 25 Helden", hi: "🛡️ २५ नायकों में महारत", zh: "🛡️ 驾驭25位传奇英雄", ja: "🛡️ 25人の英雄を極めろ", pt: "🛡️ Domine 25 heróis"),
-            LanguageSelectionUI.Localize("💰 Offline Gold & XP", ar: "💰 ذهب ونقاط خبرة بدون نت", ru: "💰 Золото и опыт без сети", es: "💰 Oro y EXP sin internet", fr: "💰 Or et EXP hors-ligne", de: "💰 Gold & XP offline", hi: "💰 बिना नेट सोना व XP", zh: "💰 离线获取金币与经验", ja: "💰 オフラインで報酬獲得", pt: "💰 Ouro e EXP offline")
+            LanguageSelectionUI.Localize("⚔️ 3 Guardian Titans", ar: "⚔️ ٣ زعماء عمالقة", ru: "⚔️ 3 титана-босса", es: "⚔️ 3 jefes titanes", fr: "⚔️ 3 titans gardiens", de: "⚔️ 3 Titanen-Bosse", hi: "⚔️ ३ अभिभावक टाइटन", zh: "⚔️ 三大森林巨像Boss", ja: "⚔️ 3体の守護タイタン", pt: "⚔️ 3 chefes titãs", fa: "⚔️ ۳ غول نگهبان", it: "⚔️ 3 titani guardiani", tr: "⚔️ 3 Muhafız Titan"),
+            LanguageSelectionUI.Localize("🌲 Chop Tree or Take Crystal", ar: "🌲 اسقط الشجرة أو خذ الكريستال", ru: "🌲 Срубите древо или кристалл", es: "🌲 Tala el árbol o toma el cristal", fr: "🌲 Abattez l'arbre ou cristal", de: "🌲 Baum fällen oder Kristall", hi: "🌲 पेड़ काटें या क्रिस्टल लें", zh: "🌲 伐倒古树或争夺水晶", ja: "🌲 神木伐採または水晶奪回", pt: "🌲 Derrube a árvore ou cristal", fa: "🌲 قطع درخت یا تصاحب کریستال", it: "🌲 Abbatti l'albero o prendi il cristallo", tr: "🌲 Ağacı Devir veya Kristali Al"),
+            LanguageSelectionUI.Localize("🛡️ Master 25 Hero Classes", ar: "🛡️ تدرّب على ٢٥ بطلاً", ru: "🛡️ 25 классов героев", es: "🛡️ Domina 25 héroes", fr: "🛡️ Maîtrisez 25 héros", de: "🛡️ Meistert 25 Helden", hi: "🛡️ २५ नायकों में महारत", zh: "🛡️ 驾驭25位传奇英雄", ja: "🛡️ 25人の英雄を極めろ", pt: "🛡️ Domine 25 heróis", fa: "🛡️ تسلط بر ۲۵ قهرمان", it: "🛡️ Domina 25 classi di eroi", tr: "🛡️ 25 Kahraman Sınıfında Ustalaş"),
+            LanguageSelectionUI.Localize("💰 Offline Gold & XP", ar: "💰 ذهب ونقاط خبرة بدون نت", ru: "💰 Золото и опыт без сети", es: "💰 Oro y EXP sin internet", fr: "💰 Or et EXP hors-ligne", de: "💰 Gold & XP offline", hi: "💰 बिना नेट सोना व XP", zh: "💰 离线获取金币与经验", ja: "💰 オフラインで報酬獲得", pt: "💰 Ouro e EXP offline", fa: "💰 طلا و امتیاز تجربه بدون اینترنت", it: "💰 Oro ed ESP offline", tr: "💰 Çevrimdışı Altın ve TP")
         };
 
         string c1Desc = LanguageSelectionUI.Localize(
@@ -285,7 +297,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "जंगल में बॉट योद्धाओं के विरुद्ध अपने साहस का परीक्षण करें।",
             zh: "深入密林挑战人机守卫。击败三大Boss，无需联网即可斩获黄金与经验。",
             ja: "森のボット戦士たちと腕試し。3体のボスを討伐し、オフラインで報酬を獲得しよう。",
-            pt: "Aventure-se na floresta contra bots guerreiros. Derrote os 3 chefes e ganhe ouro e EXP offline."
+            pt: "Aventure-se na floresta contra bots guerreiros. Derrote os 3 chefes e ganhe ouro e EXP offline.",
+            fa: "به بیشه پنهان بروید تا شجاعت خود را در برابر جنگجویان بات بسنجید. ۳ غول را شکست دهید و طلا و امتیاز بدون اینترنت کسب کنید.",
+            it: "Avventurati nei boschi contro guerrieri bot. Sconfiggi 3 titani e raccogli oro ed ESP senza connessione.",
+            tr: "Bot savaşçılara karşı ormana dalın. 3 titanı yenin ve internet olmadan altın ve TP kazanın."
         );
 
         string c1Btn = LanguageSelectionUI.Localize("🌲 ENTER GROVE",
@@ -297,7 +312,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🌲 ग्रोव में प्रवेश",
             zh: "🌲 进入丛林",
             ja: "🌲 森に入る",
-            pt: "🌲 ENTRAR NO BOSQUE");
+            pt: "🌲 ENTRAR NO BOSQUE",
+            fa: "🌲 ورود به بیشه",
+            it: "🌲 ENTRA NEL BOSCO",
+            tr: "🌲 KORULUĞA GİR");
 
         DrawVerticalPortalCard(
             c1X, cardY, cardW, cardH,
@@ -325,7 +343,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "👑 लाइव युद्ध",
             zh: "👑 实时全服战役",
             ja: "👑 リアルタイム戦",
-            pt: "👑 GUERRA AO VIVO");
+            pt: "👑 GUERRA AO VIVO",
+            fa: "👑 نبرد زنده",
+            it: "👑 GUERRA DAL VIVO",
+            tr: "👑 CANLI SAVAŞ");
 
         string c2Title = LanguageSelectionUI.Localize("REALM WAR",
             ar: "حرب العوالم",
@@ -336,7 +357,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "क्षेत्र युद्ध",
             zh: "全域远征",
             ja: "領域大戦",
-            pt: "GUERRA DO REINO");
+            pt: "GUERRA DO REINO",
+            fa: "نبرد قلمروها",
+            it: "GUERRA DEI REGNI",
+            tr: "DİYAR SAVAŞI");
 
         string c2Sub = LanguageSelectionUI.Localize("Global Multiplayer Arena",
             ar: "معارك حية متعددة اللاعبين",
@@ -347,14 +371,17 @@ public class PlayModeUI : MonoBehaviour
             hi: "ग्लोबल मल्टीप्लेयर अखाड़ा",
             zh: "跨服多人实时联机竞技场",
             ja: "グローバルマルチプレイ闘技場",
-            pt: "Arena multijogador global");
+            pt: "Arena multijugador global",
+            fa: "میدان چندنفره جهانی",
+            it: "Arena Multigiocatore Globale",
+            tr: "Küresel Çok Oyunculu Arena");
 
         string[] c2Highlights = new string[]
         {
-            LanguageSelectionUI.Localize("👑 Host Realm or Direct IP", ar: "👑 استضافة سيرفر أو بالـ IP", ru: "👑 Сервер хоста или прямой IP", es: "👑 Hostea o conecta por IP", fr: "👑 Hébergez ou rejoignez par IP", de: "👑 Server hosten oder IP-Beitritt", hi: "👑 सर्वर होस्ट या सीधा आईपी", zh: "👑 建立主机或直连IP", ja: "👑 サーバー作成・IP直結", pt: "👑 Hostear ou conectar via IP"),
-            LanguageSelectionUI.Localize("⚔️ Protectors vs Destroyers", ar: "⚔️ حماة الشجرة ضد المدمرين", ru: "⚔️ Защитники против Разрушителей", es: "⚔️ Protectores vs Destructores", fr: "⚔️ Protecteurs vs Destructeurs", de: "⚔️ Beschützer vs Zerstörer", hi: "⚔️ रक्षक बनाम विनाशक", zh: "⚔️ 守护者对阵破坏者", ja: "⚔️ 守護者 vs 破壊者", pt: "⚔️ Protetores vs Destruidores"),
-            LanguageSelectionUI.Localize("💎 Live Crystal Altar War", ar: "💎 صراع الكريستالة المباشر", ru: "💎 Битва за алтарь кристаллов", es: "💎 Lucha en vivo por el altar", fr: "💎 Guerre du cristal en direct", de: "💎 Echtzeit-Kristallkampf", hi: "💎 लाइव क्रिस्टल वेदी युद्ध", zh: "💎 水晶祭坛争夺战", ja: "💎 水晶の祭壇をめぐる激戦", pt: "💎 Guerra pelo altar de cristal"),
-            LanguageSelectionUI.Localize("🔥 10s Divine Shield Stand", ar: "🔥 صمود درع الشجرة الأخير", ru: "🔥 10с священного щита", es: "🔥 Escudo divino de 10 seg", fr: "🔥 Bouclier divin de 10s", de: "🔥 10s göttlicher Schutzschild", hi: "🔥 १० सेकंड दिव्य ढाल", zh: "🔥 10秒神圣护盾最后坚守", ja: "🔥 10秒間の神木シールド攻防", pt: "🔥 Escudo sagrado de 10s")
+            LanguageSelectionUI.Localize("👑 Host Realm or Direct IP", ar: "👑 استضافة سيرفر أو بالـ IP", ru: "👑 Сервер хоста или прямой IP", es: "👑 Hostea o conecta por IP", fr: "👑 Hébergez ou rejoignez par IP", de: "👑 Server hosten oder IP-Beitritt", hi: "👑 सर्वर होस्ट या सीधा आईपी", zh: "👑 建立主机或直连IP", ja: "👑 サーバー作成・IP直結", pt: "👑 Hostear ou conectar via IP", fa: "👑 میزبانی سرور یا اتصال با آی‌پی", it: "👑 Ospita server o entra con IP", tr: "👑 Sunucu Aç veya IP ile Bağlan"),
+            LanguageSelectionUI.Localize("⚔️ Protectors vs Destroyers", ar: "⚔️ حماة الشجرة ضد المدمرين", ru: "⚔️ Защитники против Разрушителей", es: "⚔️ Protectores vs Destructores", fr: "⚔️ Protecteurs vs Destructeurs", de: "⚔️ Beschützer vs Zerstörer", hi: "⚔️ रक्षक बनाम विनाशक", zh: "⚔️ 守护者对阵破坏者", ja: "⚔️ 守護者 vs 破壊者", pt: "⚔️ Protetores vs Destruidores", fa: "⚔️ حامیان در برابر ویرانگران", it: "⚔️ Protettori vs Distruttori", tr: "⚔️ Muhafızlar vs Yok Ediciler"),
+            LanguageSelectionUI.Localize("💎 Live Crystal Altar War", ar: "💎 صراع الكريستالة المباشر", ru: "💎 Битва за алтарь кристаллов", es: "💎 Lucha en vivo por el altar", fr: "💎 Guerre du cristal en direct", de: "💎 Echtzeit-Kristallkampf", hi: "💎 लाइव क्रिस्टल वेदी युद्ध", zh: "💎 水晶祭坛争夺战", ja: "💎 水晶の祭壇をめぐる激戦", pt: "💎 Guerra pelo altar de cristal", fa: "💎 نبرد زنده محراب کریستال", it: "💎 Guerra per l'altare del cristallo", tr: "💎 Canlı Kristal Sunak Savaşı"),
+            LanguageSelectionUI.Localize("🔥 10s Divine Shield Stand", ar: "🔥 صمود درع الشجرة الأخير", ru: "🔥 10с священного щита", es: "🔥 Escudo divino de 10 seg", fr: "🔥 Bouclier divin de 10s", de: "🔥 10s göttlicher Schutzschild", hi: "🔥 १० सेकंड दिव्य ढाल", zh: "🔥 10秒神圣护盾最后坚守", ja: "🔥 10秒間の神木シールド攻防", pt: "🔥 Escudo sagrado de 10s", fa: "🔥 ایستادگی ۱۰ ثانیه‌ای سپر مقدس", it: "🔥 Difesa Scudo Divino di 10s", tr: "🔥 10 sn İlahi Kalkan Mücadelesi")
         };
 
         string c2Desc = LanguageSelectionUI.Localize(
@@ -367,7 +394,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "पवित्र वृक्ष की रक्षा करें या सामरिक मल्टीप्लेयर युद्ध में इसके विशाल तने को गिराएं।",
             zh: "与各方勇士联机作战。在战术对抗中守护圣豆蔓或斩断其参天巨干。",
             ja: "世界中の戦士と共闘。神木を守り抜くか、巨躯を切り倒すか、白熱の対戦へ。",
-            pt: "Una-se a aliados online. Defenda a árvore sagrada ou destrua seu tronco colossal."
+            pt: "Una-se a aliados online. Defenda a árvore sagrada ou destrua seu tronco colossal.",
+            fa: "با جنگجویان سراسر قلمروها در نبرد شبکه‌ای زنده متحد شوید. از ساقه مقدس دفاع کنید یا تنه غول‌پیکر آن را واژگون سازید.",
+            it: "Unisciti ai guerrieri di regni lontani in battaglie di rete dal vivo. Difendi il Sacro Fagiolo o abbatti il suo colossale tronco.",
+            tr: "Uzak diyarlardaki savaşçılarla canlı ağ savaşında birleşin. Kutsal Fasulye Sırığını savunun veya devasa gövdesini devirin."
         );
 
         string c2Btn = LanguageSelectionUI.Localize("⚔️ ENTER REALM",
@@ -379,7 +409,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "⚔️ क्षेत्र में प्रवेश",
             zh: "⚔️ 奔赴战场",
             ja: "⚔️ オンライン出撃",
-            pt: "⚔️ ENTRAR NO REINO");
+            pt: "⚔️ ENTRAR NO REINO",
+            fa: "⚔️ ورود به قلمرو",
+            it: "⚔️ ENTRA NEL REGNO",
+            tr: "⚔️ DİYARA GİR");
 
         DrawVerticalPortalCard(
             c2X, cardY, cardW, cardH,
@@ -407,7 +440,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🛡️ पवित्र गठबंधन",
             zh: "🛡️ 私密部落",
             ja: "🛡️ 秘密の盟約",
-            pt: "🛡️ CLÃ PRIVADO");
+            pt: "🛡️ CLÃ PRIVADO",
+            fa: "🛡️ محفل اختصاصی",
+            it: "🛡️ CONGREGA PRIVATA",
+            tr: "🛡️ ÖZEL BİRLİK");
 
         string c3Title = LanguageSelectionUI.Localize("TRIBE SANCTUARY",
             ar: "ملاذ العشيرة",
@@ -418,7 +454,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "मित्र अभयारण्य",
             zh: "部落圣所",
             ja: "仲間たちの聖域",
-            pt: "SANTUÁRIO DA TRIBO");
+            pt: "SANTUÁRIO DA TRIBO",
+            fa: "پناهگاه قبیله",
+            it: "SANTUARIO DELLA TRIBÙ",
+            tr: "KABİLE SIĞINAĞI");
 
         string c3Sub = LanguageSelectionUI.Localize("Custom Private Lobby",
             ar: "غرفة خاصة مخصصة للأصدقاء",
@@ -429,14 +468,17 @@ public class PlayModeUI : MonoBehaviour
             hi: "कस्टम निजी लॉबी",
             zh: "自定义好友私密房间",
             ja: "カスタムフレンドロビー",
-            pt: "Lobby privado personalizado");
+            pt: "Lobby privado personalizado",
+            fa: "لابی خصوصی سفارشی",
+            it: "Lobby Privata Personalizzata",
+            tr: "Özel Kabile Odası");
 
         string[] c3Highlights = new string[]
         {
-            LanguageSelectionUI.Localize("🤝 Secret Room Cipher Code", ar: "🤝 رمز سري خاص للغرفة", ru: "🤝 Секретный код комнаты", es: "🤝 Código secreto de sala", fr: "🤝 Code privé sécurisé", de: "🤝 Geheimer Raum-Code", hi: "🤝 गुप्त रूम कोड", zh: "🤝 专属私密房间密码", ja: "🤝 秘密のルームコード", pt: "🤝 Código secreto da sala"),
-            LanguageSelectionUI.Localize("⚖️ Custom Team Distribution", ar: "⚖️ توزيع الحلفاء والفرق", ru: "⚖️ Ручное распределение команд", es: "⚖️ División de equipos a medida", fr: "⚖️ Répartition libre des équipes", de: "⚖️ Freie Team-Einteilung", hi: "⚖️ कस्टम टीम आवंटन", zh: "⚖️ 自由阵营与队伍分配", ja: "⚖️ 自由なチーム編成", pt: "⚖️ Divisão livre de equipes"),
-            LanguageSelectionUI.Localize("🤖 Fill Roster With AI Bots", ar: "🤖 ملء المقاعد بالبوتات", ru: "🤖 Заполнение слотов ботами", es: "🤖 Relleno con bots IA", fr: "🤖 Remplissage par bots IA", de: "🤖 Mit KI-Bots auffüllen", hi: "🤖 बॉट्स से सीटें भरें", zh: "🤖 支持AI人机补位", ja: "🤖 AIボット補充対応", pt: "🤖 Preencher vagas com bots"),
-            LanguageSelectionUI.Localize("🛡️ Practice Tactics & Duels", ar: "🛡️ تجربة خطط ومبارزات ودية", ru: "🛡️ Тренировка дуэлей и тактик", es: "🛡️ Duelos y tácticas amistosas", fr: "🛡️ Duels et tactiques amicales", de: "🛡️ Taktik-Training & Duelle", hi: "🛡️ अभ्यास और दोस्ताना मैच", zh: "🛡️ 演练战术与好友对决", ja: "🛡️ 戦術練習とフレンド対戦", pt: "🛡️ Treino tático e duelos")
+            LanguageSelectionUI.Localize("🤝 Secret Room Cipher Code", ar: "🤝 رمز سري خاص للغرفة", ru: "🤝 Секретный код комнаты", es: "🤝 Código secreto de sala", fr: "🤝 Code privé sécurisé", de: "🤝 Geheimer Raum-Code", hi: "🤝 गुप्त रूम कोड", zh: "🤝 专属私密房间密码", ja: "🤝 秘密のルームコード", pt: "🤝 Código secreto da sala", fa: "🤝 رمز مخفی اتاق", it: "🤝 Codice segreto della stanza", tr: "🤝 Gizli Oda Şifresi"),
+            LanguageSelectionUI.Localize("⚖️ Custom Team Distribution", ar: "⚖️ توزيع الحلفاء والفرق", ru: "⚖️ Ручное распределение команд", es: "⚖️ División de equipos a medida", fr: "⚖️ Répartition libre des équipes", de: "⚖️ Freie Team-Einteilung", hi: "⚖️ कस्टम टीम आवंटन", zh: "⚖️ 自由阵营与队伍分配", ja: "⚖️ 自由なチーム編成", pt: "⚖️ Divisão livre de equipes", fa: "⚖️ توزیع سفارشی تیم‌ها", it: "⚖️ Distribuzione libera squadre", tr: "⚖️ Özel Takım Dağılımı"),
+            LanguageSelectionUI.Localize("🤖 Fill Roster With AI Bots", ar: "🤖 ملء المقاعد بالبوتات", ru: "🤖 Заполнение слотов ботами", es: "🤖 Relleno con bots IA", fr: "🤖 Remplissage par bots IA", de: "🤖 Mit KI-Bots auffüllen", hi: "🤖 बॉट्स से सीटें भरें", zh: "🤖 支持AI人机补位", ja: "🤖 AIボット補充対応", pt: "🤖 Preencher vagas com bots", fa: "🤖 پر کردن ظرفیت با بات‌های هوشمند", it: "🤖 Riempi posti con bot IA", tr: "🤖 Boşlukları Yapay Zeka ile Doldur"),
+            LanguageSelectionUI.Localize("🛡️ Practice Tactics & Duels", ar: "🛡️ تجربة خطط ومبارزات ودية", ru: "🛡️ Тренировка дуэлей и тактик", es: "🛡️ Duelos y tácticas amistosas", fr: "🛡️ Duels et tactiques amicales", de: "🛡️ Taktik-Training & Duelle", hi: "🛡️ अभ्यास और दोस्ताना मैच", zh: "🛡️ 演练战术与好友对决", ja: "🛡️ 戦術練習とフレンド対戦", pt: "🛡️ Treino tático e duelos", fa: "🛡️ تمرین تاکتیک‌ها و دوئل دوستانه", it: "🛡️ Allena tattiche e duelli", tr: "🛡️ Taktik ve Düello Çalışması")
         };
 
         string c3Desc = LanguageSelectionUI.Localize(
@@ -449,7 +491,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "गुप्त कमरे के कोड के साथ मित्रों को इकट्ठा करें और निजी लड़ाइयों का आनंद लें।",
             zh: "凭借私密房间码召集好友。在守护者与破坏者间自由分配阵营并设定对战规则。",
             ja: "秘密のルームコードで仲間を招集。自由なルールと編成で親善試合を楽しもう。",
-            pt: "Reúna seus amigos com um código privado. Divida as equipes e jogue partidas privadas."
+            pt: "Reúna seus amigos com um código privado. Divida as equipes e jogue partidas privadas.",
+            fa: "دوستان خود را با یک رمز مخفی گرد هم آورید، تیم‌ها را میان حامیان و ویرانگران تقسیم کنید و با قوانین سفارشی مبارزه نمایید.",
+            it: "Raduna i tuoi compagni con un codice segreto. Imposta regole personalizzate, assegna squadre e goditi battaglie private.",
+            tr: "Gizli oda şifresiyle arkadaşlarınızı toplayın. Takımları Koruyucular ve Yok Ediciler olarak ayırın, özel kurallarla savaşın."
         );
 
         string c3Btn = LanguageSelectionUI.Localize("🤝 GATHER TRIBE",
@@ -461,7 +506,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🤝 कबीला इकट्ठा करें",
             zh: "🤝 召集部落",
             ja: "🤝 仲間を集める",
-            pt: "🤝 REUNIR A TRIBO");
+            pt: "🤝 REUNIR A TRIBO",
+            fa: "🤝 تشکیل لابی",
+            it: "🤝 RIUNISCI LA TRIBÙ",
+            tr: "🤝 KABİLEYİ TOPLA");
 
         DrawVerticalPortalCard(
             c3X, cardY, cardW, cardH,
@@ -638,7 +686,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🌊 ऑनलाइन वन क्षेत्र सेटअप",
             zh: "🌊 在线森林领域设置",
             ja: "🌊 オンライン領域の設定",
-            pt: "🌊 CONFIGURAÇÃO DE REINO ONLINE");
+            pt: "🌊 CONFIGURAÇÃO DE REINO ONLINE",
+            fa: "🌊 تنظیمات اتصال آنلاین قلمرو جنگل",
+            it: "🌊 CONFIGURAZIONE REGNO DELLA FORESTA ONLINE",
+            tr: "🌊 ÇEVRİMİÇİ ORMAN DİYARI AYARLARI");
 
         string subTitleText = LanguageSelectionUI.Localize("~ Awaken a Wild Sanctuary or Step Across Distant Rivers ~",
             ar: "~ أنشئ خادمًا جديدًا أو انضم إلى معركة عبر الشبكة ~",
@@ -649,7 +700,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "~ एक अभयारण्य बनाएं या दूर की नदियों के पार कदम रखें ~",
             zh: "~ 唤醒狂野圣所，或跨越遥远之河 ~",
             ja: "~ 荒野の聖域を開くか、遥かなる大河を渡れ ~",
-            pt: "~ Desperte um santuário ou atravesse rios distantes ~");
+            pt: "~ Desperte um santuário ou atravesse rios distantes ~",
+            fa: "~ یک پناهگاه باستانی برپا کنید یا از رودهای دوردست بگذرید ~",
+            it: "~ Risveglia un santuario selvaggio o varca fiumi lontani ~",
+            tr: "~ Vahşi bir sığınak kur veya uzak nehirleri aş ~");
 
         string hostTitle = LanguageSelectionUI.Localize("👑 HOST A FOREST REALM (SERVER)",
             ar: "👑 استضافة سيرفر للغابة (مضيف)",
@@ -660,7 +714,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "👑 वन क्षेत्र होस्ट करें (सर्वर)",
             zh: "👑 创立森林领域 (主机)",
             ja: "👑 サーバーをホストする",
-            pt: "👑 HOSPEDAR REINO (SERVIDOR)");
+            pt: "👑 HOSPEDAR REINO (SERVIDOR)",
+            fa: "👑 میزبانی سرور جنگل (میزبان)",
+            it: "👑 CREA UN REGNO DELLA FORESTA (SERVER)",
+            tr: "👑 ORMAN DİYARI OLUŞTUR (SUNUCU)");
 
         string hostDesc = LanguageSelectionUI.Localize("Awaken the ancient grove on your device. Other warriors can connect directly to your forest using your IP address.",
             ar: "افتح عالم الغابة على جهازك ليتمكن اللاعبون الآخرون من الاتصال بك مباشرة عبر الـ IP.",
@@ -671,7 +728,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "अपने डिवाइस पर प्राचीन ग्रोव को जगाएं। अन्य योद्धा आपके आईपी पते का उपयोग करके जुड़ सकते हैं।",
             zh: "在您的设备上唤醒古老树林。其他勇士可直接通过您的IP地址连接加入森林战场。",
             ja: "お使いの端末で古代の木立ちを開設。他のプレイヤーがIPアドレスで直接接続可能になります。",
-            pt: "Desperte o bosque no seu dispositivo. Outros jogadores podem conectar-se diretamente via seu IP.");
+            pt: "Desperte o bosque no seu dispositivo. Outros jogadores podem conectar-se diretamente via seu IP.",
+            fa: "بیشه باستانی را روی دستگاه خود برپا کنید. جنگجویان دیگر می‌توانند با نشانی IP مستقیماً به شما متصل شوند.",
+            it: "Risveglia l'antico bosco sul tuo dispositivo. Gli altri guerrieri potranno connettersi direttamente tramite il tuo IP.",
+            tr: "Kadim koruyu cihazınızda uyandırın. Diğer savaşçılar IP adresiniz üzerinden doğrudan bağlanabilirler.");
 
         string hostBtn = LanguageSelectionUI.Localize("👑 HOST REALM",
             ar: "👑 استضافة السيرفر",
@@ -682,7 +742,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "👑 सर्वर बनाएं",
             zh: "👑 创建领域",
             ja: "👑 ホスト開始",
-            pt: "👑 HOSPEDAR REINO");
+            pt: "👑 HOSPEDAR REINO",
+            fa: "👑 میزبانی قلمرو",
+            it: "👑 CREA SERVER",
+            tr: "👑 DİYAR OLUŞTUR");
 
         string joinTitle = LanguageSelectionUI.Localize("🎮 JOURNEY TO A REMOTE REALM",
             ar: "🎮 الانضمام إلى سيرفر آخر",
@@ -693,7 +756,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🎮 दूर के क्षेत्र में प्रवेश करें",
             zh: "🎮 前往远程领域",
             ja: "🎮 遠隔サーバーへ参加",
-            pt: "🎮 JUNTAR-SE A UM REINO");
+            pt: "🎮 JUNTAR-SE A UM REINO",
+            fa: "🎮 پیوستن به سرور دیگر (مهمان)",
+            it: "🎮 VIAGGIA VERSO UN ALTRO REGNO",
+            tr: "🎮 UZAK BİR DİYARA KATIL");
 
         string joinDesc = LanguageSelectionUI.Localize("Enter the host's sacred IP address to step into their live arena:",
             ar: "أدخل عنوان الـ IP الخاص بالمضيف للدخول في معركتهم المباشرة:",
@@ -704,7 +770,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "लाइव अखाड़े में कदम रखने के लिए होस्ट का आईपी पता दर्ज करें:",
             zh: "输入主机的IP地址以踏入其战局领域：",
             ja: "ホストのIPアドレスを入力してリアルタイムバトルへ参加：",
-            pt: "Insira o IP do anfitrião para entrar na arena:");
+            pt: "Insira o IP do anfitrião para entrar na arena:",
+            fa: "نشانی IP مقدس میزبان را وارد کنید تا وارد میدان نبرد زنده شوید:",
+            it: "Inserisci l'indirizzo IP dell'host per entrare nell'arena:",
+            tr: "Canlı arenaya girmek için sunucunun kutsal IP adresini girin:");
 
         string joinBtn = LanguageSelectionUI.Localize("🌊 JOIN REALM",
             ar: "🌊 دخول السيرفر",
@@ -715,7 +784,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "🌊 क्षेत्र में शामिल हों",
             zh: "🌊 加入领域",
             ja: "🌊 参加する",
-            pt: "🌊 ENTRAR NO REINO");
+            pt: "🌊 ENTRAR NO REINO",
+            fa: "🌊 ورود به قلمرو",
+            it: "🌊 UNISCITI AL REGNO",
+            tr: "🌊 DİYARA KATIL");
 
         string backBtn = LanguageSelectionUI.Localize("⬅️ Return to Gateways",
             ar: "⬅️ رجوع إلى البوابات",
@@ -726,7 +798,10 @@ public class PlayModeUI : MonoBehaviour
             hi: "⬅️ वापस लौटें",
             zh: "⬅️ 返回大厅",
             ja: "⬅️ 戻る",
-            pt: "⬅️ Voltar aos portais");
+            pt: "⬅️ Voltar aos portais",
+            fa: "⬅️ بازگشت به دروازه‌ها",
+            it: "⬅️ Torna ai portali",
+            tr: "⬅️ Geçitlere Dön");
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
         titleStyle.fontSize = 20;

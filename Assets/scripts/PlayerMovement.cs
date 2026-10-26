@@ -1095,7 +1095,8 @@ public class PlayerMovement : NetworkBehaviour
         {
             if (rb != null && !rb.isKinematic)
             {
-                if (isGroundedSlope || isCurrentlyGrounded)
+                bool nearGround = isGroundedSlope || isCurrentlyGrounded || Physics.Raycast(transform.position + Vector3.up * 0.15f, Vector3.down, 1.35f, ~LayerMask.GetMask("Ignore Raycast", "Player"));
+                if (nearGround && (Time.time - lastJumpTime > 0.25f))
                 {
                     // على الأرضية أو المنحدر: نثبت السرعة تماماً لمنع الانزلاق والقفز اللاإرادي
                     rb.linearVelocity = Vector3.zero;
