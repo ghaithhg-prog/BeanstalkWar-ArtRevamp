@@ -425,5 +425,41 @@ public class PlayerXP : NetworkBehaviour
             string ultLvl5 = LanguageSelectionUI.Localize("🌿 Ultimate Awakes at Level 5 🌿", ar: "🌿 تفتح القدرة الخارقة في المستوى 5 🌿", ru: "🌿 Ульта откроется на 5 уровне 🌿", es: "🌿 La definitiva se activa al nivel 5 🌿", fr: "🌿 L'ultime se débloque au niveau 5 🌿");
             GUI.Label(new Rect(x, y + 66f, crestW, 18f), ultLvl5, subStyle);
         }
+
+        // Top-Right Acorn Purse & Match Stakes (Wager style like 8-Ball Pool)
+        if (PlayerProfile.Instance != null)
+        {
+            float purseW = 230f;
+            float purseH = 32f;
+            float px = Screen.width - purseW - 16f;
+            float py = 14f;
+
+            EnchantedNatureGUI.DrawWoodPlate(new Rect(px, py, purseW, purseH), new Color(0.10f, 0.15f, 0.10f, 0.92f), new Color(0.95f, 0.80f, 0.35f, 0.92f));
+
+            GUIStyle purseStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 11,
+                fontStyle = FontStyle.Bold
+            };
+            purseStyle.normal.textColor = new Color(1f, 0.92f, 0.45f);
+
+            string purseText = LanguageSelectionUI.Localize(
+                $"🌰 {PlayerProfile.Instance.Coins}  |  Stake: -60 (Win: +350)",
+                ar: $"🌰 {PlayerProfile.Instance.Coins}  |  الرهان: -60 (الفوز: +350)",
+                fa: $"🌰 {PlayerProfile.Instance.Coins}  |  هزینه: -۶۰ (پیروزی: +۳۵۰)",
+                ru: $"🌰 {PlayerProfile.Instance.Coins}  |  Ставка: -60 (Победа: +350)",
+                de: $"🌰 {PlayerProfile.Instance.Coins}  |  Einsatz: -60 (Sieg: +350)",
+                it: $"🌰 {PlayerProfile.Instance.Coins}  |  Posta: -60 (Vittoria: +350)",
+                tr: $"🌰 {PlayerProfile.Instance.Coins}  |  Bahis: -60 (Zafer: +350)",
+                es: $"🌰 {PlayerProfile.Instance.Coins}  |  Apuesta: -60 (Ganar: +350)",
+                fr: $"🌰 {PlayerProfile.Instance.Coins}  |  Mise: -60 (Victoire: +350)",
+                zh: $"🌰 {PlayerProfile.Instance.Coins}  |  底注: -60 (获胜: +350)",
+                ja: $"🌰 {PlayerProfile.Instance.Coins}  |  賭け金: -60 (勝利: +350)",
+                pt: $"🌰 {PlayerProfile.Instance.Coins}  |  Aposta: -60 (Vitória: +350)"
+            );
+
+            GUI.Label(new Rect(px, py, purseW, purseH), purseText, purseStyle);
+        }
     }
 }

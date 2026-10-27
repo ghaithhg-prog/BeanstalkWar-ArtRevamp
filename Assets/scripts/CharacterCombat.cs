@@ -293,9 +293,9 @@ public class CharacterCombat : NetworkBehaviour
                 PlayerXP xp = GetComponent<PlayerXP>();
                 float xpMult = (xp != null) ? xp.GetDamageMultiplier() : 1f;
                 float levelMult = TreeGrowth.GetHeightMultiplier(transform.position);
-                // مضاعف الحطابين الفتاك لتقطيع جذع الشجرة العملاقة (9500 HP) ليكون التأثير كبيراً ومحسوساً
-                float woodcutterMult = (team == PlayerMovement.TeamType.Destroyer) ? 3.6f : 1.5f;
-                float amount = attackDamage * levelMult * xpMult * woodcutterMult;
+                // مضاعف متوازن وعادل لتأثير ضرب الشجرة وتطبيبها، متساوي بين الحماة والمدمرين لضمان تكافؤ الفوز بنسبة 50/50
+                float treeImpactMult = 2.2f;
+                float amount = attackDamage * levelMult * xpMult * treeImpactMult;
 
                 if (team == PlayerMovement.TeamType.Destroyer)
                 {
@@ -507,8 +507,8 @@ public class CharacterCombat : NetworkBehaviour
             {
                 treeDamagedThisSwing = true;
                 float levelMultiplier = TreeGrowth.GetHeightMultiplier(transform.position);
-                float woodcutterMult = (team == PlayerMovement.TeamType.Destroyer) ? 3.6f : 1.5f;
-                float finalAmount = attackDamage * levelMultiplier * xpMultiplier * woodcutterMult;
+                float treeImpactMult = 2.2f;
+                float finalAmount = attackDamage * levelMultiplier * xpMultiplier * treeImpactMult;
 
                 if (team ==
                     PlayerMovement.TeamType.Destroyer)
@@ -576,9 +576,16 @@ public class CharacterCombat : NetworkBehaviour
                         if (tree != null)
                         {
                             float levelMultiplier = TreeGrowth.GetHeightMultiplier(transform.position);
-                            float woodcutterMult = (team == PlayerMovement.TeamType.Destroyer) ? 3.6f : 1.5f;
-                            float finalAmount = attackDamage * levelMultiplier * xpMultiplier * woodcutterMult;
-                            tree.TakeDamage(finalAmount, gameObject);
+                            float treeImpactMult = 2.2f;
+                            float finalAmount = attackDamage * levelMultiplier * xpMultiplier * treeImpactMult;
+                            if (team == PlayerMovement.TeamType.Destroyer)
+                            {
+                                tree.TakeDamage(finalAmount, gameObject);
+                            }
+                            else
+                            {
+                                tree.Heal(finalAmount);
+                            }
                             if (xp != null) xp.AddTreeHitXP();
                         }
                     }

@@ -490,22 +490,22 @@ public class BotController : NetworkBehaviour
             return;
         }
 
-        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 25% من صحتها في وجود الدرع)
+        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 35% من صحتها في وجود الدرع)
         bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
-            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.255f) : 10f));
+            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.355f) : 10f));
 
         // 5. للمدمرين (Destroyer Bots) أثناء وجود الدرع وقبل موت الزعماء الثلاثة:
-        // كما طلب المستخدم: المدمرون يهاجمون الشجرة مسبقاً طالما لم تصل للحد الأقصى للدرع (25%)!
-        // وإذا وصلت صحة الشجرة إلى حد الدرع (25%)، يكتفون بمحاربة الزعماء والحماة لكسر الدرع!
+        // كما طلب المستخدم: المدمرون يهاجمون الشجرة مسبقاً طالما لم تصل للحد الأقصى للدرع (35%)!
+        // وإذا وصلت صحة الشجرة إلى حد الدرع (35%)، يكتفون بمحاربة الزعماء والحماة لكسر الدرع!
         if (team == PlayerMovement.TeamType.Destroyer && !allBossesSlain)
         {
             int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
 
             if (canTreeTakeMoreDamage)
             {
-                // الشجرة ما تزال تقبل الضرر حتى 25%:
-                // حوالي نصف فريق المدمرين (45%) يركزون على تقطيع الشجرة وإنزال صحتها مسبقاً!
-                if (botRatio < 5)
+                // الشجرة ما تزال تقبل الضرر حتى 35%:
+                // قسم من فريق المدمرين (حوالي 40%) يركزون على تقطيع الشجرة وإنزال صحتها مسبقاً حتى حد الدرع 35%!
+                if (botRatio < 4)
                 {
                     Transform immediateThreat = FindClosestEnemy();
                     if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 2.5f)
@@ -519,7 +519,7 @@ public class BotController : NetworkBehaviour
                     return;
                 }
             }
-            // إذا وصلت الشجرة لحد الـ 25%: لا يمكن إنقاص صحتها أكثر طالما الدرع فعال!
+            // إذا وصلت الشجرة لحد الـ 35%: لا يمكن إنقاص صحتها أكثر طالما الدرع فعال!
             // فيتوجه 100% من المدمرين لقتال الزعماء وإسقاط الحماة لكسر درع الشجرة!
         }
 
