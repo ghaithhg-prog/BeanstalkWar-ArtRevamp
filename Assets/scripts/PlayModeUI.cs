@@ -30,9 +30,67 @@ public class PlayModeUI : MonoBehaviour
     private bool inOnlineSubmenu = false;
     private string onlineConnectIP = "127.0.0.1";
 
+    public static bool isTitleScreenActive = true;
+    private Texture2D splashArtTex = null;
+
+    private struct FloatingParticle
+    {
+        public float x;
+        public float y;
+        public float speed;
+        public float size;
+        public float seed;
+        public Color color;
+    }
+    private static FloatingParticle[] titleParticles = null;
+
+    private void InitTitleParticles()
+    {
+        if (titleParticles != null) return;
+        titleParticles = new FloatingParticle[26];
+        for (int i = 0; i < titleParticles.Length; i++)
+        {
+            titleParticles[i] = new FloatingParticle
+            {
+                x = Random.value,
+                y = Random.value,
+                speed = Random.Range(0.025f, 0.085f),
+                size = Random.Range(4f, 9f),
+                seed = Random.Range(0f, 100f),
+                color = (i % 2 == 0)
+                    ? new Color(0.98f, 0.88f, 0.35f, Random.Range(0.45f, 0.85f))
+                    : new Color(0.35f, 0.95f, 0.55f, Random.Range(0.35f, 0.75f))
+            };
+        }
+    }
+
+    private Texture2D LoadSplashTexture()
+    {
+        if (splashArtTex != null) return splashArtTex;
+
+        splashArtTex = Resources.Load<Texture2D>("UI/BeanstalkWar_TitleSplash");
+        if (splashArtTex != null) return splashArtTex;
+
+        string directPath = System.IO.Path.Combine(Application.dataPath, "Resources/UI/BeanstalkWar_TitleSplash.png");
+        if (!System.IO.File.Exists(directPath))
+        {
+            directPath = System.IO.Path.Combine(Application.dataPath, "Resources/UI/BeanstalkWar_TitleSplash.jpg");
+        }
+
+        if (System.IO.File.Exists(directPath))
+        {
+            byte[] fileData = System.IO.File.ReadAllBytes(directPath);
+            splashArtTex = new Texture2D(2, 2);
+            splashArtTex.LoadImage(fileData);
+        }
+
+        return splashArtTex;
+    }
+
     void Awake()
     {
         Instance = this;
+        isTitleScreenActive = true;
 
         if (panel != null)
         {
@@ -50,6 +108,7 @@ public class PlayModeUI : MonoBehaviour
         if (MatchEndStatsUI.isAutoRestartingMatch)
         {
             isMenuVisible = false;
+            isTitleScreenActive = false;
             return;
         }
 
@@ -138,6 +197,12 @@ public class PlayModeUI : MonoBehaviour
         // Keep background haze strictly behind top bar buttons (which are at depth -100)
         GUI.depth = 10;
 
+        if (isTitleScreenActive)
+        {
+            DrawTitleSplashScreen();
+            return;
+        }
+
         // Dark enchanted emerald haze behind the scroll
         GUI.color = new Color(0.04f, 0.09f, 0.05f, 0.85f);
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
@@ -154,10 +219,296 @@ public class PlayModeUI : MonoBehaviour
     }
 
     // =========================================================================
+    // GRAND TITLE SPLASH SCREEN (AAA Cinematic Presentation & Opening Screen)
+    // =========================================================================
+    void DrawTitleSplashScreen()
+    {
+        float sw = Screen.width;
+        float sh = Screen.height;
+
+        // 1. Full Screen Splash Background Art with Subtle Breathing Scale Animation
+        Texture2D splash = LoadSplashTexture();
+        if (splash != null)
+        {
+            float breathe = 1.0f + Mathf.Sin(Time.time * 0.45f) * 0.02f;
+            float imgAspect = (float)splash.width / (float)splash.height;
+            float screenAspect = sw / sh;
+            float dw, dh;
+            if (screenAspect > imgAspect)
+            {
+                dw = sw * breathe;
+                dh = (sw / imgAspect) * breathe;
+            }
+            else
+            {
+                dh = sh * breathe;
+                dw = (sh * imgAspect) * breathe;
+            }
+            float dx = (sw - dw) * 0.5f;
+            float dy = (sh - dh) * 0.5f;
+            GUI.color = Color.white;
+            GUI.DrawTexture(new Rect(dx, dy, dw, dh), splash, ScaleMode.StretchToFill);
+
+            // Subtle dark fantasy vignette to make golden title & buttons pop
+            GUI.color = new Color(0.02f, 0.05f, 0.03f, 0.32f);
+            GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+        }
+        else
+        {
+            // Procedural Emerald Forest Gradient
+            GUI.color = new Color(0.04f, 0.10f, 0.06f, 0.96f);
+            GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+        }
+
+        // 2. Animated Floating Golden Spores & Glowing Nature Dust
+        InitTitleParticles();
+        for (int i = 0; i < titleParticles.Length; i++)
+        {
+            titleParticles[i].y -= titleParticles[i].speed * Time.deltaTime;
+            if (titleParticles[i].y < -0.05f) titleParticles[i].y = 1.05f;
+
+            float sway = Mathf.Sin(Time.time * 1.5f + titleParticles[i].seed) * 0.018f;
+            float px = (titleParticles[i].x + sway) * sw;
+            float py = titleParticles[i].y * sh;
+
+            float pulse = 0.65f + 0.35f * Mathf.Sin(Time.time * 3f + titleParticles[i].seed);
+            Color pCol = titleParticles[i].color;
+            pCol.a *= pulse;
+
+            GUI.color = pCol;
+            GUI.DrawTexture(new Rect(px, py, titleParticles[i].size, titleParticles[i].size), Texture2D.whiteTexture);
+        }
+        GUI.color = Color.white;
+
+        // 3. Decorative Ancient Gold Corner Filigree Frame
+        EnchantedNatureGUI.DrawCrispBorder(new Rect(12f, 12f, sw - 24f, sh - 24f), new Color(0.85f, 0.72f, 0.32f, 0.65f), 1.5f);
+        EnchantedNatureGUI.DrawCornerFiligree(new Rect(16f, 16f, sw - 32f, sh - 32f), new Color(0.95f, 0.82f, 0.38f, 0.85f), 24f);
+
+        // Top-Right Utility: Audio Toggle Button
+        float audioBtnW = 78f;
+        float audioBtnH = 38f;
+        float audioX = sw - audioBtnW - 12f;
+        float audioY = 8f;
+        string audioText = AudioListener.pause ? "🔇 OFF" : "🔊 ON";
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 11))
+        {
+            AudioListener.pause = !AudioListener.pause;
+        }
+
+        // Top Guide Button
+        float guideBtnW = 135f;
+        float guideX = audioX - guideBtnW - 80f; // Leaves space for language flag button in-between
+        if (guideX > 200f)
+        {
+            string guideText = LanguageSelectionUI.Localize("📖 HOW TO PLAY", ar: "📖 طَرِيقَةُ اللَّعِبِ", fa: "📖 راهنمای بازی", ru: "📖 КАК ИГРАТЬ", de: "📖 ANLEITUNG", it: "📖 COME GIOCARE", tr: "📖 NASIL OYNANIR", es: "📖 CÓMO JUGAR", fr: "📖 COMMENT JOUER", zh: "📖 玩法指南", ja: "📖 遊び方", hi: "📖 कैसे खेलें", pt: "📖 COMO JOGAR");
+            if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(guideX, audioY, guideBtnW, audioBtnH), guideText, new Color(0.35f, 0.95f, 0.85f), 11))
+            {
+                GameIntroBriefingUI.Instance?.OpenBriefing();
+            }
+        }
+
+        // 4. Grand Game Title Plaque (Center-Top)
+        float titleBoxW = Mathf.Min(sw * 0.88f, 860f);
+        float titleBoxH = 152f;
+        float titleBoxX = (sw - titleBoxW) * 0.5f;
+        float titleBoxY = Mathf.Max(30f, sh * 0.10f);
+
+        Rect titleRect = new Rect(titleBoxX, titleBoxY, titleBoxW, titleBoxH);
+        EnchantedNatureGUI.DrawWoodPlate(titleRect, new Color(0.08f, 0.14f, 0.09f, 0.92f), new Color(0.92f, 0.78f, 0.30f, 0.95f));
+
+        // Floating Title Shimmer
+        float titleGlow = (Mathf.Sin(Time.time * 2.5f) + 1f) * 0.5f;
+        Color glowingGold = Color.Lerp(new Color(0.95f, 0.82f, 0.28f), new Color(1f, 0.98f, 0.65f), titleGlow);
+
+        string grandTitle = LanguageSelectionUI.Localize(
+            "🌿 BEANSTALK WAR 🌿",
+            ar: "🌿 حَرْبُ شَجَرَةِ الفَاصُولِيَاء 🌿",
+            fa: "🌿 جنگ ساقه لوبیا 🌿",
+            ru: "🌿 БИТВА ЗА БОБОВЫЙ СТЕБЕЛЬ 🌿",
+            de: "🌿 KRIEG DER BOHNENRANKE 🌿",
+            it: "🌿 GUERRA DEL FAGIOLO SACRO 🌿",
+            tr: "🌿 FASULYE SIRIĞI SAVAŞI 🌿",
+            es: "🌿 LA GUERRA DEL TALLO SAGRADO 🌿",
+            fr: "🌿 LA GUERRE DU HARICOT SACRÉ 🌿",
+            zh: "🌿 巨藤神树之战 🌿",
+            ja: "🌿 聖なる巨木の戦い 🌿",
+            hi: "🌿 सेम के पौधे का महायुद्ध 🌿",
+            pt: "🌿 A GUERRA DO PÉ DE FEIJÃO 🌿"
+        );
+
+        GUIStyle mainTitleStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.038f), 26, 42),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter
+        };
+        EnchantedNatureGUI.DrawTextWithShadow(
+            new Rect(titleBoxX + 10f, titleBoxY + 14f, titleBoxW - 20f, 52f),
+            grandTitle,
+            mainTitleStyle,
+            glowingGold,
+            new Color(0.02f, 0.05f, 0.02f, 0.98f),
+            2.5f, 2.5f
+        );
+
+        string grandSubtitle = LanguageSelectionUI.Localize(
+            "⚔️ Battle for the Sacred Tree & Celestial Sanctuary ⚔️",
+            ar: "⚔️ مَعْرَكَةُ الشَّجَرَةِ المُقَدَّسَةِ وَالمِحْرَابِ السَّمَاوِيّ ⚔️",
+            fa: "⚔️ نبرد بر سر درخت مقدس و محراب آسمانی ⚔️",
+            ru: "⚔️ Битва за Священное Древо и Небесный Алтарь ⚔️",
+            de: "⚔️ Schlacht um den Heiligen Baum & Himmlischen Altar ⚔️",
+            it: "⚔️ Battaglia per l'Albero Sacro e il Santuario Celeste ⚔️",
+            tr: "⚔️ Kutsal Ağaç ve Göksel Sunak İçin Savaş ⚔️",
+            es: "⚔️ Batalla por el Árbol Sagrado y el Altar Celestial ⚔️",
+            fr: "⚔️ Bataille pour l'Arbre Sacré et le Sanctuaire Céleste ⚔️",
+            zh: "⚔️ 神圣巨树守护与苍穹圣坛争夺战 ⚔️",
+            ja: "⚔️ 聖なる巨木と天空の祭壇を巡る最終決戦 ⚔️",
+            hi: "⚔️ पवित्र वृक्ष और दिव्य वेदी का महासंग्राम ⚔️",
+            pt: "⚔️ Batalha pela Árvore Sagrada e Altar Celestial ⚔️"
+        );
+
+        GUIStyle subtitleStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.016f), 13, 17),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter
+        };
+        EnchantedNatureGUI.DrawTextWithShadow(
+            new Rect(titleBoxX + 10f, titleBoxY + 74f, titleBoxW - 20f, 28f),
+            grandSubtitle,
+            subtitleStyle,
+            new Color(0.35f, 0.95f, 0.88f),
+            new Color(0.01f, 0.04f, 0.02f, 0.95f),
+            1.5f, 1.5f
+        );
+
+        // Feature badge ribbons below title
+        string factionInfo = LanguageSelectionUI.Localize(
+            "🛡️ Protectors of the Forest   ⚔️ VS ⚔️   🔥 Destroyers of the Canopy",
+            ar: "🛡️ حُمَاةُ الغَابَةِ المُقَدَّسَةِ   ⚔️ ضِدَّ ⚔️   🔥 مُدَمِّرُو الشَّجَرَةِ",
+            fa: "🛡️ مدافعان جنگل مقدس   ⚔️ در برابر ⚔️   🔥 ویرانگران درخت",
+            ru: "🛡️ Защитники Священного Леса   ⚔️ ПРОТИВ ⚔️   🔥 Разрушители Древа",
+            de: "🛡️ Hüter des Heiligen Waldes   ⚔️ GEGEN ⚔️   🔥 Zerstörer des Baumes",
+            it: "🛡️ Protettori della Foresta   ⚔️ CONTRO ⚔️   🔥 Distruttori dell'Albero",
+            tr: "🛡️ Kutsal Ormanın Koruyucuları   ⚔️ KARŞI ⚔️   🔥 Ağaç Yok Edicileri",
+            es: "🛡️ Protectores del Bosque   ⚔️ VS ⚔️   🔥 Destructores del Árbol",
+            fr: "🛡️ Protecteurs de la Forêt   ⚔️ VS ⚔️   🔥 Destructeurs de l'Arbre",
+            zh: "🛡️ 圣林守护盟军   ⚔️ 阵营巅峰决战 ⚔️   🔥 烈焰伐树征服者",
+            ja: "🛡️ 聖樹の守護同盟   ⚔️ 宿命の激突 ⚔️   🔥 巨木伐採破壊軍",
+            hi: "🛡️ पवित्र वन के संरक्षक   ⚔️ बनाम ⚔️   🔥 वृक्ष के विनाशक",
+            pt: "🛡️ Protetores da Floresta   ⚔️ VS ⚔️   🔥 Destruidores da Árvore"
+        );
+        GUIStyle factionStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.013f), 11, 14),
+            fontStyle = FontStyle.Italic,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(0.85f, 0.92f, 0.85f, 0.85f) }
+        };
+        GUI.Label(new Rect(titleBoxX + 10f, titleBoxY + 110f, titleBoxW - 20f, 24f), factionInfo, factionStyle);
+
+        // 5. Grand Interactive Call-to-Action (Center-Bottom)
+        float startBtnW = Mathf.Clamp(sw * 0.50f, 360f, 560f);
+        float startBtnH = 62f;
+        float startBtnX = (sw - startBtnW) * 0.5f;
+        float startBtnY = sh - startBtnH - 80f;
+
+        float btnPulse = (Mathf.Sin(Time.time * 3.5f) + 1f) * 0.5f;
+        Color btnBorderCol = Color.Lerp(new Color(0.28f, 0.95f, 0.45f), new Color(1f, 0.88f, 0.35f), btnPulse);
+
+        string startText = LanguageSelectionUI.Localize(
+            "⚔️ ENTER THE FOREST — PLAY NOW ⚔️",
+            ar: "⚔️ ادْخُلْ الغَابَةَ — ابْدَأ اللَّعِبَ الآن ⚔️",
+            fa: "⚔️ ورود به جنگل — آغاز نبرد ⚔️",
+            ru: "⚔️ ВОЙТИ В ЛЕС — ИГРАТЬ ⚔️",
+            de: "⚔️ BETRETE DEN WALD — JETZT SPIELEN ⚔️",
+            it: "⚔️ ENTRA NELLA FORESTA — GIOCA ORA ⚔️",
+            tr: "⚔️ ORMANA GİR — ŞİMDİ OYNA ⚔️",
+            es: "⚔️ ENTRAR AL BOSQUE — JUGAR AHORA ⚔️",
+            fr: "⚔️ ENTRER DANS LA FORÊT — JOUER ⚔️",
+            zh: "⚔️ 进入神秘巨林 — 立即开启征程 ⚔️",
+            ja: "⚔️ 神秘の森へ進撃 — 今すぐプレイ ⚔️",
+            hi: "⚔️ जंगल में प्रवेश करें — अभी खेलें ⚔️",
+            pt: "⚔️ ENTRAR NA FLORESTA — JOGAR AGORA ⚔️"
+        );
+
+        Rect startBtnRect = new Rect(startBtnX, startBtnY, startBtnW, startBtnH);
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(startBtnRect, startText, btnBorderCol, 15))
+        {
+            isTitleScreenActive = false;
+        }
+
+        // Subtitle Hint
+        string hintText = LanguageSelectionUI.Localize(
+            "~ Click the button, press SPACE or click anywhere on screen ~",
+            ar: "~ انقر فوق الزر أو اضغط مسافة أو انقر في أي مكان للدخول ~",
+            fa: "~ روی دکمه کلیک کنید یا کلید فاصله را فشار دهید ~",
+            ru: "~ Нажмите кнопку, ПРОБЕЛ или кликните в любом месте экрана ~",
+            de: "~ Klicke auf den Button, drücke LEERTASTE oder klicke irgendwo hin ~",
+            it: "~ Fai clic sul pulsante, premi SPAZIO o clicca ovunque sullo schermo ~",
+            tr: "~ Butona tıklayın, BOŞLUK tuşuna basın veya ekranda herhangi bir yere tıklayın ~",
+            es: "~ Haz clic en el botón, presiona ESPACIO o haz clic en cualquier lugar ~",
+            fr: "~ Cliquez sur le bouton, appuyez sur ESPACE ou cliquez n'importe où ~",
+            zh: "~ 点击上方按钮、敲击空格键或在屏幕任意处点击开启冒险 ~",
+            ja: "~ ボタンをクリック、スペースキーを押すか、画面の任意の場所をクリック ~",
+            hi: "~ बटन पर क्लिक करें, स्पेस दबाएं या स्क्रीन पर कहीं भी क्लिक करें ~",
+            pt: "~ Clique no botão, pressione ESPAÇO ou clique em qualquer lugar da tela ~"
+        );
+        GUIStyle hintStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Italic,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(0.95f, 0.95f, 0.75f, 0.85f) }
+        };
+        GUI.Label(new Rect(startBtnX - 100f, startBtnY + startBtnH + 8f, startBtnW + 200f, 22f), hintText, hintStyle);
+
+        // Click anywhere on screen (excluding top bar) to start
+        Event evt = Event.current;
+        if (evt.type == EventType.MouseDown && evt.mousePosition.y > 60f)
+        {
+            isTitleScreenActive = false;
+            evt.Use();
+        }
+        else if (evt.type == EventType.KeyDown && (evt.keyCode == KeyCode.Space || evt.keyCode == KeyCode.Return))
+        {
+            isTitleScreenActive = false;
+            evt.Use();
+        }
+    }
+
+    // =========================================================================
     // TRIUMVIRATE GATEWAYS (3 VERTICAL AAA MONOLITHS)
     // =========================================================================
     void DrawMainModeSelect()
     {
+        // 0. Top-Left: Return to Title Screen Button
+        float backBtnW = 145f;
+        float backBtnH = 38f;
+        float backX = 12f;
+        float backY = 8f;
+        string backText = LanguageSelectionUI.Localize(
+            "🔙 TITLE SCREEN",
+            ar: "🔙 شاشة البداية",
+            fa: "🔙 صفحه عنوان",
+            ru: "🔙 ТИТУЛЬНЫЙ ЭКРАН",
+            de: "🔙 TITELBILDSCHIRM",
+            it: "🔙 SCHERMATA TITOLO",
+            tr: "🔙 BAŞLIK EKRANI",
+            es: "🔙 PANTALLA TÍTULO",
+            fr: "🔙 ÉCRAN TITRE",
+            zh: "🔙 返回标题画面",
+            ja: "🔙 タイトル画面へ",
+            hi: "🔙 शीर्षक स्क्रीन",
+            pt: "🔙 TELA DE TÍTULO"
+        );
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(backX, backY, backBtnW, backBtnH), backText, EnchantedNatureGUI.AntiqueGoldMid, 11))
+        {
+            isTitleScreenActive = true;
+        }
+
         // 1. Unified Top Citadel Ribbon - Audio Toggle (Top-Right)
         float audioBtnW = 78f;
         float audioBtnH = 38f;
