@@ -508,7 +508,7 @@ public class TreeGrowth : MonoBehaviour
         // حماية قاطعة: لا تسقط الشجرة أبداً إلا بعد موت الزعماء الثلاثة
         if (LevelBossManager.Instance != null && !LevelBossManager.Instance.AreAllBossesDefeated)
         {
-            currentHealth = maxHealth * 0.35f;
+            currentHealth = maxHealth * 0.30f;
             isCritical = false;
             return;
         }
@@ -972,9 +972,9 @@ public class TreeGrowth : MonoBehaviour
 
         currentHealth -= amount;
 
-        // درع الأختام الثلاثة والعد التنازلي لـ 10 ثوانٍ: لا يمكن إسقاط الشجرة أو إنزال صحتها تحت 35% طالما الدرع فعال!
+        // درع الأختام الثلاثة والعد التنازلي لـ 10 ثوانٍ: لا يمكن إسقاط الشجرة أو إنزال صحتها تحت 30% طالما الدرع فعال!
         bool shieldActive = IsShieldActive;
-        float minAllowedHealth = shieldActive ? (maxHealth * 0.35f) : 0f;
+        float minAllowedHealth = shieldActive ? (maxHealth * 0.30f) : 0f;
 
         currentHealth = Mathf.Clamp(currentHealth, minAllowedHealth, maxHealth);
     }
@@ -1006,9 +1006,9 @@ public class TreeGrowth : MonoBehaviour
             float healthPercent = currentHealth / maxHealth;
             healthBarFill.fillAmount = healthPercent;
             bool shieldActive = IsShieldActive;
-            if (shieldActive && healthPercent <= 0.355f)
+            if (shieldActive && healthPercent <= 0.305f)
             {
-                // لون ذهبي متوهج يدل على أن درع الزعماء الثلاثة يحمي الشجرة من السقوط (صامدة عند 35%)
+                // لون ذهبي متوهج يدل على أن درع الزعماء الثلاثة يحمي الشجرة من السقوط (صامدة عند 30%)
                 healthBarFill.color = new Color(1f, 0.82f, 0.2f);
             }
             else
@@ -1106,23 +1106,23 @@ public class TreeGrowth : MonoBehaviour
                 deadCount = LevelBossManager.Instance.DefeatedBossCount;
             }
 
-            bool isShieldCapped = currentHealth <= (maxHealth * 0.355f);
+            bool isShieldCapped = currentHealth <= (maxHealth * 0.305f);
             if (isShieldCapped)
             {
                 shieldStatus = LanguageSelectionUI.Localize(
-                    $"🛡️ SHIELD LOCKED (35% HP)! Tree is immune to further damage until all 3 Bosses are slain ({deadCount}/3 defeated)!",
-                    ar: $"🛡️ الدرع مفعل الآن (35% صحة)! لا يمكن إلحاق ضرر إضافي بالشجرة إلا بعد القضاء على الزعماء الثلاثة ({deadCount}/3 قتلى)!",
-                    fa: $"🛡️ سپر هم‌اکنون فعال است (۳۵٪ سلامت)! درخت آسیب نمی‌بیند تا زمانی که هر ۳ غول نابود شوند ({deadCount}/۳ کشته شدند)!",
-                    de: $"🛡️ SCHILD JETZT AKTIV (35% TP)! Baum immun gegen weiteren Schaden, bis alle 3 Bosse besiegt sind ({deadCount}/3)!",
-                    it: $"🛡️ SCUDO ORA ATTIVO (35% PS)! L'albero non può subire altri danni finché tutti e 3 i boss non saranno sconfitti ({deadCount}/3)!",
-                    tr: $"🛡️ KALKAN ŞİMDİ AKTİF (%35 CAN)! 3 Patron yenilene kadar ağaç daha fazla vurulamaz ({deadCount}/3)!",
-                    ru: $"🛡️ ЩИТ АКТИВИРОВАН (35% HP)! Урон дереву заблокирован до уничтожения всех 3 боссов ({deadCount}/3)!",
-                    fr: $"🛡️ BOUCLIER ACTIF (35% PV) ! Aucun dégât supplémentaire possible tant que les 3 boss ne sont pas vaincus ({deadCount}/3) !",
-                    es: $"🛡️ ¡ESCUDO ACTIVO (35% PS)! ¡No se puede dañar más al árbol hasta derrotar a los 3 jefes ({deadCount}/3)!",
-                    hi: $"🛡️ ढाल अब सक्रिय है (35% स्वास्थ्य)! जब तक सभी 3 बॉस पराजित नहीं होते, वृक्ष को नुकसान नहीं पहुँचेगा ({deadCount}/3)!",
-                    zh: $"🛡️ 护盾现已锁定 (35% 生命)！在击败全部 3 位领主前，无法对神树造成更多伤害 ({deadCount}/3)！",
-                    ja: $"🛡️ シールド現在発動中 (35% HP)！3体のボスを撃破するまで神木へのダメージはこれ以上入りません ({deadCount}/3)！",
-                    pt: $"🛡️ ESCUDO ATIVO AGORA (35% VIDA)! Nenhum dano adicional é permitido até derrotar os 3 chefes ({deadCount}/3)!"
+                    $"🛡️ SHIELD LOCKED (30% HP)! Tree is immune to further damage until all 3 Bosses are slain ({deadCount}/3 defeated)!",
+                    ar: $"🛡️ الدرع مفعل الآن (30% صحة)! لا يمكن إلحاق ضرر إضافي بالشجرة إلا بعد القضاء على الزعماء الثلاثة ({deadCount}/3 قتلى)!",
+                    fa: $"🛡️ سپر هم‌اکنون فعال است (۳۰٪ سلامت)! درخت آسیب نمی‌بیند تا زمانی که هر ۳ غول نابود شوند ({deadCount}/۳ کشته شدند)!",
+                    de: $"🛡️ SCHILD JETZT AKTIV (30% TP)! Baum immun gegen weiteren Schaden, bis alle 3 Bosse besiegt sind ({deadCount}/3)!",
+                    it: $"🛡️ SCUDO ORA ATTIVO (30% PS)! L'albero non può subire altri danni finché tutti e 3 i boss non saranno sconfitti ({deadCount}/3)!",
+                    tr: $"🛡️ KALKAN ŞİMDİ AKTİF (%30 CAN)! 3 Patron yenilene kadar ağaç daha fazla vurulamaz ({deadCount}/3)!",
+                    ru: $"🛡️ ЩИТ АКТИВИРОВАН (30% HP)! Урон дереву заблокирован до уничтожения всех 3 боссов ({deadCount}/3)!",
+                    fr: $"🛡️ BOUCLIER ACTIF (30% PV) ! Aucun dégât supplémentaire possible tant que les 3 boss ne sont pas vaincus ({deadCount}/3) !",
+                    es: $"🛡️ ¡ESCUDO ACTIVO (30% PS)! ¡No se puede dañar más al árbol hasta derrotar a los 3 jefes ({deadCount}/3)!",
+                    hi: $"🛡️ ढाल अब सक्रिय है (30% स्वास्थ्य)! जब तक सभी 3 बॉस पराजित नहीं होते, वृक्ष को नुकसान नहीं पहुँचेगा ({deadCount}/3)!",
+                    zh: $"🛡️ 护盾现已锁定 (30% 生命)！在击败全部 3 位领主前，无法对神树造成更多伤害 ({deadCount}/3)！",
+                    ja: $"🛡️ シールド現在発動中 (30% HP)！3体のボスを撃破するまで神木へのダメージはこれ以上入りません ({deadCount}/3)！",
+                    pt: $"🛡️ ESCUDO ATIVO AGORA (30% VIDA)! Nenhum dano adicional é permitido até derrotar os 3 chefes ({deadCount}/3)!"
                 );
                 float flash = Mathf.PingPong(Time.time * 4f, 1f);
                 shieldColor = Color.Lerp(new Color(1f, 0.85f, 0.2f), new Color(1f, 1f, 0.65f), flash);
@@ -1130,19 +1130,19 @@ public class TreeGrowth : MonoBehaviour
             else
             {
                 shieldStatus = LanguageSelectionUI.Localize(
-                    $"🛡️ DIVINE SHIELD ACTIVE ({deadCount}/3 BOSS SEALS BROKEN) - Tree protected below 35% HP",
-                    ar: $"🛡️ الدرع الإلهي مفعل ({deadCount}/3 أختام مكسورة) - الشجرة محمية عند 35% من الصحة",
-                    fa: $"🛡️ سپر مقدس فعال است ({deadCount}/۳ مهر شکسته شد) - محافظت در زیر ۳۵٪",
-                    de: $"🛡️ GÖTTLICHER SCHILD AKTIV ({deadCount}/3 BOSSSIEGEL GEBROCHEN) - Geschützt unter 35%",
-                    it: $"🛡️ SCUDO DIVINO ATTIVO ({deadCount}/3 SIGILLI DEI BOSS SPEZZATI) - Protetto sotto il 35%",
-                    tr: $"🛡️ İLAHİ KALKAN AKTİF ({deadCount}/3 PATRON MÜHRÜ KIRILDI) - %35 altında korumalı",
-                    ru: $"🛡️ БОЖЕСТВЕННЫЙ ЩИТ АКТИВЕН ({deadCount}/3 СНЯТО) - Защита ниже 35%",
-                    fr: $"🛡️ BOUCLIER SACRÉ ACTIF ({deadCount}/3 SCEAUX BRISÉS) - Protégé sous 35%",
-                    es: $"🛡️ ESCUDO SAGRADO ACTIVO ({deadCount}/3 SELLOS ROTOS) - Protegido bajo 35%",
-                    hi: $"🛡️ दिव्य ढाल सक्रिय ({deadCount}/3 बॉस सील टूट गईं) - 35% के नीचे सुरक्षित",
-                    zh: $"🛡️ 神圣护盾生效中 ({deadCount}/3 领主封印已破) - 35% 生命锁死保护",
-                    ja: $"🛡️ 神聖シールド展開中 (封印解除: {deadCount}/3) - HP 35%未満保護",
-                    pt: $"🛡️ ESCUDO DIVINO ATIVO ({deadCount}/3 SELOS DE CHEFES QUEBRADOS) - Protegido abaixo de 35%"
+                    $"🛡️ DIVINE SHIELD ACTIVE ({deadCount}/3 BOSS SEALS BROKEN) - Tree protected below 30% HP",
+                    ar: $"🛡️ الدرع الإلهي مفعل ({deadCount}/3 أختام مكسورة) - الشجرة محمية عند 30% من الصحة",
+                    fa: $"🛡️ سپر مقدس فعال است ({deadCount}/۳ مهر شکسته شد) - محافظت در زیر ۳۰٪",
+                    de: $"🛡️ GÖTTLICHER SCHILD AKTIV ({deadCount}/3 BOSSSIEGEL GEBROCHEN) - Geschützt unter 30%",
+                    it: $"🛡️ SCUDO DIVINO ATTIVO ({deadCount}/3 SIGILLI DEI BOSS SPEZZATI) - Protetto sotto il 30%",
+                    tr: $"🛡️ İLAHİ KALKAN AKTİF ({deadCount}/3 PATRON MÜHRÜ KIRILDI) - %30 altında korumalı",
+                    ru: $"🛡️ БОЖЕСТВЕННЫЙ ЩИТ АКТИВЕН ({deadCount}/3 СНЯТО) - Защита ниже 30%",
+                    fr: $"🛡️ BOUCLIER SACRÉ ACTIF ({deadCount}/3 SCEAUX BRISÉS) - Protégé sous 30%",
+                    es: $"🛡️ ESCUDO SAGRADO ACTIVO ({deadCount}/3 SELLOS ROTOS) - Protegido bajo 30%",
+                    hi: $"🛡️ दिव्य ढाल सक्रिय ({deadCount}/3 बॉस सील टूट गईं) - 30% के नीचे सुरक्षित",
+                    zh: $"🛡️ 神圣护盾生效中 ({deadCount}/3 领主封印已破) - 30% 生命锁死保护",
+                    ja: $"🛡️ 神聖シールド展開中 (封印解除: {deadCount}/3) - HP 30%未満保護",
+                    pt: $"🛡️ ESCUDO DIVINO ATIVO ({deadCount}/3 SELOS DE CHEFES QUEBRADOS) - Protegido abaixo de 30%"
                 );
                 shieldColor = new Color(1f, 0.85f, 0.25f);
             }
@@ -1199,7 +1199,7 @@ public class TreeGrowth : MonoBehaviour
         float statusY = barY + barH + 6f;
         float statusH = 24f;
 
-        if (IsShieldActive && currentHealth <= (maxHealth * 0.355f))
+        if (IsShieldActive && currentHealth <= (maxHealth * 0.305f))
         {
             EnchantedNatureGUI.DrawWoodPlate(new Rect(statusX - 10f, statusY - 2f, statusW + 20f, statusH + 4f), new Color(0.12f, 0.16f, 0.10f, 0.92f), new Color(1f, 0.85f, 0.25f, 0.95f));
         }

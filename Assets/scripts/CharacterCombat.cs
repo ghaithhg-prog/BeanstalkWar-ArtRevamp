@@ -293,8 +293,8 @@ public class CharacterCombat : NetworkBehaviour
                 PlayerXP xp = GetComponent<PlayerXP>();
                 float xpMult = (xp != null) ? xp.GetDamageMultiplier() : 1f;
                 float levelMult = TreeGrowth.GetHeightMultiplier(transform.position);
-                // مضاعف متوازن وعادل لتأثير ضرب الشجرة وتطبيبها، متساوي بين الحماة والمدمرين لضمان تكافؤ الفوز بنسبة 50/50
-                float treeImpactMult = 2.2f;
+                // مضاعف فعال وقوي لتقطيع الشجرة للمدمرين وعلاجها للحماة مع الحفاظ على التكافؤ التام 50/50
+                float treeImpactMult = (team == PlayerMovement.TeamType.Destroyer) ? 2.55f : 2.2f;
                 float amount = attackDamage * levelMult * xpMult * treeImpactMult;
 
                 if (team == PlayerMovement.TeamType.Destroyer)
@@ -507,7 +507,7 @@ public class CharacterCombat : NetworkBehaviour
             {
                 treeDamagedThisSwing = true;
                 float levelMultiplier = TreeGrowth.GetHeightMultiplier(transform.position);
-                float treeImpactMult = 2.2f;
+                float treeImpactMult = (team == PlayerMovement.TeamType.Destroyer) ? 2.55f : 2.2f;
                 float finalAmount = attackDamage * levelMultiplier * xpMultiplier * treeImpactMult;
 
                 if (team ==
@@ -576,7 +576,7 @@ public class CharacterCombat : NetworkBehaviour
                         if (tree != null)
                         {
                             float levelMultiplier = TreeGrowth.GetHeightMultiplier(transform.position);
-                            float treeImpactMult = 2.2f;
+                            float treeImpactMult = (team == PlayerMovement.TeamType.Destroyer) ? 2.55f : 2.2f;
                             float finalAmount = attackDamage * levelMultiplier * xpMultiplier * treeImpactMult;
                             if (team == PlayerMovement.TeamType.Destroyer)
                             {

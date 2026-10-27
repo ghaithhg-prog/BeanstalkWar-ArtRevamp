@@ -447,16 +447,16 @@ public class BotController : NetworkBehaviour
         if (team == PlayerMovement.TeamType.Destroyer && allBossesSlain)
         {
             int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
-            // 25% من المدمرين يركزون على مراقبة واعتراض الكريستالة الساقطة لمنع الحماة من التقاطها
-            if (botRatio >= 8 && CrystalItem.Instance != null && CrystalItem.Instance.isDropped.Value)
+            // 15% فقط من المدمرين يراقبون الكريستالة الساقطة بينما 85% يصبون كل تركيزهم على تقطيع الشجرة
+            if (botRatio >= 9 && CrystalItem.Instance != null && CrystalItem.Instance.isDropped.Value)
             {
                 currentState = BotState.GuardDroppedCrystal;
                 return;
             }
 
             Transform veryCloseEnemy = FindClosestEnemy();
-            // لا ينشغل المدمر بقتال جانبي إلا إذا كان العدو ملاصقاً له تماماً (أقل من 3.0 م)
-            if (veryCloseEnemy != null && Vector3.Distance(transform.position, veryCloseEnemy.position) <= 3.0f)
+            // لا ينشغل المدمر بقتال جانبي إلا إذا كان العدو ملاصقاً له جداً (أقل من 2.0 م)
+            if (veryCloseEnemy != null && Vector3.Distance(transform.position, veryCloseEnemy.position) <= 2.0f)
             {
                 EnterFight(veryCloseEnemy);
                 return;
@@ -468,7 +468,7 @@ public class BotController : NetworkBehaviour
             {
                 // إذا كان البوت يضرب الشجرة بالفعل على طابقه الحالي في نطاق الهجوم، يضرب فوراً
                 CharacterCombat myCombat = GetComponent<CharacterCombat>();
-                float reach = myCombat != null ? Mathf.Max(6f, myCombat.attackRange + 3.5f) : 6f;
+                float reach = myCombat != null ? Mathf.Max(6.5f, myCombat.attackRange + 4.0f) : 6.5f;
                 Vector3 treeDiff = treeTarget != null ? (transform.position - treeTarget.position) : Vector3.zero;
                 treeDiff.y = 0f;
                 if (treeDiff.magnitude <= reach)
@@ -484,31 +484,31 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
-            // 75% تركيز مباشر حتمي على ضرب الشجرة وتدميرها
+            // تركيز مباشر كاسح على ضرب الشجرة وتدميرها
             enemyTarget = null;
             currentState = BotState.AttackTree;
             return;
         }
 
-        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 35% من صحتها في وجود الدرع)
+        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 30% من صحتها في وجود الدرع)
         bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
-            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.355f) : 10f));
+            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.305f) : 10f));
 
         // 5. للمدمرين (Destroyer Bots) أثناء وجود الدرع وقبل موت الزعماء الثلاثة:
-        // كما طلب المستخدم: المدمرون يهاجمون الشجرة مسبقاً طالما لم تصل للحد الأقصى للدرع (35%)!
-        // وإذا وصلت صحة الشجرة إلى حد الدرع (35%)، يكتفون بمحاربة الزعماء والحماة لكسر الدرع!
+        // كما طلب المستخدم: تركيز مكثف من المدمرين على مهاجمة الشجرة مسبقاً وتدميرها حتى حد الـ 30%!
+        // وإذا وصلت صحة الشجرة إلى حد الدرع (30%)، يركز الجميع 100% على قتال الزعماء لكسر الدرع!
         if (team == PlayerMovement.TeamType.Destroyer && !allBossesSlain)
         {
             int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
 
             if (canTreeTakeMoreDamage)
             {
-                // الشجرة ما تزال تقبل الضرر حتى 35%:
-                // قسم من فريق المدمرين (حوالي 40%) يركزون على تقطيع الشجرة وإنزال صحتها مسبقاً حتى حد الدرع 35%!
-                if (botRatio < 4)
+                // الشجرة ما تزال تقبل الضرر حتى 30%:
+                // أغلبية فريق المدمرين (حوالي 70%) يركزون على تقطيع الشجرة وتدميرها مسبقاً حتى حد الدرع 30%!
+                if (botRatio < 7)
                 {
                     Transform immediateThreat = FindClosestEnemy();
-                    if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 2.5f)
+                    if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 1.8f)
                     {
                         EnterFight(immediateThreat);
                         return;
@@ -519,7 +519,7 @@ public class BotController : NetworkBehaviour
                     return;
                 }
             }
-            // إذا وصلت الشجرة لحد الـ 35%: لا يمكن إنقاص صحتها أكثر طالما الدرع فعال!
+            // إذا وصلت الشجرة لحد الـ 30%: لا يمكن إنقاص صحتها أكثر طالما الدرع فعال!
             // فيتوجه 100% من المدمرين لقتال الزعماء وإسقاط الحماة لكسر درع الشجرة!
         }
 
