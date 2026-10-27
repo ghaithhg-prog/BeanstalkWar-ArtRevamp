@@ -293,7 +293,9 @@ public class CharacterCombat : NetworkBehaviour
                 PlayerXP xp = GetComponent<PlayerXP>();
                 float xpMult = (xp != null) ? xp.GetDamageMultiplier() : 1f;
                 float levelMult = TreeGrowth.GetHeightMultiplier(transform.position);
-                float amount = attackDamage * levelMult * xpMult;
+                // مضاعف الحطابين الفتاك لتقطيع جذع الشجرة العملاقة (9500 HP) ليكون التأثير كبيراً ومحسوساً
+                float woodcutterMult = (team == PlayerMovement.TeamType.Destroyer) ? 3.6f : 1.5f;
+                float amount = attackDamage * levelMult * xpMult * woodcutterMult;
 
                 if (team == PlayerMovement.TeamType.Destroyer)
                 {
@@ -505,7 +507,8 @@ public class CharacterCombat : NetworkBehaviour
             {
                 treeDamagedThisSwing = true;
                 float levelMultiplier = TreeGrowth.GetHeightMultiplier(transform.position);
-                float finalAmount = attackDamage * levelMultiplier * xpMultiplier;
+                float woodcutterMult = (team == PlayerMovement.TeamType.Destroyer) ? 3.6f : 1.5f;
+                float finalAmount = attackDamage * levelMultiplier * xpMultiplier * woodcutterMult;
 
                 if (team ==
                     PlayerMovement.TeamType.Destroyer)
@@ -573,7 +576,8 @@ public class CharacterCombat : NetworkBehaviour
                         if (tree != null)
                         {
                             float levelMultiplier = TreeGrowth.GetHeightMultiplier(transform.position);
-                            float finalAmount = attackDamage * levelMultiplier * xpMultiplier;
+                            float woodcutterMult = (team == PlayerMovement.TeamType.Destroyer) ? 3.6f : 1.5f;
+                            float finalAmount = attackDamage * levelMultiplier * xpMultiplier * woodcutterMult;
                             tree.TakeDamage(finalAmount, gameObject);
                             if (xp != null) xp.AddTreeHitXP();
                         }

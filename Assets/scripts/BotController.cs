@@ -240,6 +240,24 @@ public class BotController : NetworkBehaviour
         currentTargetLevel = null;
     }
 
+    public void OnCrystalPickedUpByMe()
+    {
+        enemyTarget = null;
+        currentState = BotState.DeliverCrystal;
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.isStopped = false;
+            agent.stoppingDistance = 0.1f;
+        }
+    }
+
+    public Transform GetLevel3Transform()
+    {
+        if (levelTargets != null && levelTargets.Length > 2 && levelTargets[2] != null) return levelTargets[2];
+        GameObject treeLevels = GameObject.Find("TreeLevels");
+        return treeLevels != null ? treeLevels.transform.Find("Level_3") : null;
+    }
+
     void Update()
     {
         if (!IsServerOrAuthority || agent == null) return;
@@ -429,25 +447,80 @@ public class BotController : NetworkBehaviour
         if (team == PlayerMovement.TeamType.Destroyer && allBossesSlain)
         {
             int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
-            // 30% من المدمرين يركزون على مراقبة واعتراض الكريستالة الساقطة لمنع الحماة من التقاطها
-            if (botRatio >= 7 && CrystalItem.Instance != null && CrystalItem.Instance.isDropped.Value)
+            // 25% من المدمرين يركزون على مراقبة واعتراض الكريستالة الساقطة لمنع الحماة من التقاطها
+            if (botRatio >= 8 && CrystalItem.Instance != null && CrystalItem.Instance.isDropped.Value)
             {
                 currentState = BotState.GuardDroppedCrystal;
                 return;
             }
 
             Transform veryCloseEnemy = FindClosestEnemy();
-            // لا ينشغل المدمر بقتال جانبي إلا إذا كان العدو ملاصقاً له تماماً (أقل من 3.5 م)
-            if (veryCloseEnemy != null && Vector3.Distance(transform.position, veryCloseEnemy.position) <= 3.5f)
+            // لا ينشغل المدمر بقتال جانبي إلا إذا كان العدو ملاصقاً له تماماً (أقل من 3.0 م)
+            if (veryCloseEnemy != null && Vector3.Distance(transform.position, veryCloseEnemy.position) <= 3.0f)
             {
                 EnterFight(veryCloseEnemy);
                 return;
             }
 
-            // 70% تركيز مباشر حتمي على ضرب الشجرة وتدميرها
+            // تدمير الشجرة بأقصى قوة: الصعود إلى الطابق الثالث إن أمكن لضرب الشجرة بمضاعف 100%!
+            Transform l3 = GetLevel3Transform();
+            if (l3 != null && (l3.position.y - transform.position.y) > 2.0f)
+            {
+                // إذا كان البوت يضرب الشجرة بالفعل على طابقه الحالي في نطاق الهجوم، يضرب فوراً
+                CharacterCombat myCombat = GetComponent<CharacterCombat>();
+                float reach = myCombat != null ? Mathf.Max(6f, myCombat.attackRange + 3.5f) : 6f;
+                Vector3 treeDiff = treeTarget != null ? (transform.position - treeTarget.position) : Vector3.zero;
+                treeDiff.y = 0f;
+                if (treeDiff.magnitude <= reach)
+                {
+                    enemyTarget = null;
+                    currentState = BotState.AttackTree;
+                    return;
+                }
+
+                currentState = BotState.Advance;
+                hasDestination = false;
+                currentTargetLevel = l3;
+                return;
+            }
+
+            // 75% تركيز مباشر حتمي على ضرب الشجرة وتدميرها
             enemyTarget = null;
             currentState = BotState.AttackTree;
             return;
+        }
+
+        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 25% من صحتها في وجود الدرع)
+        bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
+            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.255f) : 10f));
+
+        // 5. للمدمرين (Destroyer Bots) أثناء وجود الدرع وقبل موت الزعماء الثلاثة:
+        // كما طلب المستخدم: المدمرون يهاجمون الشجرة مسبقاً طالما لم تصل للحد الأقصى للدرع (25%)!
+        // وإذا وصلت صحة الشجرة إلى حد الدرع (25%)، يكتفون بمحاربة الزعماء والحماة لكسر الدرع!
+        if (team == PlayerMovement.TeamType.Destroyer && !allBossesSlain)
+        {
+            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
+
+            if (canTreeTakeMoreDamage)
+            {
+                // الشجرة ما تزال تقبل الضرر حتى 25%:
+                // حوالي نصف فريق المدمرين (45%) يركزون على تقطيع الشجرة وإنزال صحتها مسبقاً!
+                if (botRatio < 5)
+                {
+                    Transform immediateThreat = FindClosestEnemy();
+                    if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 2.5f)
+                    {
+                        EnterFight(immediateThreat);
+                        return;
+                    }
+
+                    enemyTarget = null;
+                    currentState = BotState.AttackTree;
+                    return;
+                }
+            }
+            // إذا وصلت الشجرة لحد الـ 25%: لا يمكن إنقاص صحتها أكثر طالما الدرع فعال!
+            // فيتوجه 100% من المدمرين لقتال الزعماء وإسقاط الحماة لكسر درع الشجرة!
         }
 
         // 5. إذا كان هناك زعيم مستيقظ في طابق علوي: أولوية عليا لجميع البوتات للصعود لطابق الزعيم فوراً!
@@ -620,7 +693,34 @@ public class BotController : NetworkBehaviour
 
     void UpdateFetchCrystal()
     {
-        if (CrystalItem.Instance == null || !CrystalItem.Instance.IsAvailableForPickup)
+        if (CrystalItem.Instance == null)
+        {
+            currentState = BotState.Defend;
+            return;
+        }
+
+        // إذا كنت أنا حامل الكريستالة، أنطلق فوراً إلى المذبح دون أي تأخير!
+        if (CrystalItem.Instance.IsCarrier(gameObject))
+        {
+            enemyTarget = null;
+            currentState = BotState.DeliverCrystal;
+            if (agent != null && agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+                agent.stoppingDistance = 0.1f;
+            }
+            return;
+        }
+
+        // إذا كان هناك حامي آخر يحمل الكريستالة بالفعل، أرافقه وأحميه فوراً!
+        if (CrystalItem.Instance.isCarried.Value)
+        {
+            currentState = BotState.EscortCarrier;
+            return;
+        }
+
+        // إذا لم تعد متاحة للالتقاط ولم يحملها أحد، عودة للدفاع
+        if (!CrystalItem.Instance.IsAvailableForPickup)
         {
             currentState = BotState.Defend;
             return;
@@ -631,7 +731,7 @@ public class BotController : NetworkBehaviour
         if (agent != null && agent.isOnNavMesh)
         {
             agent.isStopped = false;
-            agent.stoppingDistance = 0.2f;
+            agent.stoppingDistance = 0.1f;
 
             Vector3 targetNavPos = crystalPos;
             if (NavMesh.SamplePosition(crystalPos, out NavMeshHit navHit, 8f, NavMesh.AllAreas))
@@ -648,13 +748,24 @@ public class BotController : NetworkBehaviour
             }
         }
 
-        // إذا اقترب البوت الحامي من الكريستالة يلتقطها فوراً
+        // إذا اقترب البوت الحامي من الكريستالة يلتقطها فوراً دون أي تردد أو انتظار
         Vector3 horizDiff = transform.position - crystalPos;
         horizDiff.y = 0f;
-        if (horizDiff.magnitude <= CrystalItem.Instance.pickupRadius + 1.2f &&
-            Mathf.Abs(transform.position.y - crystalPos.y) <= 4.5f)
+        if (horizDiff.magnitude <= (CrystalItem.Instance.pickupRadius + 2.4f) &&
+            Mathf.Abs(transform.position.y - crystalPos.y) <= 5.5f)
         {
             CrystalItem.Instance.TryPickupServer(gameObject);
+            if (CrystalItem.Instance.IsCarrier(gameObject))
+            {
+                enemyTarget = null;
+                currentState = BotState.DeliverCrystal;
+                if (agent != null && agent.isOnNavMesh)
+                {
+                    agent.isStopped = false;
+                    agent.stoppingDistance = 0.1f;
+                }
+                return;
+            }
         }
     }
 

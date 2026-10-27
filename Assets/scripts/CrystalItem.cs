@@ -354,7 +354,8 @@ public class CrystalItem : NetworkBehaviour
 
     void CheckPickupOverlapServer()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, pickupRadius);
+        float detectRadius = Mathf.Max(pickupRadius * 1.6f, 4.8f);
+        Collider[] hits = Physics.OverlapSphere(transform.position, detectRadius);
 
         foreach (Collider hit in hits)
         {
@@ -405,12 +406,17 @@ public class CrystalItem : NetworkBehaviour
         isDropped.Value = false;
         resetTimer.Value = maxDroppedDuration;
 
+        currentCarrierObj = rootObj;
+
         if (pm != null)
         {
             pm.isCarryingCrystal.Value = true;
         }
 
-        currentCarrierObj = rootObj;
+        if (bot != null)
+        {
+            bot.OnCrystalPickedUpByMe();
+        }
 
         ApplyVisualActiveLocal(true);
         if (IsSpawned) PlaySoundRpc(0);
@@ -529,7 +535,7 @@ public class CrystalItem : NetworkBehaviour
     {
         if (current)
         {
-            ResolveCarrierObject();
+            if (currentCarrierObj == null) ResolveCarrierObject();
             if (droppedAuraEffect != null) droppedAuraEffect.Stop();
         }
         else
@@ -563,7 +569,7 @@ public class CrystalItem : NetworkBehaviour
     public bool IsCarrier(GameObject obj)
     {
         if (!isCarried.Value || obj == null) return false;
-        if (currentCarrierObj == obj) return true;
+        if (currentCarrierObj != null && (currentCarrierObj == obj || currentCarrierObj.transform.IsChildOf(obj.transform) || obj.transform.IsChildOf(currentCarrierObj.transform))) return true;
         NetworkObject netObj = obj.GetComponent<NetworkObject>();
         return netObj != null && carrierNetworkObjectId.Value != 0 && netObj.NetworkObjectId == carrierNetworkObjectId.Value;
     }
@@ -571,7 +577,8 @@ public class CrystalItem : NetworkBehaviour
     public GameObject GetCarrierObject()
     {
         if (!isCarried.Value) return null;
-        if (currentCarrierObj == null) ResolveCarrierObject();
+        if (currentCarrierObj != null) return currentCarrierObj;
+        ResolveCarrierObject();
         return currentCarrierObj;
     }
 
