@@ -53,7 +53,6 @@ public class SpawnManager : MonoBehaviour
             if (dObj != null) destroyerSpawn = dObj.transform;
         }
 
-        // استخراج نقاط التفريخ للأبناء تلقائياً من ProtectorSpawn
         if ((protectorSpawns == null || protectorSpawns.Length == 0) && protectorSpawn != null)
         {
             int childCount = protectorSpawn.childCount;
@@ -67,7 +66,6 @@ public class SpawnManager : MonoBehaviour
             }
         }
 
-        // استخراج نقاط التفريخ للأبناء تلقائياً من DestroyerSpawn
         if ((destroyerSpawns == null || destroyerSpawns.Length == 0) && destroyerSpawn != null)
         {
             int childCount = destroyerSpawn.childCount;
@@ -83,77 +81,95 @@ public class SpawnManager : MonoBehaviour
     }
 
     /// <summary>
-    /// يحسب موقع تفريخ تكتيكي فريد لكل بوت أو لاعب على سطح NavMesh مباشرة لمنع التكدس والتجمد
+    /// يحسب موقع تفريخ تكتيكي فريد لكل بوت أو لاعب على بعد 6 إلى 8 أمتار من الشجرة
+    /// وعلى سطح NavMesh مباشرة لمنع التكدس أو البدء تحت جذع الشجرة مباشرة.
     /// </summary>
     public Vector3 GetSpawnPosition(PlayerMovement.TeamType team, int index = -1)
     {
-        AutoFindSpawns();
-
-        Transform[] spawns = (team == PlayerMovement.TeamType.Protector) ? protectorSpawns : destroyerSpawns;
-        Transform singleSpawn = (team == PlayerMovement.TeamType.Protector) ? protectorSpawn : destroyerSpawn;
-
-        Vector3 basePos = (team == PlayerMovement.TeamType.Protector)
-            ? (singleSpawn != null ? singleSpawn.position : new Vector3(-15f, 0.5f, 0f))
-            : (singleSpawn != null ? singleSpawn.position : new Vector3(15f, 0.5f, 0f));
-
-        if (spawns != null && spawns.Length > 1)
+        Vector3 treeCenter = Vector3.zero;
+        if (TreeGrowth.Instance != null)
         {
-            int slot = (index >= 0)
-                ? (index % spawns.Length)
-                : (team == PlayerMovement.TeamType.Protector ? (nextProtectorSpawn++ % spawns.Length) : (nextDestroyerSpawn++ % spawns.Length));
-
-            if (spawns[slot] != null)
-            {
-                basePos = spawns[slot].position;
-            }
+            treeCenter = TreeGrowth.Instance.transform.position;
         }
-        else if (spawns != null && spawns.Length == 1 && spawns[0] != null)
+        else
         {
-            basePos = spawns[0].position;
+            GameObject tree = GameObject.FindGameObjectWithTag("Tree") ?? GameObject.Find("Tree");
+            if (tree != null) treeCenter = tree.transform.position;
         }
+        treeCenter.y = 0f;
 
-        // توزيع تكتيكي فريد واسع لكل وحدة (Index > 0) لمنع تداخل اللاعبين والبوتات فوق بعضهم نهائياً
+        // نقطة الارتكاز الأساسية على مسافة 7.2 أمتار من الشجرة (ضمن النطاق المطلوب 6 إلى 8 أمتار)
+        float baseDistance = 7.2f;
+        Vector3 teamDir = (team == PlayerMovement.TeamType.Protector) ? Vector3.left : Vector3.right;
+        Vector3 basePos = treeCenter + teamDir * baseDistance;
+
+        // انتشار جانبي تكتيكي منظم على محور Z لمنع تداخل الوحدات فوق بعضها
         if (index > 0)
         {
-            float angle = (index * 72f) * Mathf.Deg2Rad;
-            float radius = 3.2f + (index * 0.45f);
-            basePos += new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+            float sideSign = (index % 2 == 1) ? 1f : -1f;
+            float sideOffset = ((index + 1) / 2) * 1.5f;
+            basePos += new Vector3(0f, 0f, sideSign * sideOffset);
+
+            // ضمان بقاء المسافة الكلية عن الشجرة بدقة بين 6.5 إلى 7.8 أمتار
+            Vector3 fromTree = basePos - treeCenter;
+            fromTree.y = 0f;
+            if (fromTree.magnitude > 7.8f)
+            {
+                basePos = treeCenter + fromTree.normalized * 7.8f;
+            }
         }
 
-        // معايرة الموقع بدقة فائقة على NavMesh لضمان حركة البوتات الفورية
+        // معايرة الموقع بدقة فائقة على NavMesh لضمان وقوف البوتات واللاعبين فوراً وثباتهم
         if (NavMesh.SamplePosition(basePos, out NavMeshHit hit, 8f, NavMesh.AllAreas))
         {
             return hit.position + Vector3.up * 0.15f;
         }
 
-        return basePos + Vector3.up * 0.5f;
+        return basePos + Vector3.up * 0.2f;
     }
 
     public Transform GetSpawnPoint(PlayerMovement.TeamType team)
     {
         AutoFindSpawns();
 
-        Transform[] spawns = (team == PlayerMovement.TeamType.Protector) ? protectorSpawns : destroyerSpawns;
         Transform singleSpawn = (team == PlayerMovement.TeamType.Protector) ? protectorSpawn : destroyerSpawn;
 
-        if (spawns != null && spawns.Length > 0)
+        Vector3 treeCenter = Vector3.zero;
+        if (TreeGrowth.Instance != null) treeCenter = TreeGrowth.Instance.transform.position;
+        else
         {
-            int index = (team == PlayerMovement.TeamType.Protector)
-                ? (nextProtectorSpawn++ % spawns.Length)
-                : (nextDestroyerSpawn++ % spawns.Length);
-
-            if (spawns[index] != null)
-                return spawns[index];
+            GameObject tree = GameObject.FindGameObjectWithTag("Tree") ?? GameObject.Find("Tree");
+            if (tree != null) treeCenter = tree.transform.position;
         }
+        treeCenter.y = 0f;
+
+        Vector3 idealPos = treeCenter + ((team == PlayerMovement.TeamType.Protector) ? Vector3.left : Vector3.right) * 7.2f;
 
         if (singleSpawn != null)
+        {
+            if (NavMesh.SamplePosition(idealPos, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+            {
+                singleSpawn.position = hit.position;
+            }
+            else
+            {
+                singleSpawn.position = idealPos;
+            }
             return singleSpawn;
+        }
 
-        // نقطة نجاة افتراضية بعيداً عن مركز الشجرة
-        GameObject fallback = new GameObject("Fallback_" + team);
-        fallback.transform.position = (team == PlayerMovement.TeamType.Destroyer) 
-            ? new Vector3(15f, 1f, 0f) 
-            : new Vector3(-15f, 1f, 0f);
+        GameObject fallback = new GameObject("SpawnPoint_" + team);
+        if (NavMesh.SamplePosition(idealPos, out NavMeshHit navHit, 6f, NavMesh.AllAreas))
+        {
+            fallback.transform.position = navHit.position;
+        }
+        else
+        {
+            fallback.transform.position = idealPos;
+        }
+
+        if (team == PlayerMovement.TeamType.Protector) protectorSpawn = fallback.transform;
+        else destroyerSpawn = fallback.transform;
 
         return fallback.transform;
     }

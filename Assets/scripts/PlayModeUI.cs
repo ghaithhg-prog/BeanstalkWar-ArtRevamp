@@ -278,23 +278,24 @@ public class PlayModeUI : MonoBehaviour
         EnchantedNatureGUI.DrawCrispBorder(new Rect(12f, 12f, sw - 24f, sh - 24f), new Color(0.85f, 0.72f, 0.32f, 0.65f), 1.5f);
         EnchantedNatureGUI.DrawCornerFiligree(new Rect(16f, 16f, sw - 32f, sh - 32f), new Color(0.95f, 0.82f, 0.38f, 0.85f), 24f);
 
-        // Top-Right Utility: Audio Toggle Button
-        float audioBtnW = 78f;
-        float audioBtnH = 38f;
-        float audioX = sw - audioBtnW - 12f;
+        // Top-Right Utility: Audio / Jukebox Selector Button
+        float audioBtnW = 44f;
+        float audioBtnH = 28f;
+        float audioX = sw - audioBtnW - 10f;
         float audioY = 8f;
-        string audioText = AudioListener.pause ? "🔇 OFF" : "🔊 ON";
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 11))
+        string audioText = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack) ? "🔇" : "🎵";
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 12))
         {
-            AudioListener.pause = !AudioListener.pause;
+            ForestBGMManager.ToggleJukeboxModal();
         }
 
         // Top Guide Button
-        float guideBtnW = 135f;
-        float guideX = audioX - guideBtnW - 80f; // Leaves space for language flag button in-between
-        if (guideX > 200f)
+        float guideBtnW = 96f;
+        float flagBtnW = 44f;
+        float guideX = audioX - flagBtnW - 6f - guideBtnW - 6f; // Leaves space for language flag button in-between
+        if (guideX > 180f)
         {
-            string guideText = LanguageSelectionUI.Localize("📖 HOW TO PLAY", ar: "📖 طَرِيقَةُ اللَّعِبِ", fa: "📖 راهنمای بازی", ru: "📖 КАК ИГРАТЬ", de: "📖 ANLEITUNG", it: "📖 COME GIOCARE", tr: "📖 NASIL OYNANIR", es: "📖 CÓMO JUGAR", fr: "📖 COMMENT JOUER", zh: "📖 玩法指南", ja: "📖 遊び方", hi: "📖 कैसे खेलें", pt: "📖 COMO JOGAR");
+            string guideText = LanguageSelectionUI.Localize("📖 GUIDE", ar: "📖 التوجيهات", fa: "📖 راهنما", ru: "📖 ИНФО", de: "📖 ANLEITUNG", it: "📖 GUIDA", tr: "📖 REHBER", es: "📖 GUÍA", fr: "📖 GUIDE", zh: "📖 指南", ja: "📖 ガイド", hi: "📖 निर्देश", pt: "📖 GUIA");
             if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(guideX, audioY, guideBtnW, audioBtnH), guideText, new Color(0.35f, 0.95f, 0.85f), 11))
             {
                 GameIntroBriefingUI.Instance?.OpenBriefing();
@@ -507,15 +508,15 @@ public class PlayModeUI : MonoBehaviour
             isTitleScreenActive = true;
         }
 
-        // 1. Unified Top Citadel Ribbon - Audio Toggle (Top-Right)
-        float audioBtnW = 78f;
-        float audioBtnH = 38f;
-        float audioX = Screen.width - audioBtnW - 12f;
+        // 1. Unified Top Citadel Ribbon - Audio / Jukebox Selector (Top-Right)
+        float audioBtnW = 44f;
+        float audioBtnH = 28f;
+        float audioX = Screen.width - audioBtnW - 10f;
         float audioY = 8f;
-        string audioText = AudioListener.pause ? "🔇 OFF" : "🔊 ON";
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 11))
+        string audioText = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack) ? "🔇" : "🎵";
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 12))
         {
-            AudioListener.pause = !AudioListener.pause;
+            ForestBGMManager.ToggleJukeboxModal();
         }
 
         // 2. Main Menu Frame - Sits comfortably below the top bar (starts at y = 54f with zero overlap!)

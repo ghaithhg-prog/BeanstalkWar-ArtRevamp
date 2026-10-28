@@ -74,10 +74,9 @@ public class BotController : NetworkBehaviour
     private float nextStrafeTime = 0f;
     private float currentStrafeSign = 1f;
     private float nextRepathTime = 0f;
-    private Coroutine botJumpCoroutine;
+    public const float DefaultNavMeshBaseOffset = 0.95f;
     private float lastBotJumpTime = -10f;
-    private float botJumpCooldown = 1.8f;
-    private float nextTraversalHopTime = 0f;
+    private float botJumpCooldown = 4.0f;
 
     private bool IsServerOrAuthority => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
@@ -145,6 +144,7 @@ public class BotController : NetworkBehaviour
         agent.autoBraking = true;
         agent.autoRepath = true;
         agent.avoidancePriority = Random.Range(20, 80);
+        agent.baseOffset = DefaultNavMeshBaseOffset;
     }
 
     public void OnRespawn(Vector3 targetSpawnPos)
@@ -153,7 +153,7 @@ public class BotController : NetworkBehaviour
         if (agent != null)
         {
             agent.enabled = true;
-            agent.baseOffset = 0f;
+            agent.baseOffset = DefaultNavMeshBaseOffset;
             NavMeshHit hit;
             if (NavMesh.SamplePosition(targetSpawnPos, out hit, 10f, NavMesh.AllAreas))
             {
@@ -181,6 +181,7 @@ public class BotController : NetworkBehaviour
     void PrepareAgent()
     {
         if (agent == null) return;
+        agent.baseOffset = DefaultNavMeshBaseOffset;
 
         NavMeshHit hit;
 
@@ -267,14 +268,13 @@ public class BotController : NetworkBehaviour
         Health myHealth = GetComponent<Health>();
         if (myHealth != null && myHealth.isDead) return;
 
-        // إذا كان حامياً يحمل الكريستالة متجهاً للمذبح، يركز على إيصالها ويطلق صدمة ويقفز مراوغاً
+        // إذا كان حامياً يحمل الكريستالة متجهاً للمذبح، يركز على إيصالها ويطلق صدمة دفاعية
         if (currentState == BotState.DeliverCrystal)
         {
             if (CrystalItem.Instance != null && Vector3.Distance(transform.position, attacker.transform.position) <= 5.5f)
             {
                 CrystalItem.Instance.RequestShockwaveRpc();
             }
-            TriggerBotJump();
             return;
         }
 
@@ -284,16 +284,16 @@ public class BotController : NetworkBehaviour
         // رد الهجوم الفوري والانتقام من المعتدي
         EnterFight(attacker.transform);
 
-        // فرصة 55% للقفز والمراوغة فور تلقي الضربة
-        if (Random.value < 0.55f)
+        // قفزة تكتيكية رشيقة ومحسوبة للمراوغة بنسبة متزنة (25% وبفاصل زمني كافٍ)
+        if (Random.value < 0.25f)
         {
             TriggerBotJump();
         }
     }
 
     /// <summary>
-    /// تنفيذ قفزة فيزيائية انسيابية للبوت متزامنة مع أنيميشن القفز Mixamo الحقيقي (Mixamo Jump Gesture)
-    /// دون كسر مسار شبكة NavMeshAgent.
+    /// تنفيذ قفزة انسيابية متزنة للبوت متزامنة مع أنيميشن Mixamo
+    /// مع الحفاظ الدائم على ثبات القدمين على سطح الأرض (BaseOffset = 0.95f)
     /// </summary>
     public void TriggerBotJump()
     {
@@ -303,37 +303,13 @@ public class BotController : NetworkBehaviour
         if (myHp != null && myHp.isDead) return;
 
         lastBotJumpTime = Time.time;
+        agent.baseOffset = DefaultNavMeshBaseOffset;
 
         CharacterVisualAnimator visualAnim = GetComponentInChildren<CharacterVisualAnimator>();
         if (visualAnim != null)
         {
             visualAnim.TriggerJumpGesture();
         }
-
-        if (botJumpCoroutine != null) StopCoroutine(botJumpCoroutine);
-        botJumpCoroutine = StartCoroutine(BotJumpRoutine());
-    }
-
-    private System.Collections.IEnumerator BotJumpRoutine()
-    {
-        float duration = 0.52f;
-        float elapsed = 0f;
-        float peakHeight = 1.45f;
-
-        while (elapsed < duration)
-        {
-            if (agent == null || !agent.isOnNavMesh) break;
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
-            agent.baseOffset = Mathf.Sin(t * Mathf.PI) * peakHeight;
-            yield return null;
-        }
-
-        if (agent != null)
-        {
-            agent.baseOffset = 0f;
-        }
-        botJumpCoroutine = null;
     }
 
     public Transform GetLevel3Transform()
@@ -411,16 +387,6 @@ public class BotController : NetworkBehaviour
         {
             float targetSpeed = shouldSprint ? (sprintSpeed + personalOffset) : (moveSpeed + personalOffset);
             agent.speed = targetSpeed;
-        }
-
-        // قفزات حركية أثناء الجري وتجاوز المنحدرات (Agile Traversal Hops)
-        if (agent.isOnNavMesh && agent.velocity.sqrMagnitude > 14f && Time.time >= nextTraversalHopTime)
-        {
-            nextTraversalHopTime = Time.time + Random.Range(5.5f, 10f);
-            if (Random.value < 0.55f)
-            {
-                TriggerBotJump();
-            }
         }
 
         switch (currentState)
@@ -1060,12 +1026,6 @@ public class BotController : NetworkBehaviour
                 {
                     nextStrafeTime = Time.time + Random.Range(1.8f, 2.6f);
                     currentStrafeSign = (Random.value > 0.5f) ? 1f : -1f;
-
-                    // قفزة مراوغة تكتيكية أثناء القتال (Tactical Combat Jump & Dodge)
-                    if (Random.value < 0.45f)
-                    {
-                        TriggerBotJump();
-                    }
 
                     Vector3 rightVec = Vector3.Cross(Vector3.up, toEnemy.normalized);
                     if (isRanged && distance < 4.0f)

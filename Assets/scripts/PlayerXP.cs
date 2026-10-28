@@ -430,9 +430,9 @@ public class PlayerXP : NetworkBehaviour
         if (PlayerProfile.Instance != null)
         {
             float purseW = 230f;
-            float purseH = 32f;
-            float px = Screen.width - purseW - 16f;
-            float py = 14f;
+            float purseH = 28f;
+            float px = Screen.width - purseW - 12f;
+            float py = 44f;
 
             EnchantedNatureGUI.DrawWoodPlate(new Rect(px, py, purseW, purseH), new Color(0.10f, 0.15f, 0.10f, 0.92f), new Color(0.95f, 0.80f, 0.35f, 0.92f));
 

@@ -1014,6 +1014,8 @@ public class LevelBoss : NetworkBehaviour
 
         float x = screenPos.x - barWidth / 2f;
         float y = Screen.height - screenPos.y - barHeight - 15f;
+        // منع تداخل شريط الزعيم مع شريط أزرار الزاوية العلوية والمحفظة
+        if (x > Screen.width - 320f && y < 80f) y = 80f;
 
         // إطار أسود ذهبي
         GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);

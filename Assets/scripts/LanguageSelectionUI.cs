@@ -1198,11 +1198,11 @@ public class LanguageSelectionUI : MonoBehaviour
 
     private void DrawLanguageCornerButton()
     {
-        float btnW = 64f;
-        float btnH = 38f;
-        // Positioned in top-right bar between Guide and Audio buttons:
-        // [Guide (130px)] [Flag (64px)] [Audio (78px)]
-        float x = Screen.width - 78f - 12f - btnW - 8f;
+        float btnW = 44f;
+        float btnH = 28f;
+        // Positioned in top-right ribbon: [Guide (96px)] [Flag (44px)] [Audio/Jukebox (44px)]
+        float audioBtnW = 44f;
+        float x = Screen.width - audioBtnW - 10f - btnW - 6f;
         float y = 8f;
 
         LanguageOption current = AvailableLanguages[Mathf.Clamp(selectedIndex, 0, AvailableLanguages.Length - 1)];
@@ -1217,8 +1217,8 @@ public class LanguageSelectionUI : MonoBehaviour
         Texture2D flag = GetFlagTexture(current.code);
         if (flag != null)
         {
-            float flagW = 36f;
-            float flagH = 24f;
+            float flagW = 26f;
+            float flagH = 17f;
             GUI.DrawTexture(new Rect(x + (btnW - flagW) / 2f, y + (btnH - flagH) / 2f, flagW, flagH), flag);
         }
     }

@@ -299,11 +299,12 @@ public class GameIntroBriefingUI : MonoBehaviour
     private void DrawHowToPlayToggleButton()
     {
         GUI.depth = -100;
-        float btnW = 135f;
-        float btnH = 38f;
-        // Sits in top-right bar to the left of the Language Flag and Audio buttons:
-        // [Guide (135px)] [Flag (64px)] [Audio (78px)]
-        float x = Screen.width - 78f - 12f - 64f - 8f - btnW - 8f;
+        float btnW = 96f;
+        float btnH = 28f;
+        float audioBtnW = 44f;
+        float flagBtnW = 44f;
+        // Sits in top-right ribbon: [Guide (96px)] [Flag (44px)] [Audio/Jukebox (44px)]
+        float x = Screen.width - audioBtnW - 10f - flagBtnW - 6f - btnW - 6f;
         float y = 8f;
 
         string btnLabel = showBriefingModal
@@ -311,10 +312,18 @@ public class GameIntroBriefingUI : MonoBehaviour
             : LanguageSelectionUI.Localize("📖 GUIDE", ar: "📖 التوجيهات", ru: "📖 ИНФО", es: "📖 GUÍA", fr: "📖 GUIDE");
 
         Color accent = showBriefingModal ? new Color(1f, 0.78f, 0.22f) : EnchantedNatureGUI.AntiqueGoldBright;
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x, y, btnW, btnH), btnLabel, accent, 12, true))
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x, y, btnW, btnH), btnLabel, accent, 11, true))
         {
             showBriefingModal = !showBriefingModal;
             autoPlayPresentation = false;
+        }
+
+        // Top-right corner audio & jukebox button (accessible directly during matches)
+        float audioX = Screen.width - audioBtnW - 10f;
+        string audioIcon = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack) ? "🔇" : "🎵";
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, y, audioBtnW, btnH), audioIcon, EnchantedNatureGUI.AntiqueGoldMid, 12, false))
+        {
+            ForestBGMManager.ToggleJukeboxModal();
         }
     }
 

@@ -157,7 +157,7 @@ public class InGamePauseMenuUI : MonoBehaviour
         GUI.color = Color.white;
 
         float modalW = Mathf.Min(520f, Screen.width - 24f);
-        float modalH = Mathf.Min(490f, Screen.height - 24f);
+        float modalH = Mathf.Min(545f, Screen.height - 24f);
         float mx = (Screen.width - modalW) / 2f;
         float my = (Screen.height - modalH) / 2f;
 
@@ -329,7 +329,24 @@ public class InGamePauseMenuUI : MonoBehaviour
 
         contentY += 98f;
 
-        // 4. Return to Main Menu / Leave Match Button
+        // 4. Music Jukebox Selector Button
+        string jukeboxText = LanguageSelectionUI.Localize(
+            "🎵 MUSIC JUKEBOX (تغيير نمط الموسيقى)",
+            ar: "🎵 خزانة الموسيقى (تغيير النمط)",
+            fa: "🎵 جعبه موسیقی (تغییر سبک)",
+            ru: "🎵 МУЗЫКАЛЬНЫЙ АВТОМАТ",
+            fr: "🎵 JUKEBOX MUSICAL",
+            es: "🎵 JUKEBOX MUSICAL"
+        );
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), jukeboxText, new Color(0.95f, 0.82f, 0.35f), 12))
+        {
+            ClosePauseMenu();
+            ForestBGMManager.OpenJukebox();
+        }
+
+        contentY += 52f;
+
+        // 5. Return to Main Menu / Leave Match Button
         string leaveBtnText = LanguageSelectionUI.Localize(
             "🚪 RETURN TO GROVE / MAIN MENU",
             ar: "🚪 مغادرة المعركة والعودة للبداية",
