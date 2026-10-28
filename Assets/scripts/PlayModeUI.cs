@@ -34,50 +34,28 @@ public class PlayModeUI : MonoBehaviour
     private Texture2D splashArtTex = null;
 
     // -------------------------------------------------------------------------
-    // CLASSICAL TITLE FONTS SYSTEM (DecoType Thuluth, Diwani, Aref Ruqaa, Amiri, Traditional)
+    // MODE SELECTION & SPECIFICATION POPUP MODAL
     // -------------------------------------------------------------------------
-    public static int selectedTitleFontIndex = 0; // 0=Thuluth, 1=Diwani, 2=Ruqaa, 3=Amiri, 4=Traditional
-    private static Font[] loadedTitleFonts = new Font[5];
+    public static int activeModeInfoModal = -1; // -1 = closed, 0 = Solo, 1 = Online, 2 = Friendly
+
+    public struct ModeCardData
+    {
+        public int index;
+        public Color accent;
+        public string badge;
+        public string title;
+        public string sub;
+        public string desc;
+        public string[] highlights;
+        public string btnText;
+        public System.Action onClick;
+    }
+
+    private static ModeCardData[] currentModeCards = new ModeCardData[3];
 
     public static Font GetSelectedFont()
     {
-        selectedTitleFontIndex = Mathf.Clamp(PlayerPrefs.GetInt("TitleFontIdx", 0), 0, 4);
-
-        if (loadedTitleFonts[selectedTitleFontIndex] != null)
-        {
-            return loadedTitleFonts[selectedTitleFontIndex];
-        }
-
-        string[] fontResPaths = new string[] {
-            "Fonts/DecoTypeThuluth",
-            "Fonts/DecoTypeDiwani",
-            "Fonts/ArefRuqaa-Bold",
-            "Fonts/Amiri-Bold",
-            "Fonts/TraditionalArabicBold"
-        };
-
-        string[][] osFallbacks = new string[][] {
-            new string[] { "DecoType Thuluth", "Amiri", "Traditional Arabic", "Arial" },
-            new string[] { "Diwani Bent", "DecoType Diwani", "Amiri", "Traditional Arabic", "Arial" },
-            new string[] { "Aref Ruqaa", "Amiri", "Traditional Arabic", "Arial" },
-            new string[] { "Amiri", "Traditional Arabic", "Arial" },
-            new string[] { "Traditional Arabic", "Amiri", "Arial" }
-        };
-
-        // 1. Try Resources.Load
-        loadedTitleFonts[selectedTitleFontIndex] = Resources.Load<Font>(fontResPaths[selectedTitleFontIndex]);
-
-        // 2. Fallback to OS Font
-        if (loadedTitleFonts[selectedTitleFontIndex] == null)
-        {
-            try
-            {
-                loadedTitleFonts[selectedTitleFontIndex] = Font.CreateDynamicFontFromOSFont(osFallbacks[selectedTitleFontIndex], 38);
-            }
-            catch {}
-        }
-
-        return loadedTitleFonts[selectedTitleFontIndex];
+        return EnchantedNatureGUI.GetActiveGameFont();
     }
 
     private Texture2D LoadSplashTexture()
@@ -216,6 +194,12 @@ public class PlayModeUI : MonoBehaviour
         if (PlayerProgressionAndShopUI.IsShopOpen) return;
         if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying()) return;
         if (FriendlyLobbyUI.Instance != null && FriendlyLobbyUI.Instance.isLobbyActive) return;
+
+        Font activeGameFont = EnchantedNatureGUI.GetActiveGameFont();
+        if (activeGameFont != null)
+        {
+            GUI.skin.font = activeGameFont;
+        }
 
         // Keep background haze strictly behind top bar buttons (which are at depth -100)
         GUI.depth = 10;
@@ -423,36 +407,6 @@ public class PlayModeUI : MonoBehaviour
         };
         GUI.Label(new Rect(titleBoxX + 10f, titleBoxY + 110f, titleBoxW - 20f, 24f), factionInfo, factionStyle);
 
-        // 4. Interactive Classical Font Selector Button
-        string[] fontLabelsAr = new string[] {
-            "🔤 خَـطُّ العُنْوَان: خـط الثـلث الكلاسيكي",
-            "🔤 خَـطُّ العُنْوَان: خـط الديـواني السلطـاني",
-            "🔤 خَـطُّ العُنْوَان: خـط الرقعـة الفنـي العريض",
-            "🔤 خَـطُّ العُنْوَان: الخـط الأميـري الملكي",
-            "🔤 خَـطُّ العُنْوَان: الخط العربي التقليدي"
-        };
-        string[] fontLabelsEn = new string[] {
-            "🔤 Title Font: Classical Thuluth",
-            "🔤 Title Font: Royal Diwani",
-            "🔤 Title Font: Aref Ruqaa Bold",
-            "🔤 Title Font: Royal Amiri Bold",
-            "🔤 Title Font: Traditional Arabic"
-        };
-        string currentFontLabel = LanguageSelectionUI.IsArabic
-            ? fontLabelsAr[selectedTitleFontIndex]
-            : fontLabelsEn[selectedTitleFontIndex];
-
-        float fontBtnW = 330f;
-        float fontBtnH = 34f;
-        float fontBtnX = (sw - fontBtnW) * 0.5f;
-        float fontBtnY = titleBoxY + titleBoxH + 12f;
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(fontBtnX, fontBtnY, fontBtnW, fontBtnH), currentFontLabel, EnchantedNatureGUI.AntiqueGoldBright, 11))
-        {
-            selectedTitleFontIndex = (selectedTitleFontIndex + 1) % 5;
-            PlayerPrefs.SetInt("TitleFontIdx", selectedTitleFontIndex);
-            PlayerPrefs.Save();
-        }
-
         // 5. Grand Interactive Call-to-Action (Center-Bottom)
         float startBtnW = Mathf.Clamp(sw * 0.50f, 360f, 560f);
         float startBtnH = 62f;
@@ -646,39 +600,39 @@ public class PlayModeUI : MonoBehaviour
             it: "🍃 PROVA SACRA",
             tr: "🍃 KUTSAL İMTİHAN");
 
-        string c1Title = LanguageSelectionUI.Localize("SOLO EXPEDITION",
-            ar: "الحملة الفردية",
-            ru: "ОДИНОЧНЫЙ БОЙ",
-            es: "EXPEDICIÓN INDIVIDUAL",
-            fr: "EXPÉDITION SOLO",
-            de: "SOLO-EXPEDITION",
-            hi: "एकल अभियान",
-            zh: "单人离线远征",
-            ja: "ソロ遠征",
-            pt: "EXPEDIÇÃO INDIVIDUAL",
-            fa: "اکسپدیشن انفرادی",
-            it: "SPEDIZIONE INDIVIDUALE",
-            tr: "TEK KİŞİLİK SEFER");
+        string c1Title = LanguageSelectionUI.Localize("SOLO PLAY (OFFLINE)",
+            ar: "اللعب الفردي (أوفلاين)",
+            ru: "ОДИНОЧНЫЙ БОЙ (ОФЛАЙН)",
+            es: "JUEGO INDIVIDUAL (OFFLINE)",
+            fr: "JEU SOLO (HORS-LIGNE)",
+            de: "SOLO-SPIEL (OFFLINE)",
+            hi: "एकल खेल (ऑफ़लाइन)",
+            zh: "单人游玩（离线）",
+            ja: "ソロプレイ（オフライン）",
+            pt: "JOGO INDIVIDUAL (OFFLINE)",
+            fa: "بازی انفرادی (آفلاین)",
+            it: "GIOCO SINGOLO (OFFLINE)",
+            tr: "TEK OYUNCULU (ÇEVRİMDIŞI)");
 
-        string c1Sub = LanguageSelectionUI.Localize("Vs Forest Bot Guardians",
-            ar: "ضد حراس الغابة الآليين",
-            ru: "Против лесных ботов",
-            es: "Contra guardianes bots",
-            fr: "Contre gardiens bots",
-            de: "Gegen Bot-Wächter",
-            hi: "बॉट अभिभावकों के विरुद्ध",
-            zh: "对阵森林人机守卫",
-            ja: "ボットの守護者と対戦",
-            pt: "Contra bots guardiões",
-            fa: "در برابر نگهبانان بات بیشه",
-            it: "Contro guardiani bot",
-            tr: "Orman Bot Muhafızlarına Karşı");
+        string c1Sub = LanguageSelectionUI.Localize("Offline • Against AI Bots",
+            ar: "بدون إنترنت • ضد البوتات",
+            ru: "Без интернета • Против ботов",
+            es: "Sin internet • Contra bots IA",
+            fr: "Sans connexion • Contre les bots IA",
+            de: "Ohne Internet • Gegen KI-Bots",
+            hi: "बिना इंटरनेट • बॉट्स के विरुद्ध",
+            zh: "无需网络 • 对阵AI人机",
+            ja: "オフライン • 対AIボット戦",
+            pt: "Sem internet • Contra bots de IA",
+            fa: "بدون اینترنت • در برابر بات‌ها",
+            it: "Senza internet • Contro i bot IA",
+            tr: "İnternetsiz • Yapay Zeka Botlarına Karşı");
 
         string[] c1Highlights = new string[]
         {
             LanguageSelectionUI.Localize("⚔️ 3 Guardian Titans", ar: "⚔️ ٣ زعماء عمالقة", ru: "⚔️ 3 титана-босса", es: "⚔️ 3 jefes titanes", fr: "⚔️ 3 titans gardiens", de: "⚔️ 3 Titanen-Bosse", hi: "⚔️ ३ अभिभावक टाइटन", zh: "⚔️ 三大森林巨像Boss", ja: "⚔️ 3体の守護タイタン", pt: "⚔️ 3 chefes titãs", fa: "⚔️ ۳ غول نگهبان", it: "⚔️ 3 titani guardiani", tr: "⚔️ 3 Muhafız Titan"),
             LanguageSelectionUI.Localize("🌲 Chop Tree or Take Crystal", ar: "🌲 اسقط الشجرة أو خذ الكريستال", ru: "🌲 Срубите древо или кристалл", es: "🌲 Tala el árbol o toma el cristal", fr: "🌲 Abattez l'arbre ou cristal", de: "🌲 Baum fällen oder Kristall", hi: "🌲 पेड़ काटें या क्रिस्टल लें", zh: "🌲 伐倒古树或争夺水晶", ja: "🌲 神木伐採または水晶奪回", pt: "🌲 Derrube a árvore ou cristal", fa: "🌲 قطع درخت یا تصاحب کریستال", it: "🌲 Abbatti l'albero o prendi il cristallo", tr: "🌲 Ağacı Devir veya Kristali Al"),
-            LanguageSelectionUI.Localize("🛡️ Master 25 Hero Classes", ar: "🛡️ تدرّب على ٢٥ بطلاً", ru: "🛡️ 25 классов героев", es: "🛡️ Domina 25 héroes", fr: "🛡️ Maîtrisez 25 héros", de: "🛡️ Meistert 25 Helden", hi: "🛡️ २५ नायकों में महारत", zh: "🛡️ 驾驭25位传奇英雄", ja: "🛡️ 25人の英雄を極めろ", pt: "🛡️ Domine 25 heróis", fa: "🛡️ تسلط بر ۲۵ قهرمان", it: "🛡️ Domina 25 classi di eroi", tr: "🛡️ 25 Kahraman Sınıfında Ustalaş"),
+            LanguageSelectionUI.Localize("🛡️ Master 25 Hero Classes", ar: "🛡️ تدرّب على ٢٥ بطلاً", ru: "🛡️ 25 классов героев", es: "🛡️ Domina 25 héroes", fr: "🛡️ Maîtrisez 25 héros", de: "🛡️ Meistert 25 Helden", hi: "🛡️ २५ नायकों में महारت", zh: "🛡️ 驾驭25位传奇英雄", ja: "🛡️ 25人の英雄を極めろ", pt: "🛡️ Domine 25 heróis", fa: "🛡️ تسلط بر ۲۵ قهرمان", it: "🛡️ Domina 25 classi di eroi", tr: "🛡️ 25 Kahraman Sınıfında Ustalaş"),
             LanguageSelectionUI.Localize("💰 Offline Gold & XP", ar: "💰 ذهب ونقاط خبرة بدون نت", ru: "💰 Золото и опыт без сети", es: "💰 Oro y EXP sin internet", fr: "💰 Or et EXP hors-ligne", de: "💰 Gold & XP offline", hi: "💰 बिना नेट सोना व XP", zh: "💰 离线获取金币与经验", ja: "💰 オフラインで報酬獲得", pt: "💰 Ouro e EXP offline", fa: "💰 طلا و امتیاز تجربه بدون اینترنت", it: "💰 Oro ed ESP offline", tr: "💰 Çevrimdışı Altın ve TP")
         };
 
@@ -698,32 +652,33 @@ public class PlayModeUI : MonoBehaviour
             tr: "Bot savaşçılara karşı ormana dalın. 3 titanı yenin ve internet olmadan altın ve TP kazanın."
         );
 
-        string c1Btn = LanguageSelectionUI.Localize("🌲 ENTER GROVE",
-            ar: "🌲 ابدأ المعركة",
-            ru: "🌲 ВОЙТИ В ЛЕС",
-            es: "🌲 ENTRAR AL BOSQUE",
-            fr: "🌲 ENTRER DANS LE BOIS",
-            de: "🌲 HAIN BETRETEN",
-            hi: "🌲 ग्रोव में प्रवेश",
-            zh: "🌲 进入丛林",
-            ja: "🌲 森に入る",
-            pt: "🌲 ENTRAR NO BOSQUE",
-            fa: "🌲 ورود به بیشه",
-            it: "🌲 ENTRA NEL BOSCO",
-            tr: "🌲 KORULUĞA GİR");
+        string c1Btn = LanguageSelectionUI.Localize("🌲 PLAY SOLO",
+            ar: "🌲 ابدأ اللعب الفردي",
+            ru: "🌲 ИГРАТЬ ОДНОМУ",
+            es: "🌲 JUGAR SOLO",
+            fr: "🌲 JOUER EN SOLO",
+            de: "🌲 SOLO SPIELEN",
+            hi: "🌲 अकेले खेलें",
+            zh: "🌲 开始单人游戏",
+            ja: "🌲 ソロプレイ開始",
+            pt: "🌲 JOGAR SOLO",
+            fa: "🌲 آغاز بازی تک‌نفره",
+            it: "🌲 GIOCA DA SOLO",
+            tr: "🌲 TEK OYNA");
 
-        DrawVerticalPortalCard(
-            c1X, cardY, cardW, cardH,
-            0,
-            EnchantedNatureGUI.EmeraldAccent,
-            c1Badge,
-            c1Title,
-            c1Sub,
-            c1Desc,
-            c1Highlights,
-            c1Btn,
-            () => StartOffline()
-        );
+        currentModeCards[0] = new ModeCardData {
+            index = 0,
+            accent = EnchantedNatureGUI.EmeraldAccent,
+            badge = c1Badge,
+            title = c1Title,
+            sub = c1Sub,
+            desc = c1Desc,
+            highlights = c1Highlights,
+            btnText = c1Btn,
+            onClick = () => StartOffline()
+        };
+
+        DrawVerticalPortalCard(c1X, cardY, cardW, cardH, currentModeCards[0]);
 
         // ==========================================
         // PORTAL 2: REALM WAR (ONLINE MULTIPLAYER)
@@ -743,33 +698,33 @@ public class PlayModeUI : MonoBehaviour
             it: "👑 GUERRA DAL VIVO",
             tr: "👑 CANLI SAVAŞ");
 
-        string c2Title = LanguageSelectionUI.Localize("REALM WAR",
-            ar: "حرب العوالم",
-            ru: "ВОЙНА РЕАЛЬМА",
-            es: "GUERRA DEL REINO",
-            fr: "GUERRE DES ROYAUMES",
-            de: "REICH-KRIEG",
-            hi: "क्षेत्र युद्ध",
-            zh: "全域远征",
-            ja: "領域大戦",
-            pt: "GUERRA DO REINO",
-            fa: "نبرد قلمروها",
-            it: "GUERRA DEI REGNI",
-            tr: "DİYAR SAVAŞI");
+        string c2Title = LanguageSelectionUI.Localize("ONLINE PLAY",
+            ar: "اللعب عبر الإنترنت",
+            ru: "ОНЛАЙН ИГРА",
+            es: "JUEGO ONLINE",
+            fr: "JEU EN LIGNE",
+            de: "ONLINE-SPIEL",
+            hi: "ऑनलाइन खेल",
+            zh: "网络联机",
+            ja: "オンライン対戦",
+            pt: "JOGO ONLINE",
+            fa: "بازی آنلاین",
+            it: "GIOCO ONLINE",
+            tr: "ÇEVRİMİÇİ OYUN");
 
-        string c2Sub = LanguageSelectionUI.Localize("Global Multiplayer Arena",
+        string c2Sub = LanguageSelectionUI.Localize("Live Multiplayer Battles",
             ar: "معارك حية متعددة اللاعبين",
-            ru: "Сетевая PvP-арена",
-            es: "Arena multijugador global",
-            fr: "Arène multijoueur en ligne",
-            de: "Globale Mehrspieler-Arena",
-            hi: "ग्लोबल मल्टीप्लेयर अखाड़ा",
-            zh: "跨服多人实时联机竞技场",
-            ja: "グローバルマルチプレイ闘技場",
-            pt: "Arena multijugador global",
-            fa: "میدان چندنفره جهانی",
-            it: "Arena Multigiocatore Globale",
-            tr: "Küresel Çok Oyunculu Arena");
+            ru: "Живые сетевые сражения",
+            es: "Batallas multijugador en vivo",
+            fr: "Batailles multijoueurs en direct",
+            de: "Live-Mehrspielerschlachten",
+            hi: "लाइव मल्टीप्लेयर लड़ाइयाँ",
+            zh: "实时多人在线对战",
+            ja: "白熱のマルチプレイ対戦",
+            pt: "Batalhas multijogador ao vivo",
+            fa: "نبردهای زنده چندنفره",
+            it: "Battaglie multigiocatore dal vivo",
+            tr: "Canlı Çok Oyunculu Savaşlar");
 
         string[] c2Highlights = new string[]
         {
@@ -795,78 +750,79 @@ public class PlayModeUI : MonoBehaviour
             tr: "Uzak diyarlardaki savaşçılarla canlı ağ savaşında birleşin. Kutsal Fasulye Sırığını savunun veya devasa gövdesini devirin."
         );
 
-        string c2Btn = LanguageSelectionUI.Localize("⚔️ ENTER REALM",
+        string c2Btn = LanguageSelectionUI.Localize("⚔️ PLAY ONLINE",
             ar: "⚔️ دخول أونلاين",
-            ru: "⚔️ ИГРАТЬ ОНЛАЙН",
+            ru: "⚔️ ВОЙТИ В ОНЛАЙН",
             es: "⚔️ ENTRAR ONLINE",
-            fr: "⚔️ JOUER EN LIGNE",
-            de: "⚔️ REICH BETRETEN",
-            hi: "⚔️ क्षेत्र में प्रवेश",
-            zh: "⚔️ 奔赴战场",
+            fr: "⚔️ ENTRER EN LIGNE",
+            de: "⚔️ ONLINE BEITRETEN",
+            hi: "⚔️ ऑनलाइन प्रवेश करें",
+            zh: "⚔️ 进入在线对战",
             ja: "⚔️ オンライン出撃",
-            pt: "⚔️ ENTRAR NO REINO",
-            fa: "⚔️ ورود به قلمرو",
-            it: "⚔️ ENTRA NEL REGNO",
-            tr: "⚔️ DİYARA GİR");
+            pt: "⚔️ ENTRAR ONLINE",
+            fa: "⚔️ ورود آنلاین",
+            it: "⚔️ ENTRA ONLINE",
+            tr: "⚔️ ÇEVRİMİÇİ GİR");
 
-        DrawVerticalPortalCard(
-            c2X, cardY, cardW, cardH,
-            1,
-            EnchantedNatureGUI.AmberSolarAccent,
-            c2Badge,
-            c2Title,
-            c2Sub,
-            c2Desc,
-            c2Highlights,
-            c2Btn,
-            () => { inOnlineSubmenu = true; }
-        );
+        currentModeCards[1] = new ModeCardData {
+            index = 1,
+            accent = EnchantedNatureGUI.AmberSolarAccent,
+            badge = c2Badge,
+            title = c2Title,
+            sub = c2Sub,
+            desc = c2Desc,
+            highlights = c2Highlights,
+            btnText = c2Btn,
+            onClick = () => { inOnlineSubmenu = true; }
+        };
+
+        DrawVerticalPortalCard(c2X, cardY, cardW, cardH, currentModeCards[1]);
 
         // ==========================================
         // PORTAL 3: TRIBE SANCTUARY (FRIENDLY LOBBY)
         // ==========================================
         float c3X = c2X + cardW + gap;
-        string c3Badge = LanguageSelectionUI.Localize("🛡️ PRIVATE COVEN",
-            ar: "🛡️ تحالف سري",
-            ru: "🛡️ СВОЙ КЛАН",
-            es: "🛡️ COFRADÍA SAGRADA",
-            fr: "🛡️ ALLIANCE PRIVÉE",
-            de: "🛡️ HEILIGER ZIRKEL",
-            hi: "🛡️ पवित्र गठबंधन",
-            zh: "🛡️ 私密部落",
-            ja: "🛡️ 秘密の盟約",
-            pt: "🛡️ CLÃ PRIVADO",
-            fa: "🛡️ محفل اختصاصی",
-            it: "🛡️ CONGREGA PRIVATA",
-            tr: "🛡️ ÖZEL BİRLİK");
+        string c3Badge = LanguageSelectionUI.Localize("🤝 COVEN",
+            ar: "🤝 الأصدقاء",
+            ru: "🤝 ДРУЗЬЯ",
+            es: "🤝 AMIGOS",
+            fr: "🤝 AMIS",
+            de: "🤝 FREUNDE",
+            hi: "🤝 मित्र",
+            zh: "🤝 好友",
+            ja: "🤝 フレンド",
+            pt: "🤝 AMIGOS",
+            fa: "🤝 دوستان",
+            it: "🤝 AMICI",
+            tr: "🤝 ARKADAŞLAR");
 
-        string c3Title = LanguageSelectionUI.Localize("TRIBE SANCTUARY",
-            ar: "ملاذ العشيرة",
-            ru: "ДРУЖЕСКОЕ ЛОББИ",
-            es: "SANTUARIO DE AMIGOS",
-            fr: "SANCTUAIRE D'AMIS",
-            de: "STAMMESHEILIGTUM",
-            hi: "मित्र अभयारण्य",
-            zh: "部落圣所",
-            ja: "仲間たちの聖域",
-            pt: "SANTUÁRIO DA TRIBO",
-            fa: "پناهگاه قبیله",
-            it: "SANTUARIO DELLA TRIBÙ",
-            tr: "KABİLE SIĞINAĞI");
+        string c3Title = LanguageSelectionUI.Localize("PLAY WITH FRIENDS",
+            ar: "اللعب مع الأصدقاء",
+            ru: "ИГРА С ДРУЗЬЯМИ",
+            es: "JUGAR CON AMIGOS",
+            fr: "JOUER AVEC DES AMIS",
+            de: "MIT FREUNDEN SPIELEN",
+            hi: "दोस्तों के साथ खेलें",
+            zh: "与好友同玩",
+            ja: "友達とプレイ",
+            pt: "JOGAR COM AMIGOS",
+            fa: "بازی با دوستان",
+            it: "GIOCA CON GLI AMICI",
+            tr: "ARKADAŞLARLA OYNA");
 
-        string c3Sub = LanguageSelectionUI.Localize("Custom Private Lobby",
-            ar: "غرفة خاصة مخصصة للأصدقاء",
-            ru: "Своя комната с друзьями",
-            es: "Lobby privado con amigos",
-            fr: "Salon privé personnalisé",
-            de: "Eigene Freundes-Lobby",
-            hi: "कस्टम निजी लॉबी",
-            zh: "自定义好友私密房间",
-            ja: "カスタムフレンドロビー",
-            pt: "Lobby privado personalizado",
-            fa: "لابی خصوصی سفارشی",
-            it: "Lobby Privata Personalizzata",
-            tr: "Özel Kabile Odası");
+        string c3Sub = LanguageSelectionUI.Localize("Private Room with Secret Code",
+            ar: "غرفة خاصة مخصصة برمز سري",
+            ru: "Своя комната с секретным кодом",
+            es: "Sala privada con código secreto",
+            fr: "Salon privé avec code secret",
+            de: "Eigener Raum mit Geheimcode",
+            hi: "गुप्त कोड के साथ निजी कमरा",
+            zh: "带密码的专属好友房间",
+            ja: "秘密コード付きのプライベートルーム",
+            pt: "Sala privada com código secreto",
+            fa: "اتاق اختصاصی با رمز محرمانه",
+            it: "Stanza privata con codice segreto",
+            tr: "Gizli Kodlu Özel Oda");
 
         string[] c3Highlights = new string[]
         {
@@ -892,32 +848,33 @@ public class PlayModeUI : MonoBehaviour
             tr: "Gizli oda şifresiyle arkadaşlarınızı toplayın. Takımları Koruyucular ve Yok Ediciler olarak ayırın, özel kurallarla savaşın."
         );
 
-        string c3Btn = LanguageSelectionUI.Localize("🤝 GATHER TRIBE",
-            ar: "🤝 إنشاء اللوبي",
-            ru: "🤝 СОЗДАТЬ ЛОББИ",
-            es: "🤝 CREAR LOBBY",
-            fr: "🤝 CRÉER LE SALON",
-            de: "🤝 STAMM VERSAMMELN",
-            hi: "🤝 कबीला इकट्ठा करें",
-            zh: "🤝 召集部落",
-            ja: "🤝 仲間を集める",
-            pt: "🤝 REUNIR A TRIBO",
-            fa: "🤝 تشکیل لابی",
-            it: "🤝 RIUNISCI LA TRIBÙ",
-            tr: "🤝 KABİLEYİ TOPLA");
+        string c3Btn = LanguageSelectionUI.Localize("🤝 PLAY WITH FRIENDS",
+            ar: "🤝 اللعب مع الأصدقاء",
+            ru: "🤝 ИГРА С ДРУЗЬЯМИ",
+            es: "🤝 JUGAR CON AMIGOS",
+            fr: "🤝 JOUER AVEC DES AMIS",
+            de: "🤝 MIT FREUNDEN SPIELEN",
+            hi: "दोस्तों के साथ खेलें",
+            zh: "🤝 与好友同玩",
+            ja: "🤝 友達とプレイ",
+            pt: "🤝 JOGAR COM AMIGOS",
+            fa: "🤝 بازی با دوستان",
+            it: "🤝 GIOCA CON GLI AMICI",
+            tr: "🤝 ARKADAŞLARLA OYNA");
 
-        DrawVerticalPortalCard(
-            c3X, cardY, cardW, cardH,
-            2,
-            EnchantedNatureGUI.BronzeSanctuary,
-            c3Badge,
-            c3Title,
-            c3Sub,
-            c3Desc,
-            c3Highlights,
-            c3Btn,
-            () => StartFriendlyMode()
-        );
+        currentModeCards[2] = new ModeCardData {
+            index = 2,
+            accent = EnchantedNatureGUI.BronzeSanctuary,
+            badge = c3Badge,
+            title = c3Title,
+            sub = c3Sub,
+            desc = c3Desc,
+            highlights = c3Highlights,
+            btnText = c3Btn,
+            onClick = () => StartFriendlyMode()
+        };
+
+        DrawVerticalPortalCard(c3X, cardY, cardW, cardH, currentModeCards[2]);
 
         // 5. Sleek Footer Bar
         float footerY = modalY + modalHeight - 32f;
@@ -927,24 +884,19 @@ public class PlayModeUI : MonoBehaviour
         footerStyle.normal.textColor = new Color(0.55f, 0.70f, 0.60f, 0.85f);
         string footerMsg = "Beanstalkwar v1.0.4 - Sacred Tree Sanctuary  |  [Press L for Languages | Esc to Pause]";
         GUI.Label(new Rect(modalX, footerY, modalWidth, 22f), footerMsg, footerStyle);
+
+        // 6. Mode Info Popup Modal (if opened by clicking ❓ button)
+        if (activeModeInfoModal >= 0 && activeModeInfoModal < currentModeCards.Length)
+        {
+            DrawModeInfoModal(currentModeCards[activeModeInfoModal]);
+        }
     }
 
     /// <summary>
     /// Renders a monolithic AAA vertical portal card with smooth hover easing,
-    /// vertical lift, heraldic mode crest, typography hierarchy, and beveled action button.
+    /// vertical lift, heraldic mode crest, typography hierarchy, question mark specs button, and action button.
     /// </summary>
-    void DrawVerticalPortalCard(
-        float x, float y, float w, float h,
-        int portalIndex,
-        Color accent,
-        string badge,
-        string title,
-        string sub,
-        string desc,
-        string[] highlights,
-        string btnText,
-        System.Action onClick
-    )
+    void DrawVerticalPortalCard(float x, float y, float w, float h, ModeCardData data)
     {
         int elementId = (int)(x * 777f + y);
         bool isHover = new Rect(x, y, w, h).Contains(Event.current.mousePosition);
@@ -955,7 +907,7 @@ public class PlayModeUI : MonoBehaviour
         Rect cardRect = new Rect(x, y + liftY, w, h);
 
         // 1. Multi-layer Antique Gold & Obsidian Glass Frame
-        EnchantedNatureGUI.DrawAntiqueGoldFrame(cardRect, accent, hover);
+        EnchantedNatureGUI.DrawAntiqueGoldFrame(cardRect, data.accent, hover);
 
         // 2. Top Pill Badge Banner
         float badgeW = w - 44f;
@@ -969,28 +921,28 @@ public class PlayModeUI : MonoBehaviour
         badgeStyle.alignment = TextAnchor.MiddleCenter;
 
         Color badgeBg = Color.Lerp(
-            new Color(accent.r * 0.16f, accent.g * 0.16f, accent.b * 0.16f, 0.90f),
-            new Color(accent.r * 0.32f, accent.g * 0.32f, accent.b * 0.32f, 0.95f),
+            new Color(data.accent.r * 0.16f, data.accent.g * 0.16f, data.accent.b * 0.16f, 0.90f),
+            new Color(data.accent.r * 0.32f, data.accent.g * 0.32f, data.accent.b * 0.32f, 0.95f),
             hover
         );
-        EnchantedNatureGUI.DrawLeafPlaque(new Rect(badgeX, badgeY, badgeW, badgeH), badgeBg, accent);
-        badgeStyle.normal.textColor = Color.Lerp(accent, Color.white, hover * 0.4f);
-        GUI.Label(new Rect(badgeX, badgeY, badgeW, badgeH), badge, badgeStyle);
+        EnchantedNatureGUI.DrawLeafPlaque(new Rect(badgeX, badgeY, badgeW, badgeH), badgeBg, data.accent);
+        badgeStyle.normal.textColor = Color.Lerp(data.accent, Color.white, hover * 0.4f);
+        GUI.Label(new Rect(badgeX, badgeY, badgeW, badgeH), data.badge, badgeStyle);
 
         // 3. Heraldic Mode Crest (72x72)
         float crestSize = 72f;
-        Rect crestRect = new Rect(x + (w - crestSize) / 2f, y + liftY + 40f, crestSize, crestSize);
-        EnchantedNatureGUI.DrawHeraldicCrest(crestRect, portalIndex, accent, hover);
+        Rect crestRect = new Rect(x + (w - crestSize) / 2f, y + liftY + 44f, crestSize, crestSize);
+        EnchantedNatureGUI.DrawHeraldicCrest(crestRect, data.index, data.accent, hover);
 
         // 4. Portal Title
         GUIStyle cardTitleStyle = new GUIStyle(GUI.skin.label);
-        cardTitleStyle.fontSize = 14;
+        cardTitleStyle.fontSize = 15;
         cardTitleStyle.fontStyle = FontStyle.Bold;
         cardTitleStyle.alignment = TextAnchor.MiddleCenter;
         Color titleColor = Color.Lerp(EnchantedNatureGUI.AntiqueGoldBright, Color.white, hover * 0.3f);
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(x + 10f, y + liftY + 118f, w - 20f, 22f),
-            title,
+            new Rect(x + 10f, y + liftY + 126f, w - 20f, 26f),
+            data.title,
             cardTitleStyle,
             titleColor,
             new Color(0.02f, 0.04f, 0.02f, 0.95f),
@@ -999,13 +951,13 @@ public class PlayModeUI : MonoBehaviour
 
         // 5. Portal Subtitle
         GUIStyle cardSubStyle = new GUIStyle(GUI.skin.label);
-        cardSubStyle.fontSize = 10;
+        cardSubStyle.fontSize = 11;
         cardSubStyle.fontStyle = FontStyle.Italic;
         cardSubStyle.alignment = TextAnchor.MiddleCenter;
         Color subColor = Color.Lerp(new Color(0.72f, 0.88f, 0.78f), Color.white, hover * 0.4f);
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(x + 10f, y + liftY + 138f, w - 20f, 18f),
-            sub,
+            new Rect(x + 10f, y + liftY + 154f, w - 20f, 20f),
+            data.sub,
             cardSubStyle,
             subColor,
             new Color(0.02f, 0.04f, 0.02f, 0.85f),
@@ -1013,52 +965,236 @@ public class PlayModeUI : MonoBehaviour
         );
 
         // 6. Flourish Divider
-        EnchantedNatureGUI.DrawFlourishDivider(new Rect(x + 22f, y + liftY + 158f, w - 44f, 8f), accent);
+        EnchantedNatureGUI.DrawFlourishDivider(new Rect(x + 22f, y + liftY + 180f, w - 44f, 8f), data.accent);
 
-        // 7. Feature Highlights Bullets
-        float hlY = y + liftY + 172f;
-        GUIStyle hlStyle = new GUIStyle(GUI.skin.label);
-        hlStyle.fontSize = 11;
-        hlStyle.alignment = LanguageSelectionUI.IsArabic ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-        hlStyle.wordWrap = true;
-        hlStyle.normal.textColor = new Color(0.92f, 0.96f, 0.93f);
+        // 7. Middle Section: Mode Details Question-Mark Button (Replaces cluttered bullets & long paragraph!)
+        float midBoxY = y + liftY + 204f;
+        float midBoxW = w - 36f;
+        float midBoxX = x + 18f;
 
-        if (highlights != null)
+        string detailsBtnText = LanguageSelectionUI.Localize(
+            "❓ [ MODE DETAILS & SPECS ]",
+            ar: "❓ [ كَافَّةُ المُمَيِّزَاتِ وَالتَّفَاصِيلِ ]",
+            fa: "❓ [ مشخصات و جزئیات کامل ]",
+            ru: "❓ [ ОПИСАНИЕ И ХАРАКТЕРИСТИКИ ]",
+            es: "❓ [ DETALLES Y CARACTERÍSTICAS ]",
+            fr: "❓ [ DÉTAILS ET SPÉCIFICATIONS ]",
+            de: "❓ [ DETAILS & REGELN ANSEHEN ]",
+            it: "❓ [ DETTAGLI E SPECIFICHE ]",
+            tr: "❓ [ MOD DETAYLARI VE BİLGİ ]",
+            zh: "❓ [ 查看模式特色与规则详情 ]",
+            ja: "❓ [ モード詳細とルールを見る ]",
+            hi: "❓ [ मोड विवरण और नियम देखें ]",
+            pt: "❓ [ DETALHES E ESPECIFICAÇÕES ]"
+        );
+
+        float infoBtnH = 42f;
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(midBoxX, midBoxY, midBoxW, infoBtnH), detailsBtnText, data.accent, 11))
         {
-            for (int i = 0; i < highlights.Length; i++)
+            activeModeInfoModal = data.index;
+        }
+
+        string infoHint = LanguageSelectionUI.Localize(
+            "Click for rules, titans & battle tactics",
+            ar: "انقر لمعرفة القوانين والزعماء والخطط",
+            fa: "برای مشاهده قوانین و غول‌ها کلیک کنید",
+            ru: "Нажмите для просмотра правил и тактик",
+            es: "Clic para ver reglas, titanes y tácticas",
+            fr: "Cliquez pour règles, titans et tactiques",
+            de: "Klicke für Regeln, Bosse und Taktiken",
+            it: "Clicca per regole, titani e tattiche",
+            tr: "Kurallar, titanlar ve taktikler için tıkla",
+            zh: "点击查看对战规则、巨像首领与战术",
+            ja: "ルール、ボス、戦術の詳細を確認",
+            hi: "नियम, टाइटन्स और रणनीतियों के लिए क्लिक करें",
+            pt: "Clique para regras, titãs e táticas"
+        );
+        GUIStyle infoHintStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 10,
+            fontStyle = FontStyle.Italic,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(0.68f, 0.82f, 0.72f, 0.85f) }
+        };
+        GUI.Label(new Rect(midBoxX, midBoxY + infoBtnH + 8f, midBoxW, 20f), infoHint, infoHintStyle);
+
+        // 8. Bottom Action Button
+        float btnW = w - 32f;
+        float btnH = 48f;
+        float btnX = x + 16f;
+        float btnY = y + liftY + h - btnH - 18f;
+
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(btnX, btnY, btnW, btnH), data.btnText, data.accent, 13, isMajor: (data.index == 1)))
+        {
+            data.onClick?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Renders an elegant popup dialog showing comprehensive narrative description,
+    /// complete mechanics, and 4 highlight specifications for the selected mode.
+    /// </summary>
+    void DrawModeInfoModal(ModeCardData data)
+    {
+        float sw = Screen.width;
+        float sh = Screen.height;
+
+        // Dark dimming overlay behind modal
+        GUI.depth = -100;
+        GUI.color = new Color(0.01f, 0.03f, 0.02f, 0.90f);
+        GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+
+        float mw = Mathf.Min(680f, sw - 24f);
+        float mh = Mathf.Min(560f, sh - 24f);
+        float mx = (sw - mw) * 0.5f;
+        float my = (sh - mh) * 0.5f;
+        Rect modalRect = new Rect(mx, my, mw, mh);
+
+        // Master antique gold frame
+        EnchantedNatureGUI.DrawAntiqueGoldFrame(modalRect, data.accent, 0.5f);
+
+        // Close button (Top-Right)
+        float closeBtnSize = 34f;
+        Rect closeRect = new Rect(mx + mw - closeBtnSize - 14f, my + 12f, closeBtnSize, closeBtnSize);
+        if (EnchantedNatureGUI.DrawAncientGoldButton(closeRect, "✕", EnchantedNatureGUI.AntiqueGoldBright, 13))
+        {
+            activeModeInfoModal = -1;
+        }
+
+        // Header Mode Title
+        GUIStyle mTitleStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 20,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter
+        };
+        EnchantedNatureGUI.DrawTextWithShadow(
+            new Rect(mx + 40f, my + 14f, mw - 80f, 28f),
+            data.title,
+            mTitleStyle,
+            EnchantedNatureGUI.AntiqueGoldBright,
+            new Color(0.02f, 0.04f, 0.02f, 0.95f),
+            1.5f, 1.5f
+        );
+
+        // Header Subtitle
+        GUIStyle mSubStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            fontStyle = FontStyle.Italic,
+            alignment = TextAnchor.MiddleCenter
+        };
+        EnchantedNatureGUI.DrawTextWithShadow(
+            new Rect(mx + 40f, my + 42f, mw - 80f, 20f),
+            data.sub,
+            mSubStyle,
+            new Color(0.40f, 0.95f, 0.85f),
+            new Color(0.01f, 0.03f, 0.02f, 0.95f),
+            1f, 1f
+        );
+
+        // Flourish divider
+        EnchantedNatureGUI.DrawFlourishDivider(new Rect(mx + 30f, my + 64f, mw - 60f, 8f), data.accent);
+
+        // Narrative Description Plaque
+        float descY = my + 76f;
+        float descH = 68f;
+        Rect descBox = new Rect(mx + 24f, descY, mw - 48f, descH);
+        EnchantedNatureGUI.DrawLeafPlaque(descBox, new Color(0.04f, 0.09f, 0.06f, 0.95f), data.accent);
+        GUIStyle descStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            wordWrap = true,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(0.92f, 0.96f, 0.92f) }
+        };
+        GUI.Label(new Rect(mx + 34f, descY + 6f, mw - 68f, descH - 12f), data.desc, descStyle);
+
+        // Highlights Section Title
+        string specTitle = LanguageSelectionUI.Localize(
+            "⚜️ MODE HIGHLIGHTS & SPECIFICATIONS ⚜️",
+            ar: "⚜️ خَصَائِصُ وَمُمَيِّزَاتُ هَذَا الطَّوْرِ ⚜️",
+            fa: "⚜️ مشخصات و ویژگی‌های این حالت ⚜️",
+            ru: "⚜️ ОСОБЕННОСТИ И ХАРАКТЕРИСТИКИ РЕЖИМА ⚜️",
+            es: "⚜️ CARACTERÍSTICAS Y ESPECIFICACIONES ⚜️",
+            fr: "⚜️ CARACTÉRISTIQUES ET SPÉCIFICATIONS ⚜️",
+            de: "⚜️ BESONDERHEITEN & SPEZIFIKATIONEN ⚜️",
+            it: "⚜️ CARATTERISTICHE E SPECIFICHE ⚜️",
+            tr: "⚜️ MOD ÖZELLİKLERİ VE AYRINTILARI ⚜️",
+            zh: "⚜️ 模式核心特色与系统规则 ⚜️",
+            ja: "⚜️ モードの特徴と詳細仕様 ⚜️",
+            hi: "⚜️ मोड की मुख्य विशेषताएं और नियम ⚜️",
+            pt: "⚜️ DESTAQUES E ESPECIFICAÇÕES DO MODO ⚜️"
+        );
+        GUIStyle specTitleStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = EnchantedNatureGUI.AntiqueGoldBright }
+        };
+        GUI.Label(new Rect(mx + 24f, descY + descH + 10f, mw - 48f, 22f), specTitle, specTitleStyle);
+
+        // Highlights Items (4 items)
+        float hlStartY = descY + descH + 34f;
+        if (data.highlights != null)
+        {
+            for (int i = 0; i < data.highlights.Length; i++)
             {
-                Rect hlRect = new Rect(x + 18f, hlY, w - 36f, 23f);
-                GUI.color = new Color(accent.r, accent.g, accent.b, 0.12f);
+                Rect hlRect = new Rect(mx + 24f, hlStartY + (i * 42f), mw - 48f, 36f);
+                GUI.color = new Color(data.accent.r * 0.12f, data.accent.g * 0.12f, data.accent.b * 0.12f, 0.85f);
                 GUI.DrawTexture(hlRect, Texture2D.whiteTexture);
                 GUI.color = Color.white;
-                EnchantedNatureGUI.DrawCrispBorder(hlRect, new Color(accent.r, accent.g, accent.b, 0.28f), 1f);
+                EnchantedNatureGUI.DrawCrispBorder(hlRect, new Color(data.accent.r, data.accent.g, data.accent.b, 0.45f), 1.2f);
 
-                GUI.Label(new Rect(x + 24f, hlY + 2f, w - 48f, 19f), highlights[i], hlStyle);
-                hlY += 27f;
+                GUIStyle hlStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 12,
+                    fontStyle = FontStyle.Bold,
+                    alignment = LanguageSelectionUI.IsArabic ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft,
+                    normal = { textColor = new Color(0.95f, 0.98f, 0.95f) }
+                };
+                GUI.Label(new Rect(mx + 38f, hlStartY + (i * 42f) + 4f, mw - 76f, 28f), data.highlights[i], hlStyle);
             }
         }
 
-        // 8. Description paragraph (subtle parchment flavor)
-        GUIStyle descStyle = new GUIStyle(GUI.skin.label);
-        descStyle.fontSize = 10;
-        descStyle.wordWrap = true;
-        descStyle.alignment = TextAnchor.UpperCenter;
-        descStyle.normal.textColor = new Color(0.68f, 0.80f, 0.72f);
-        float descH = (y + liftY + h - 68f) - hlY;
-        if (descH > 28f)
+        // Bottom Action Buttons
+        float btnY = my + mh - 60f;
+        float launchBtnW = (mw - 60f) * 0.65f;
+        float closeBtnW = (mw - 60f) * 0.35f;
+
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(mx + 24f, btnY, launchBtnW, 46f), data.btnText, data.accent, 13, isMajor: true))
         {
-            GUI.Label(new Rect(x + 16f, hlY + 4f, w - 32f, descH), desc, descStyle);
+            activeModeInfoModal = -1;
+            data.onClick?.Invoke();
         }
 
-        // 9. Bottom Action Button
-        float btnW = w - 32f;
-        float btnH = 46f;
-        float btnX = x + 16f;
-        float btnY = y + liftY + h - btnH - 16f;
-
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(btnX, btnY, btnW, btnH), btnText, accent, 13, isMajor: (portalIndex == 1)))
+        string closeTxt = LanguageSelectionUI.Localize(
+            "✕ CLOSE",
+            ar: "✕ إِغْلاَق",
+            fa: "✕ بستن",
+            ru: "✕ ЗАКРЫТЬ",
+            es: "✕ CERRAR",
+            fr: "✕ FERMER",
+            de: "✕ SCHLIESSEN",
+            it: "✕ CHIUDI",
+            tr: "✕ KAPAT",
+            zh: "✕ 关闭",
+            ja: "✕ 閉じる",
+            hi: "✕ बंद करें",
+            pt: "✕ FECHAR"
+        );
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(mx + 24f + launchBtnW + 12f, btnY, closeBtnW, 46f), closeTxt, EnchantedNatureGUI.AntiqueGoldMid, 12))
         {
-            onClick?.Invoke();
+            activeModeInfoModal = -1;
+        }
+
+        // Escape key to close modal
+        if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+        {
+            activeModeInfoModal = -1;
+            Event.current.Use();
         }
     }
 

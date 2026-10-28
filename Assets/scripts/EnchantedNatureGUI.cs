@@ -37,6 +37,59 @@ public static class EnchantedNatureGUI
     public static readonly Color BronzeSanctuary     = new Color(0.92f, 0.60f, 0.32f, 1.0f);
     public static readonly Color CyanRuneAccent      = new Color(0.30f, 0.85f, 1.0f, 1.0f);
 
+    // =========================================================================
+    // DYNAMIC GAME FONT ENGINE (DecoType Thuluth for Arabic/Farsi, Aref Ruqaa for Latin)
+    // =========================================================================
+    private static Font cachedArabicFont;
+    private static Font cachedLatinFont;
+
+    public static Font GetActiveGameFont()
+    {
+        string lang = LanguageSelectionUI.CurrentLanguageCode;
+        bool isArabicScript = (lang == "ar" || lang == "fa");
+
+        if (isArabicScript)
+        {
+            if (cachedArabicFont == null)
+            {
+                cachedArabicFont = Resources.Load<Font>("Fonts/DecoTypeThuluth");
+                if (cachedArabicFont == null)
+                {
+                    try
+                    {
+                        cachedArabicFont = Font.CreateDynamicFontFromOSFont(new string[] { "DecoType Thuluth", "Amiri", "Traditional Arabic", "Arial" }, 16);
+                    }
+                    catch {}
+                }
+            }
+            return cachedArabicFont;
+        }
+        else
+        {
+            // Latin-script languages (English, German, French, Spanish, Italian, Portuguese, Turkish, etc.)
+            bool isLatin = (lang == "en" || lang == "de" || lang == "fr" || lang == "es" || lang == "it" || lang == "pt" || lang == "tr");
+            if (isLatin)
+            {
+                if (cachedLatinFont == null)
+                {
+                    cachedLatinFont = Resources.Load<Font>("Fonts/ArefRuqaa-Bold");
+                    if (cachedLatinFont == null)
+                    {
+                        try
+                        {
+                            cachedLatinFont = Font.CreateDynamicFontFromOSFont(new string[] { "Aref Ruqaa", "Georgia", "Arial" }, 16);
+                        }
+                        catch {}
+                    }
+                }
+                return cachedLatinFont;
+            }
+
+            // For other scripts (Cyrillic ru, CJK zh/ja, Devanagari hi), let Unity use default fallback font
+            return null;
+        }
+    }
+
     static EnchantedNatureGUI()
     {
         GenerateTextures();
@@ -430,6 +483,12 @@ public static class EnchantedNatureGUI
     {
         if (string.IsNullOrEmpty(text)) return;
 
+        Font activeFont = GetActiveGameFont();
+        if (activeFont != null)
+        {
+            style.font = activeFont;
+        }
+
         Color oldCol = style.normal.textColor;
 
         // Shadow pass
@@ -487,6 +546,12 @@ public static class EnchantedNatureGUI
         btnStyle.fontSize = fontSize;
         btnStyle.fontStyle = FontStyle.Bold;
         btnStyle.alignment = TextAnchor.MiddleCenter;
+
+        Font activeFont = GetActiveGameFont();
+        if (activeFont != null)
+        {
+            btnStyle.font = activeFont;
+        }
 
         Color textCol = isHover
             ? new Color(1.0f, 0.98f, 0.85f)

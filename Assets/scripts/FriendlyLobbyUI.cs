@@ -93,6 +93,12 @@ public class FriendlyLobbyUI : MonoBehaviour
         if (PlayModeUI.SelectedMode != PlayModeUI.PlayMode.Friendly) return;
         if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying()) return;
 
+        Font activeGameFont = EnchantedNatureGUI.GetActiveGameFont();
+        if (activeGameFont != null)
+        {
+            GUI.skin.font = activeGameFont;
+        }
+
         // رسم نافذة اللوبي في منتصف الشاشة
         float winWidth = Mathf.Min(640f, Screen.width - 20f);
         float winHeight = Mathf.Min(480f, Screen.height - 20f);
@@ -148,16 +154,19 @@ public class FriendlyLobbyUI : MonoBehaviour
         titleStyle.normal.textColor = Color.yellow;
 
         string lobbyTitle = LanguageSelectionUI.Localize(
-            "🤝 FRIENDLY CUSTOM LOBBY",
-            ar: "🤝 غرفة الأصدقاء الخاصة",
-            ru: "🤝 ДРУЖЕСКОЕ ЛОББИ",
-            fr: "🤝 SALON PRIVÉ D'AMIS",
-            es: "🤝 LOBBY DE AMIGOS",
-            de: "🤝 FREUNDES-LOBBY",
-            hi: "🤝 मित्र लॉबी",
-            zh: "🤝 好友自定义房间",
-            ja: "🤝 フレンドカスタムロビー",
-            pt: "🤝 LOBBY PERSONALIZADO"
+            "🤝 PLAY WITH FRIENDS",
+            ar: "🤝 اللعب مع الأصدقاء",
+            fa: "🤝 بازی با دوستان",
+            ru: "🤝 ИГРА С ДРУЗЬЯМИ",
+            fr: "🤝 JOUER AVEC DES AMIS",
+            es: "🤝 JUGAR CON AMIGOS",
+            de: "🤝 MIT FREUNDEN SPIELEN",
+            hi: "🤝 दोस्तों के साथ खेलें",
+            zh: "🤝 与好友同玩",
+            ja: "🤝 友達とプレイ",
+            pt: "🤝 JOGAR COM AMIGOS",
+            it: "🤝 GIOCA CON GLI AMICI",
+            tr: "🤝 ARKADAŞLARLA OYNA"
         );
         GUI.Label(new Rect(winX, winY + 12, winWidth, 28), lobbyTitle, titleStyle);
 
