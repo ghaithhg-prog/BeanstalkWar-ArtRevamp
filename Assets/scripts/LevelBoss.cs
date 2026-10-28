@@ -37,12 +37,27 @@ public class LevelBoss : NetworkBehaviour
 
     public float GetExpectedLevelY()
     {
+        float scaleMult = Mathf.Min(bossScale, 1.4f);
+        float baseOff = (agent != null) ? agent.baseOffset : (0.95f * scaleMult);
+
+        GameObject pObj = myPlatformObject;
+        if (pObj == null) pObj = GameObject.Find($"Level_{levelNumber}");
+        if (pObj != null)
+        {
+            Collider col = pObj.GetComponent<Collider>();
+            if (col != null)
+            {
+                return col.bounds.max.y + baseOff;
+            }
+            return pObj.transform.position.y + 1.0f + baseOff;
+        }
+
         return levelNumber switch
         {
-            1 => 6.5f,
-            2 => 16.5f,
-            3 => 26.5f,
-            _ => 6.5f
+            1 => 5.8f + baseOff,
+            2 => 15.8f + baseOff,
+            3 => 25.8f + baseOff,
+            _ => 5.8f + baseOff
         };
     }
 
@@ -98,11 +113,23 @@ public class LevelBoss : NetworkBehaviour
             SetBossDormant(false);
 
             GameObject lvl1Obj = GameObject.Find("Level_1");
+            myPlatformObject = lvl1Obj;
+            float clampedScale = Mathf.Min(bossScale, 1.4f);
+            if (agent != null)
+            {
+                agent.baseOffset = 0.95f * clampedScale;
+            }
+
+            float yPos = GetExpectedLevelY();
             if (lvl1Obj != null)
             {
-                guardCenter = lvl1Obj.transform.position + Vector3.up * 1.5f;
-                transform.position = guardCenter;
+                guardCenter = new Vector3(lvl1Obj.transform.position.x, yPos, lvl1Obj.transform.position.z);
             }
+            else
+            {
+                guardCenter = new Vector3(transform.position.x, yPos, transform.position.z);
+            }
+            transform.position = guardCenter;
 
             if (agent != null)
             {
@@ -224,7 +251,7 @@ public class LevelBoss : NetworkBehaviour
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
         {
-            agent.baseOffset = 0.95f;
+            agent.baseOffset = 0.95f * clampedScale;
             agent.speed = 4.5f;
             agent.stoppingDistance = 2.5f;
         }
@@ -274,6 +301,8 @@ public class LevelBoss : NetworkBehaviour
         if (existing != null)
         {
             model = existing.gameObject;
+            model.transform.localPosition = new Vector3(0f, -0.95f, 0f);
+            model.transform.localRotation = Quaternion.identity;
         }
         else
         {
@@ -596,9 +625,32 @@ public class LevelBoss : NetworkBehaviour
 
         if (isDormant) return;
 
-        // حماية قطعية: تثبيت ارتفاع الزعيم على طابقه المخصص بدقة لمنع أي سقوط لطابق أدنى
+        // حماية قطعية: تثبيت ارتفاع الزعيم على طابقه المخصص بدقة ومنع أي غوص في الأرض إطلاقاً
+        float clampedScale = Mathf.Min(bossScale, 1.4f);
+        float targetBaseOffset = 0.95f * clampedScale;
+        if (agent != null && Mathf.Abs(agent.baseOffset - targetBaseOffset) > 0.02f)
+        {
+            agent.baseOffset = targetBaseOffset;
+        }
+
+        // فحص سطح المنصة تحت الزعيم مباشرة لمنع أي انغراس في الأرضية
+        if (Physics.Raycast(transform.position + Vector3.up * 2.0f, Vector3.down, out RaycastHit groundHit, 5.0f))
+        {
+            float minAllowedY = groundHit.point.y + targetBaseOffset;
+            if (transform.position.y < minAllowedY - 0.05f)
+            {
+                Vector3 correctedPos = transform.position;
+                correctedPos.y = minAllowedY;
+                transform.position = correctedPos;
+                if (agent != null && agent.enabled && agent.isOnNavMesh)
+                {
+                    agent.Warp(correctedPos);
+                }
+            }
+        }
+
         float expectedY = GetExpectedLevelY();
-        if (Mathf.Abs(transform.position.y - expectedY) > 0.8f)
+        if (Mathf.Abs(transform.position.y - expectedY) > 1.4f)
         {
             Vector3 fixedPos = transform.position;
             fixedPos.y = expectedY;

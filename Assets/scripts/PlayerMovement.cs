@@ -1010,15 +1010,23 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    public void ResetToSafeSpawn()
+    public void ResetFallState()
     {
         wasAirborne = false;
         highestFallY = float.MinValue;
+        isCurrentlyGrounded = true;
+        jumpCount = 0;
+        lastJumpTime = -10f;
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
+    }
+
+    public void ResetToSafeSpawn()
+    {
+        ResetFallState();
 
         Transform sp = null;
         if (SpawnManager.Instance != null)
@@ -1026,12 +1034,12 @@ public class PlayerMovement : NetworkBehaviour
 
         if (sp != null)
         {
-            transform.position = new Vector3(Mathf.Clamp(sp.position.x, -14f, 14f), sp.position.y + 1.05f, Mathf.Clamp(sp.position.z, -14f, 14f));
+            transform.position = sp.position + Vector3.up * 0.25f;
             transform.rotation = sp.rotation;
         }
         else
         {
-            transform.position = (team == TeamType.Destroyer) ? new Vector3(8f, 1.05f, 0f) : new Vector3(-8f, 1.05f, 0f);
+            transform.position = (team == TeamType.Destroyer) ? new Vector3(22f, 0.25f, 0f) : new Vector3(-22f, 0.25f, 0f);
         }
     }
 

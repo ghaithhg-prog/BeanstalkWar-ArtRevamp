@@ -75,9 +75,19 @@ public class Health : MonoBehaviour
             respawnText.gameObject.SetActive(false);
     }
 
+    private float spawnInvulnerabilityTimer = 0f;
+
+    void Update()
+    {
+        if (spawnInvulnerabilityTimer > 0f)
+        {
+            spawnInvulnerabilityTimer -= Time.deltaTime;
+        }
+    }
+
     public void TakeDamage(float amount)
     {
-        if (isDead) return;
+        if (isDead || spawnInvulnerabilityTimer > 0f) return;
         if (!initialized)
         {
             initialized = true;
@@ -156,7 +166,11 @@ public class Health : MonoBehaviour
 
         // تعطيل الحركة والقتال لجميع الكائنات (لاعب أو بوت)
         PlayerMovement player = GetComponent<PlayerMovement>();
-        if (player != null) player.enabled = false;
+        if (player != null)
+        {
+            player.ResetFallState();
+            player.enabled = false;
+        }
 
         BotController bot = GetComponent<BotController>();
         if (bot != null) bot.enabled = false;
@@ -303,7 +317,7 @@ public class Health : MonoBehaviour
         }
         else
         {
-            transform.position = targetSpawnPos + Vector3.up * 1.05f;
+            transform.position = targetSpawnPos + Vector3.up * 0.25f;
             if (spawnPoint != null) transform.rotation = spawnPoint.rotation;
 
             Rigidbody rb = GetComponent<Rigidbody>();
@@ -311,15 +325,22 @@ public class Health : MonoBehaviour
             {
                 rb.isKinematic = false;
                 rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
             }
 
-            if (player != null) player.enabled = true;
+            if (player != null)
+            {
+                player.ResetFallState();
+                player.enabled = true;
+                player.ResetFallState();
+            }
         }
 
         currentHealth = maxHealth;
         isDead = false;
         IsLocalPlayerDead = false;
         currentRespawnCountdown = 0f;
+        spawnInvulnerabilityTimer = 2.5f; // فترة حصانة مؤقتة 2.5 ثانية عند العودة للحياة لمنع الموت المفاجئ
 
         CharacterCombat combatComp = GetComponent<CharacterCombat>();
         if (combatComp != null) combatComp.enabled = true;

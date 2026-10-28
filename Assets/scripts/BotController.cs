@@ -76,7 +76,9 @@ public class BotController : NetworkBehaviour
     private float nextRepathTime = 0f;
     public const float DefaultNavMeshBaseOffset = 0.95f;
     private float lastBotJumpTime = -10f;
-    private float botJumpCooldown = 4.0f;
+    private float botJumpCooldown = 2.8f;
+    private float nextTraversalHopTime = 0f;
+    private Coroutine botJumpCoroutine = null;
 
     private bool IsServerOrAuthority => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
@@ -88,6 +90,15 @@ public class BotController : NetworkBehaviour
     void OnDisable()
     {
         LevelBossManager.OnSingleBossDefeated -= HandleBossDefeated;
+        if (botJumpCoroutine != null)
+        {
+            StopCoroutine(botJumpCoroutine);
+            botJumpCoroutine = null;
+        }
+        if (agent != null)
+        {
+            agent.baseOffset = DefaultNavMeshBaseOffset;
+        }
     }
 
     void HandleBossDefeated(string title, string killer, PlayerMovement.TeamType killerTeam, int level)
@@ -99,6 +110,7 @@ public class BotController : NetworkBehaviour
 
     void Start()
     {
+        nextTraversalHopTime = Time.time + Random.Range(5f, 12f);
         if (IsServerOrAuthority && agent == null)
         {
             InitializeBotServer();
@@ -284,18 +296,18 @@ public class BotController : NetworkBehaviour
         // رد الهجوم الفوري والانتقام من المعتدي
         EnterFight(attacker.transform);
 
-        // قفزة تكتيكية رشيقة ومحسوبة للمراوغة بنسبة متزنة (25% وبفاصل زمني كافٍ)
-        if (Random.value < 0.25f)
+        // قفزة تكتيكية رشيقة ومحسوبة للمراوغة بنسبة 40% عند التعرض للهجوم
+        if (Random.value < 0.40f)
         {
-            TriggerBotJump();
+            TriggerBotJump(0.85f);
         }
     }
 
     /// <summary>
     /// تنفيذ قفزة انسيابية متزنة للبوت متزامنة مع أنيميشن Mixamo
-    /// مع الحفاظ الدائم على ثبات القدمين على سطح الأرض (BaseOffset = 0.95f)
+    /// مع الحفاظ الدائم على ثبات القدمين على سطح الأرض دون أي غوص أو اختراق للتربة (BaseOffset >= 0.95f)
     /// </summary>
-    public void TriggerBotJump()
+    public void TriggerBotJump(float jumpHeight = 0.75f)
     {
         if (Time.time - lastBotJumpTime < botJumpCooldown) return;
         if (agent == null || !agent.isOnNavMesh) return;
@@ -303,13 +315,39 @@ public class BotController : NetworkBehaviour
         if (myHp != null && myHp.isDead) return;
 
         lastBotJumpTime = Time.time;
-        agent.baseOffset = DefaultNavMeshBaseOffset;
 
         CharacterVisualAnimator visualAnim = GetComponentInChildren<CharacterVisualAnimator>();
         if (visualAnim != null)
         {
             visualAnim.TriggerJumpGesture();
         }
+
+        if (botJumpCoroutine != null)
+        {
+            StopCoroutine(botJumpCoroutine);
+        }
+        botJumpCoroutine = StartCoroutine(BotJumpRoutine(jumpHeight));
+    }
+
+    private System.Collections.IEnumerator BotJumpRoutine(float jumpHeight)
+    {
+        float duration = 0.50f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            if (agent == null || !agent.isOnNavMesh) break;
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            agent.baseOffset = DefaultNavMeshBaseOffset + Mathf.Sin(t * Mathf.PI) * jumpHeight;
+            yield return null;
+        }
+
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.baseOffset = DefaultNavMeshBaseOffset;
+        }
+        botJumpCoroutine = null;
     }
 
     public Transform GetLevel3Transform()
@@ -362,6 +400,13 @@ public class BotController : NetworkBehaviour
 
         // حماية تامة من اختراق جذع الشجرة
         EnforceTreeTrunkAvoidance();
+
+        // قفزات نادرة وانسيابية للبوتات أثناء الركض في الممرات والمنحنيات للصعود السريع
+        if (agent.velocity.sqrMagnitude > 4.5f && Time.time >= nextTraversalHopTime)
+        {
+            nextTraversalHopTime = Time.time + Random.Range(10f, 18f);
+            TriggerBotJump(0.65f);
+        }
 
         if (Time.time >= nextDecisionTime)
         {
@@ -1026,6 +1071,12 @@ public class BotController : NetworkBehaviour
                 {
                     nextStrafeTime = Time.time + Random.Range(1.8f, 2.6f);
                     currentStrafeSign = (Random.value > 0.5f) ? 1f : -1f;
+
+                    // قفزة مراوغة تكتيكية أثناء الاشتباك القتالي (Combat Jump & Dodge)
+                    if (Random.value < 0.35f)
+                    {
+                        TriggerBotJump(0.75f);
+                    }
 
                     Vector3 rightVec = Vector3.Cross(Vector3.up, toEnemy.normalized);
                     if (isRanged && distance < 4.0f)
