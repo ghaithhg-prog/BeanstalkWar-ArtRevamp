@@ -318,10 +318,10 @@ public class GameIntroBriefingUI : MonoBehaviour
             autoPlayPresentation = false;
         }
 
-        // Top-right corner audio & jukebox button (accessible directly during matches)
+        // Top-right corner audio & jukebox button (accessible directly during matches, Solid & Crisp)
         float audioX = Screen.width - audioBtnW - 10f;
-        string audioIcon = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack) ? "🔇" : "🎵";
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, y, audioBtnW, btnH), audioIcon, EnchantedNatureGUI.AntiqueGoldMid, 12, false))
+        bool isMatchAudioMuted = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack);
+        if (EnchantedNatureGUI.DrawMusicJukeboxButton(new Rect(audioX, y, audioBtnW, btnH), isMatchAudioMuted))
         {
             ForestBGMManager.ToggleJukeboxModal();
         }

@@ -570,6 +570,65 @@ public static class EnchantedNatureGUI
     }
 
     /// <summary>
+    /// Renders a highly visible, solid gold-rimmed Audio/Jukebox icon button with crisp sound/music symbols.
+    /// Uses system font to ensure unicode audio glyphs (🔊 ♫ / 🔇) are 100% opaque, bright, and legible.
+    /// </summary>
+    public static bool DrawMusicJukeboxButton(Rect rect, bool isMuted = false)
+    {
+        if (buttonGradientTex == null) GenerateTextures();
+
+        int id = (int)(rect.x * 1000f + rect.y + 77f);
+        bool isHover = rect.Contains(Event.current.mousePosition);
+        float hover = GetSmoothHover(id, isHover, 10f);
+
+        // 1. Drop shadow
+        GUI.color = new Color(0f, 0f, 0f, 0.6f);
+        GUI.DrawTexture(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), whitePixelTex);
+
+        // 2. Solid, high-contrast wood & emerald plate fill (never transparent!)
+        Color baseFill = isMuted
+            ? Color.Lerp(new Color(0.20f, 0.08f, 0.08f, 0.98f), new Color(0.35f, 0.12f, 0.12f, 0.98f), hover)
+            : Color.Lerp(new Color(0.09f, 0.18f, 0.12f, 0.98f), new Color(0.16f, 0.32f, 0.20f, 0.98f), hover);
+        GUI.color = baseFill;
+        GUI.DrawTexture(rect, buttonGradientTex, ScaleMode.StretchToFill);
+
+        // 3. Top Specular Sheen
+        GUI.color = new Color(1f, 1f, 1f, 0.12f + 0.18f * hover);
+        GUI.DrawTexture(new Rect(rect.x + 2f, rect.y + 1f, rect.width - 4f, rect.height * 0.45f), whitePixelTex);
+
+        // 4. Glowing Gold Border
+        Color rimCol = isMuted
+            ? Color.Lerp(new Color(0.85f, 0.35f, 0.35f, 0.9f), new Color(1.0f, 0.5f, 0.5f, 1.0f), hover)
+            : Color.Lerp(new Color(0.92f, 0.78f, 0.30f, 0.95f), new Color(1.0f, 0.92f, 0.55f, 1.0f), hover);
+        DrawCrispBorder(rect, rimCol, isHover ? 2f : 1.5f);
+
+        // 5. Crisp Audio & Music Symbol (Using default system font for perfect unicode glyph rendering)
+        GUIStyle iconStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            font = null
+        };
+
+        string symbol = isMuted ? "🔇" : "🔊♫";
+        Color textCol = isMuted
+            ? (isHover ? new Color(1f, 0.6f, 0.6f) : new Color(0.95f, 0.45f, 0.45f))
+            : (isHover ? new Color(1f, 1f, 0.85f) : new Color(1.0f, 0.92f, 0.42f));
+        Color shadowCol = new Color(0.01f, 0.02f, 0.01f, 0.95f);
+
+        DrawTextWithShadow(rect, symbol, iconStyle, textCol, shadowCol, 1f, 1f);
+
+        // Click trigger
+        Color old = GUI.color;
+        GUI.color = Color.clear;
+        bool clicked = GUI.Button(rect, "");
+        GUI.color = old;
+
+        return clicked;
+    }
+
+    /// <summary>
     /// Draws an ornate flourish divider line with center diamond.
     /// </summary>
     public static void DrawFlourishDivider(Rect rect, Color color)

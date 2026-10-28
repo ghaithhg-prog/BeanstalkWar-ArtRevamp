@@ -278,13 +278,13 @@ public class PlayModeUI : MonoBehaviour
         EnchantedNatureGUI.DrawCrispBorder(new Rect(12f, 12f, sw - 24f, sh - 24f), new Color(0.85f, 0.72f, 0.32f, 0.65f), 1.5f);
         EnchantedNatureGUI.DrawCornerFiligree(new Rect(16f, 16f, sw - 32f, sh - 32f), new Color(0.95f, 0.82f, 0.38f, 0.85f), 24f);
 
-        // Top-Right Utility: Audio / Jukebox Selector Button
-        float audioBtnW = 44f;
+        // Top-Right Utility: Audio / Jukebox Selector Button (Crisp & Solid)
+        float audioBtnW = 46f;
         float audioBtnH = 28f;
         float audioX = sw - audioBtnW - 10f;
         float audioY = 8f;
-        string audioText = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack) ? "🔇" : "🎵";
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 12))
+        bool isAudioMuted = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack);
+        if (EnchantedNatureGUI.DrawMusicJukeboxButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), isAudioMuted))
         {
             ForestBGMManager.ToggleJukeboxModal();
         }
@@ -508,13 +508,13 @@ public class PlayModeUI : MonoBehaviour
             isTitleScreenActive = true;
         }
 
-        // 1. Unified Top Citadel Ribbon - Audio / Jukebox Selector (Top-Right)
-        float audioBtnW = 44f;
+        // 1. Unified Top Citadel Ribbon - Audio / Jukebox Selector (Top-Right, Solid & Crisp)
+        float audioBtnW = 46f;
         float audioBtnH = 28f;
         float audioX = Screen.width - audioBtnW - 10f;
         float audioY = 8f;
-        string audioText = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack) ? "🔇" : "🎵";
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), audioText, EnchantedNatureGUI.AntiqueGoldMid, 12))
+        bool isMainMenuAudioMuted = (ForestBGMManager.Instance != null && ForestBGMManager.Instance.IsMutedTrack);
+        if (EnchantedNatureGUI.DrawMusicJukeboxButton(new Rect(audioX, audioY, audioBtnW, audioBtnH), isMainMenuAudioMuted))
         {
             ForestBGMManager.ToggleJukeboxModal();
         }

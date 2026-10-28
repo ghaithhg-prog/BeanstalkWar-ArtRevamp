@@ -98,8 +98,8 @@ public class SpawnManager : MonoBehaviour
         }
         treeCenter.y = 0f;
 
-        // نقطة الارتكاز الأساسية على مسافة 7.2 أمتار من الشجرة (ضمن النطاق المطلوب 6 إلى 8 أمتار)
-        float baseDistance = 7.2f;
+        // نقطة الارتكاز الأساسية على مسافة 22 متراً من الشجرة في المعسكر الخارجي المفتوح (بعيداً تماماً عن الشجرة وتحت جذعها)
+        float baseDistance = 22.0f;
         Vector3 teamDir = (team == PlayerMovement.TeamType.Protector) ? Vector3.left : Vector3.right;
         Vector3 basePos = treeCenter + teamDir * baseDistance;
 
@@ -107,20 +107,12 @@ public class SpawnManager : MonoBehaviour
         if (index > 0)
         {
             float sideSign = (index % 2 == 1) ? 1f : -1f;
-            float sideOffset = ((index + 1) / 2) * 1.5f;
+            float sideOffset = ((index + 1) / 2) * 2.2f;
             basePos += new Vector3(0f, 0f, sideSign * sideOffset);
-
-            // ضمان بقاء المسافة الكلية عن الشجرة بدقة بين 6.5 إلى 7.8 أمتار
-            Vector3 fromTree = basePos - treeCenter;
-            fromTree.y = 0f;
-            if (fromTree.magnitude > 7.8f)
-            {
-                basePos = treeCenter + fromTree.normalized * 7.8f;
-            }
         }
 
         // معايرة الموقع بدقة فائقة على NavMesh لضمان وقوف البوتات واللاعبين فوراً وثباتهم
-        if (NavMesh.SamplePosition(basePos, out NavMeshHit hit, 8f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(basePos, out NavMeshHit hit, 10f, NavMesh.AllAreas))
         {
             return hit.position + Vector3.up * 0.15f;
         }
@@ -143,7 +135,7 @@ public class SpawnManager : MonoBehaviour
         }
         treeCenter.y = 0f;
 
-        Vector3 idealPos = treeCenter + ((team == PlayerMovement.TeamType.Protector) ? Vector3.left : Vector3.right) * 7.2f;
+        Vector3 idealPos = treeCenter + ((team == PlayerMovement.TeamType.Protector) ? Vector3.left : Vector3.right) * 22.0f;
 
         if (singleSpawn != null)
         {

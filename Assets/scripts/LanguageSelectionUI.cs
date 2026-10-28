@@ -75,7 +75,9 @@ public class LanguageSelectionUI : MonoBehaviour
     // Cache of procedural pixel-perfect flag textures (36x24)
     private static readonly Dictionary<string, Texture2D> flagTextureCache = new Dictionary<string, Texture2D>();
 
-    public static string CurrentLanguageCode => PlayerPrefs.GetString("GameLanguage", "en");
+    // The game ALWAYS automatically starts in English on every launch as requested; players can switch in-session
+    private static string activeLanguageCode = "en";
+    public static string CurrentLanguageCode => activeLanguageCode;
     public static bool IsArabic => CurrentLanguageCode == "ar" || CurrentLanguageCode == "fa";
 
     #region Master Translation Dictionary & Localization Engine
@@ -1133,17 +1135,9 @@ public class LanguageSelectionUI : MonoBehaviour
             return;
         }
 
-        string saved = CurrentLanguageCode;
-        for (int i = 0; i < AvailableLanguages.Length; i++)
-        {
-            if (AvailableLanguages[i].code.Equals(saved, System.StringComparison.OrdinalIgnoreCase))
-            {
-                selectedIndex = i;
-                break;
-            }
-        }
-
-        // Always default to English and keep main menu open; player can freely choose any language via the top-left button or 'L' key
+        // Always automatically start in English on every game opening
+        activeLanguageCode = "en";
+        selectedIndex = 0;
         showLanguageModal = false;
     }
 
@@ -1458,6 +1452,7 @@ public class LanguageSelectionUI : MonoBehaviour
             if (EnchantedNatureGUI.DrawOrganicLeafButton(badgeRect, badgeText, badgeColor, 11))
             {
                 selectedIndex = i;
+                activeLanguageCode = opt.code;
                 PlayerPrefs.SetString("GameLanguage", opt.code);
                 PlayerPrefs.Save();
             }
@@ -1466,6 +1461,7 @@ public class LanguageSelectionUI : MonoBehaviour
             if (GUI.Button(itemRect, "", GUIStyle.none))
             {
                 selectedIndex = i;
+                activeLanguageCode = opt.code;
                 PlayerPrefs.SetString("GameLanguage", opt.code);
                 PlayerPrefs.Save();
             }
@@ -1573,7 +1569,8 @@ public class LanguageSelectionUI : MonoBehaviour
 
         if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(mx + 24f, bottomY, 320f, 36f), actionBtnText, new Color(0.25f, 0.95f, 0.45f), 12))
         {
-            PlayerPrefs.SetString("GameLanguage", AvailableLanguages[selectedIndex].code);
+            activeLanguageCode = AvailableLanguages[selectedIndex].code;
+            PlayerPrefs.SetString("GameLanguage", activeLanguageCode);
             PlayerPrefs.SetInt("LanguagePromptSeen", 1);
             PlayerPrefs.Save();
             showLanguageModal = false;
