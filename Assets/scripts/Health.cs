@@ -102,6 +102,12 @@ public class Health : MonoBehaviour
         {
             lastAttacker = attacker;
             MatchEndStatsUI.Instance?.RegisterDamage(attacker, amount);
+
+            BotController bot = GetComponent<BotController>();
+            if (bot != null && bot.enabled)
+            {
+                bot.OnTakeDamageFrom(attacker, amount);
+            }
         }
         TakeDamage(amount);
     }

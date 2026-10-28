@@ -76,7 +76,7 @@ public class LanguageSelectionUI : MonoBehaviour
     private static readonly Dictionary<string, Texture2D> flagTextureCache = new Dictionary<string, Texture2D>();
 
     public static string CurrentLanguageCode => PlayerPrefs.GetString("GameLanguage", "en");
-    public static bool IsArabic => CurrentLanguageCode == "ar";
+    public static bool IsArabic => CurrentLanguageCode == "ar" || CurrentLanguageCode == "fa";
 
     #region Master Translation Dictionary & Localization Engine
 
@@ -1411,8 +1411,8 @@ public class LanguageSelectionUI : MonoBehaviour
                 GUI.DrawTexture(new Rect(itemRect.x + 14f, itemRect.y + 11f, 36f, 24f), rowFlag);
             }
 
-            // Display Name (Formatted for RTL if Arabic)
-            string displayNative = (opt.code == "ar") ? ArabicFixer.Fix("العربية") : opt.nativeName;
+            // Display Name (Formatted for RTL if Arabic or Persian)
+            string displayNative = (opt.code == "ar" || opt.code == "fa") ? ArabicFixer.Fix(opt.nativeName) : opt.nativeName;
             string displayLabel = $"{opt.englishName}  —  {displayNative}";
 
             GUIStyle nameStyle = new GUIStyle(GUI.skin.label);
@@ -1426,7 +1426,7 @@ public class LanguageSelectionUI : MonoBehaviour
             GUIStyle regionStyle = new GUIStyle(GUI.skin.label);
             regionStyle.fontSize = 11;
             regionStyle.normal.textColor = new Color(0.75f, 0.85f, 0.80f);
-            string regionText = (opt.code == "ar") ? ArabicFixer.Fix(opt.region) : opt.region;
+            string regionText = (opt.code == "ar" || opt.code == "fa") ? ArabicFixer.Fix(opt.region) : opt.region;
             GUI.Label(new Rect(itemRect.x + 60f, itemRect.y + 24f, 350f, 18f), regionText, regionStyle);
 
             // Status Badge Button
@@ -1434,11 +1434,21 @@ public class LanguageSelectionUI : MonoBehaviour
             string badgeText;
             if (isSelected)
             {
-                badgeText = (activeOpt.code == "ar") ? ArabicFixer.Fix("✔ مختارة") : "★ SELECTED";
+                if (activeOpt.code == "ar")
+                    badgeText = ArabicFixer.Fix("✔ مختارة");
+                else if (activeOpt.code == "fa")
+                    badgeText = ArabicFixer.Fix("✔ انتخاب شده");
+                else
+                    badgeText = "★ SELECTED";
             }
             else
             {
-                badgeText = (activeOpt.code == "ar") ? ArabicFixer.Fix("اختر هذه اللغة") : "SELECT";
+                if (activeOpt.code == "ar")
+                    badgeText = ArabicFixer.Fix("اختر هذه اللغة");
+                else if (activeOpt.code == "fa")
+                    badgeText = ArabicFixer.Fix("انتخاب این زبان");
+                else
+                    badgeText = "SELECT";
             }
 
             Color badgeColor = isSelected 

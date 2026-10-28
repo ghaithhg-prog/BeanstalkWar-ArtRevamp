@@ -28,6 +28,7 @@ public class BotController : NetworkBehaviour
 
     [Header("Movement")]
     public float moveSpeed = 6f;
+    public float sprintSpeed = 10f;
     public float acceleration = 18f;
     public float angularSpeed = 360f;
     public float stoppingDistance = 0.8f;
@@ -73,6 +74,10 @@ public class BotController : NetworkBehaviour
     private float nextStrafeTime = 0f;
     private float currentStrafeSign = 1f;
     private float nextRepathTime = 0f;
+    private Coroutine botJumpCoroutine;
+    private float lastBotJumpTime = -10f;
+    private float botJumpCooldown = 1.8f;
+    private float nextTraversalHopTime = 0f;
 
     private bool IsServerOrAuthority => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
@@ -148,6 +153,7 @@ public class BotController : NetworkBehaviour
         if (agent != null)
         {
             agent.enabled = true;
+            agent.baseOffset = 0f;
             NavMeshHit hit;
             if (NavMesh.SamplePosition(targetSpawnPos, out hit, 10f, NavMesh.AllAreas))
             {
@@ -251,6 +257,85 @@ public class BotController : NetworkBehaviour
         }
     }
 
+    /// <summary>
+    /// رد الفعل الفوري والذكي عند تعرض البوت للهجوم (Aggro, Self-Defense & Jump/Dodge):
+    /// يدافع عن نفسه فوراً، يهاجم المعتدي، ويراوغ بالقفز والحركة التكتيكية.
+    /// </summary>
+    public void OnTakeDamageFrom(GameObject attacker, float damage = 0f)
+    {
+        if (attacker == null || attacker == gameObject) return;
+        Health myHealth = GetComponent<Health>();
+        if (myHealth != null && myHealth.isDead) return;
+
+        // إذا كان حامياً يحمل الكريستالة متجهاً للمذبح، يركز على إيصالها ويطلق صدمة ويقفز مراوغاً
+        if (currentState == BotState.DeliverCrystal)
+        {
+            if (CrystalItem.Instance != null && Vector3.Distance(transform.position, attacker.transform.position) <= 5.5f)
+            {
+                CrystalItem.Instance.RequestShockwaveRpc();
+            }
+            TriggerBotJump();
+            return;
+        }
+
+        CharacterCombat attCombat = attacker.GetComponent<CharacterCombat>();
+        if (attCombat != null && attCombat.team == team) return; // تجاهل النيران الصديقة
+
+        // رد الهجوم الفوري والانتقام من المعتدي
+        EnterFight(attacker.transform);
+
+        // فرصة 55% للقفز والمراوغة فور تلقي الضربة
+        if (Random.value < 0.55f)
+        {
+            TriggerBotJump();
+        }
+    }
+
+    /// <summary>
+    /// تنفيذ قفزة فيزيائية انسيابية للبوت متزامنة مع أنيميشن القفز Mixamo الحقيقي (Mixamo Jump Gesture)
+    /// دون كسر مسار شبكة NavMeshAgent.
+    /// </summary>
+    public void TriggerBotJump()
+    {
+        if (Time.time - lastBotJumpTime < botJumpCooldown) return;
+        if (agent == null || !agent.isOnNavMesh) return;
+        Health myHp = GetComponent<Health>();
+        if (myHp != null && myHp.isDead) return;
+
+        lastBotJumpTime = Time.time;
+
+        CharacterVisualAnimator visualAnim = GetComponentInChildren<CharacterVisualAnimator>();
+        if (visualAnim != null)
+        {
+            visualAnim.TriggerJumpGesture();
+        }
+
+        if (botJumpCoroutine != null) StopCoroutine(botJumpCoroutine);
+        botJumpCoroutine = StartCoroutine(BotJumpRoutine());
+    }
+
+    private System.Collections.IEnumerator BotJumpRoutine()
+    {
+        float duration = 0.52f;
+        float elapsed = 0f;
+        float peakHeight = 1.45f;
+
+        while (elapsed < duration)
+        {
+            if (agent == null || !agent.isOnNavMesh) break;
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            agent.baseOffset = Mathf.Sin(t * Mathf.PI) * peakHeight;
+            yield return null;
+        }
+
+        if (agent != null)
+        {
+            agent.baseOffset = 0f;
+        }
+        botJumpCoroutine = null;
+    }
+
     public Transform GetLevel3Transform()
     {
         if (levelTargets != null && levelTargets.Length > 2 && levelTargets[2] != null) return levelTargets[2];
@@ -308,9 +393,34 @@ public class BotController : NetworkBehaviour
             UpdateDecision();
         }
 
-        if (agent.isOnNavMesh && currentState != BotState.DeliverCrystal)
+        bool shouldSprint = (currentState == BotState.DeliverCrystal || 
+                             currentState == BotState.FetchCrystal ||
+                             currentState == BotState.HuntCarrier ||
+                             currentState == BotState.EscortCarrier ||
+                             currentState == BotState.Fight ||
+                             currentState == BotState.Advance);
+
+        if (currentState == BotState.AttackTree && treeTarget != null)
         {
-            agent.speed = moveSpeed + personalOffset;
+            Vector3 treeDiff = transform.position - treeTarget.position;
+            treeDiff.y = 0f;
+            if (treeDiff.magnitude > 5.5f) shouldSprint = true;
+        }
+
+        if (agent.isOnNavMesh)
+        {
+            float targetSpeed = shouldSprint ? (sprintSpeed + personalOffset) : (moveSpeed + personalOffset);
+            agent.speed = targetSpeed;
+        }
+
+        // قفزات حركية أثناء الجري وتجاوز المنحدرات (Agile Traversal Hops)
+        if (agent.isOnNavMesh && agent.velocity.sqrMagnitude > 14f && Time.time >= nextTraversalHopTime)
+        {
+            nextTraversalHopTime = Time.time + Random.Range(5.5f, 10f);
+            if (Random.value < 0.55f)
+            {
+                TriggerBotJump();
+            }
         }
 
         switch (currentState)
@@ -490,61 +600,62 @@ public class BotController : NetworkBehaviour
             return;
         }
 
-        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 30% من صحتها في وجود الدرع)
+        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 35% من صحتها في وجود الدرع)
         bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
-            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.305f) : 10f));
+            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.355f) : 10f));
 
-        // 5. للمدمرين (Destroyer Bots) أثناء وجود الدرع وقبل موت الزعماء الثلاثة:
-        // كما طلب المستخدم: تركيز مكثف من المدمرين على مهاجمة الشجرة مسبقاً وتدميرها حتى حد الـ 30%!
-        // وإذا وصلت صحة الشجرة إلى حد الدرع (30%)، يركز الجميع 100% على قتال الزعماء لكسر الدرع!
-        if (team == PlayerMovement.TeamType.Destroyer && !allBossesSlain)
-        {
-            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
-
-            if (canTreeTakeMoreDamage)
-            {
-                // الشجرة ما تزال تقبل الضرر حتى 30%:
-                // أغلبية فريق المدمرين (حوالي 70%) يركزون على تقطيع الشجرة وتدميرها مسبقاً حتى حد الدرع 30%!
-                if (botRatio < 7)
-                {
-                    Transform immediateThreat = FindClosestEnemy();
-                    if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 1.8f)
-                    {
-                        EnterFight(immediateThreat);
-                        return;
-                    }
-
-                    enemyTarget = null;
-                    currentState = BotState.AttackTree;
-                    return;
-                }
-            }
-            // إذا وصلت الشجرة لحد الـ 30%: لا يمكن إنقاص صحتها أكثر طالما الدرع فعال!
-            // فيتوجه 100% من المدمرين لقتال الزعماء وإسقاط الحماة لكسر درع الشجرة!
-        }
-
-        // 5. إذا كان هناك زعيم مستيقظ في طابق علوي: أولوية عليا لجميع البوتات للصعود لطابق الزعيم فوراً!
+        // 5. التحقق من الزعيم المستيقظ والطابق القتالي النشط:
         LevelBoss activeBoss = (LevelBossManager.Instance != null && !allBossesSlain)
             ? LevelBossManager.Instance.GetActiveAwakenedBoss()
             : null;
-        bool hasBossAbove = activeBoss != null && (activeBoss.transform.position.y - transform.position.y) > 2.5f;
+        bool hasBossAbove = activeBoss != null && (activeBoss.transform.position.y - transform.position.y) > 2.2f;
 
-        if (hasBossAbove)
+        Transform targetCombatLevel = GetBotCurrentCombatTargetLevel();
+        bool hasHigherCombatLevel = targetCombatLevel != null && (targetCombatLevel.position.y - transform.position.y) > 2.0f;
+
+        // الصعود السريع للأدوار العليا (Level 1, 2, 3):
+        // كما طلب المستخدم: الصعود يمنح مضاعف ضرر عالي للشجرة (35% في الطابق الأول، 60% في الثاني، 100% في الثالث)
+        // بالإضافة لاستهداف الزعيم النشط لكسر درع الشجرة!
+        if (hasBossAbove || hasHigherCombatLevel)
         {
-            Transform targetLevel = GetBotCurrentCombatTargetLevel();
-            if (targetLevel != null && (targetLevel.position.y - transform.position.y) > 2.0f)
+            // دفاع عن النفس: إذا كان هناك عدو ملتصق بنا في نطاق قريب على نفس الطابق، ندافع ونرد الهجوم
+            Transform immediateThreat = FindClosestEnemy();
+            if (immediateThreat != null)
             {
-                // إذا كان هناك عدو ملتصق بنا تماماً على نفس الطابق، نقاتله لفترة وجيزة (أقل من ثانيتين) ثم نواصل الصعود
-                Transform immediateThreat = FindClosestEnemy();
-                if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= 2.2f &&
-                    Mathf.Abs(immediateThreat.position.y - transform.position.y) <= 2.2f &&
-                    (Time.time - fightStartTime) < 2.0f)
+                float vDist = Mathf.Abs(immediateThreat.position.y - transform.position.y);
+                float hDist = Vector3.Distance(transform.position, immediateThreat.position);
+                CharacterCombat myCombat = GetComponent<CharacterCombat>();
+                bool isRanged = myCombat != null && (myCombat.attackType == CharacterCombat.AttackType.Ranged || myCombat.attackRange >= 5.5f);
+                float threatDist = isRanged ? 7.5f : 5.0f;
+
+                if (vDist <= 2.5f && hDist <= threatDist && (Time.time - fightStartTime) < 3.0f)
                 {
                     EnterFight(immediateThreat);
                     return;
                 }
+            }
 
-                // الصعود الحتمي عبر الممرات والمنصات لطابق الزعيم
+            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
+            if (team == PlayerMovement.TeamType.Destroyer)
+            {
+                // إذا كان البوت على الأرض (y < 3.2m):
+                // 85% من المدمرين ينطلقون صعوداً بسرعة عبر الممرات والمنصات (Advance)
+                // وفقط 15% (نسبة botRatio == 0) يشاغلون الشجرة من الأسفل إن كانت تقبل الضرر
+                if (transform.position.y < 3.2f && botRatio == 0 && canTreeTakeMoreDamage)
+                {
+                    enemyTarget = null;
+                    currentState = BotState.AttackTree;
+                    return;
+                }
+
+                // الصعود الحتمي والسريع إلى الطابق الأعلى (Advance)
+                currentState = BotState.Advance;
+                hasDestination = false;
+                currentTargetLevel = null;
+                return;
+            }
+            else // Protector:
+            {
                 currentState = BotState.Advance;
                 hasDestination = false;
                 currentTargetLevel = null;
@@ -555,11 +666,11 @@ public class BotController : NetworkBehaviour
         // 6. للمدمرين (Destroyer Bots) إذا كان الزعيم المستيقظ على نفس الطابق أو تم الوصول إليه:
         if (team == PlayerMovement.TeamType.Destroyer && activeBoss != null)
         {
-            // إذا كان هناك عدو (حامي) ملتصق بنا على نفس الطابق ويهددنا مباشرة
+            // إذا كان هناك عدو (حامي) في النطاق يهددنا أو يهاجمنا على نفس الطابق، نقاتله وندافع عن أنفسنا
             Transform immediateThreat = FindClosestEnemy();
             CharacterCombat myCombat = GetComponent<CharacterCombat>();
             bool isRanged = myCombat != null && (myCombat.attackType == CharacterCombat.AttackType.Ranged || myCombat.attackRange >= 5.5f);
-            float threatDist = isRanged ? 4.0f : 2.5f;
+            float threatDist = isRanged ? 7.5f : 5.0f;
             if (immediateThreat != null && Vector3.Distance(transform.position, immediateThreat.position) <= threatDist &&
                 Mathf.Abs(immediateThreat.position.y - transform.position.y) <= 2.5f)
             {
@@ -567,8 +678,26 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
-            EnterFight(activeBoss.transform);
-            return;
+            // إذا بلغت الشجرة حد الدرع (35%): تركيز مطلق 100% على قتل الزعيم لكسر الدرع!
+            if (!canTreeTakeMoreDamage)
+            {
+                EnterFight(activeBoss.transform);
+                return;
+            }
+
+            // إذا كانت الشجرة ما تزال تقبل الضرر فوق 35%: 65% يركزون على الزعيم و35% يضربون الشجرة بضرر الطابق المضاعف!
+            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
+            if (botRatio < 6)
+            {
+                EnterFight(activeBoss.transform);
+                return;
+            }
+            else
+            {
+                enemyTarget = null;
+                currentState = BotState.AttackTree;
+                return;
+            }
         }
 
         // 7. إذا كان مدمراً (Destroyer) ولا يوجد زعيم مستيقظ حالياً: الصعود نحو الطابق النشط ومقاتلة الأعداء
@@ -602,9 +731,24 @@ public class BotController : NetworkBehaviour
             return;
         }
 
-        // 8. إذا كان حامياً (Protector): التحقق أولاً من الطابق القتالي والصعود قبل الدخول في معارك جانبية
+        // 8. إذا كان حامياً (Protector): الدفاع أولاً عن النفس وعن الشجرة ضد الأعداء القريبين
         if (team == PlayerMovement.TeamType.Protector)
         {
+            Transform foundEnemy = FindClosestEnemy();
+            if (foundEnemy != null)
+            {
+                float vertDist = Mathf.Abs(foundEnemy.position.y - transform.position.y);
+                float dist = Vector3.Distance(transform.position, foundEnemy.position);
+                CharacterCombat myCombat = GetComponent<CharacterCombat>();
+                bool isRanged = myCombat != null && (myCombat.attackType == CharacterCombat.AttackType.Ranged || myCombat.attackRange >= 5.5f);
+                float defRange = isRanged ? 7.5f : 5.0f;
+                if (vertDist <= 2.5f && dist <= defRange)
+                {
+                    EnterFight(foundEnemy);
+                    return;
+                }
+            }
+
             Transform targetLevel = GetBotCurrentCombatTargetLevel();
             if (targetLevel != null && (targetLevel.position.y - transform.position.y) > 2.0f)
             {
@@ -614,7 +758,6 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
-            Transform foundEnemy = FindClosestEnemy();
             if (foundEnemy != null)
             {
                 EnterFight(foundEnemy);
@@ -796,11 +939,11 @@ public class BotController : NetworkBehaviour
             LevelBoss lowestActive = LevelBossManager.Instance != null ? LevelBossManager.Instance.GetActiveAwakenedBoss() : null;
             if (lowestActive != null && (lowestActive.transform.position.y - transform.position.y) > 2.8f)
             {
-                // إذا كان هذا الكائن ليس الزعيم وهو على طابق سفلي، نتجاهله إلا إذا كان ملتصقاً جداً
+                // إذا كان هذا الكائن ليس الزعيم وهو على طابق سفلي، نتجاهله إلا إذا كان قريباً بما يكفي لتهديدنا
                 if (bossComp == null && Mathf.Abs(character.transform.position.y - transform.position.y) <= 2.5f)
                 {
                     float d = Vector3.Distance(transform.position, character.transform.position);
-                    if (d > 2.8f) continue;
+                    if (d > 6.5f) continue;
                 }
             }
 
@@ -917,6 +1060,12 @@ public class BotController : NetworkBehaviour
                 {
                     nextStrafeTime = Time.time + Random.Range(1.8f, 2.6f);
                     currentStrafeSign = (Random.value > 0.5f) ? 1f : -1f;
+
+                    // قفزة مراوغة تكتيكية أثناء القتال (Tactical Combat Jump & Dodge)
+                    if (Random.value < 0.45f)
+                    {
+                        TriggerBotJump();
+                    }
 
                     Vector3 rightVec = Vector3.Cross(Vector3.up, toEnemy.normalized);
                     if (isRanged && distance < 4.0f)
@@ -1244,7 +1393,7 @@ public class BotController : NetworkBehaviour
             {
                 agent.isStopped = false;
                 agent.stoppingDistance = 0.1f;
-                agent.speed = (moveSpeed + personalOffset) * 1.35f; // +35% crystal sprint
+                agent.speed = Mathf.Max(sprintSpeed + personalOffset, 10.5f); // High-speed crystal sprint
                 agent.SetDestination(altarCenter);
             }
             currentDestination = altarCenter;

@@ -271,7 +271,7 @@ public class PlayerXP : NetworkBehaviour
                 if (otherHealth != null && !otherHealth.isDead)
                 {
                     // ضرر ساحق + دفع
-                    otherHealth.TakeDamage(ultimateDamage * GetDamageMultiplier());
+                    otherHealth.TakeDamage(ultimateDamage * GetDamageMultiplier(), gameObject);
 
                     Rigidbody rb = col.GetComponent<Rigidbody>();
                     if (rb != null)
