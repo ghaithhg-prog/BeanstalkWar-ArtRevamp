@@ -33,35 +33,51 @@ public class PlayModeUI : MonoBehaviour
     public static bool isTitleScreenActive = true;
     private Texture2D splashArtTex = null;
 
-    private struct FloatingParticle
-    {
-        public float x;
-        public float y;
-        public float speed;
-        public float size;
-        public float seed;
-        public Color color;
-    }
-    private static FloatingParticle[] titleParticles = null;
+    // -------------------------------------------------------------------------
+    // CLASSICAL TITLE FONTS SYSTEM (DecoType Thuluth, Diwani, Aref Ruqaa, Amiri, Traditional)
+    // -------------------------------------------------------------------------
+    public static int selectedTitleFontIndex = 0; // 0=Thuluth, 1=Diwani, 2=Ruqaa, 3=Amiri, 4=Traditional
+    private static Font[] loadedTitleFonts = new Font[5];
 
-    private void InitTitleParticles()
+    public static Font GetSelectedFont()
     {
-        if (titleParticles != null) return;
-        titleParticles = new FloatingParticle[26];
-        for (int i = 0; i < titleParticles.Length; i++)
+        selectedTitleFontIndex = Mathf.Clamp(PlayerPrefs.GetInt("TitleFontIdx", 0), 0, 4);
+
+        if (loadedTitleFonts[selectedTitleFontIndex] != null)
         {
-            titleParticles[i] = new FloatingParticle
-            {
-                x = Random.value,
-                y = Random.value,
-                speed = Random.Range(0.025f, 0.085f),
-                size = Random.Range(4f, 9f),
-                seed = Random.Range(0f, 100f),
-                color = (i % 2 == 0)
-                    ? new Color(0.98f, 0.88f, 0.35f, Random.Range(0.45f, 0.85f))
-                    : new Color(0.35f, 0.95f, 0.55f, Random.Range(0.35f, 0.75f))
-            };
+            return loadedTitleFonts[selectedTitleFontIndex];
         }
+
+        string[] fontResPaths = new string[] {
+            "Fonts/DecoTypeThuluth",
+            "Fonts/DecoTypeDiwani",
+            "Fonts/ArefRuqaa-Bold",
+            "Fonts/Amiri-Bold",
+            "Fonts/TraditionalArabicBold"
+        };
+
+        string[][] osFallbacks = new string[][] {
+            new string[] { "DecoType Thuluth", "Amiri", "Traditional Arabic", "Arial" },
+            new string[] { "Diwani Bent", "DecoType Diwani", "Amiri", "Traditional Arabic", "Arial" },
+            new string[] { "Aref Ruqaa", "Amiri", "Traditional Arabic", "Arial" },
+            new string[] { "Amiri", "Traditional Arabic", "Arial" },
+            new string[] { "Traditional Arabic", "Amiri", "Arial" }
+        };
+
+        // 1. Try Resources.Load
+        loadedTitleFonts[selectedTitleFontIndex] = Resources.Load<Font>(fontResPaths[selectedTitleFontIndex]);
+
+        // 2. Fallback to OS Font
+        if (loadedTitleFonts[selectedTitleFontIndex] == null)
+        {
+            try
+            {
+                loadedTitleFonts[selectedTitleFontIndex] = Font.CreateDynamicFontFromOSFont(osFallbacks[selectedTitleFontIndex], 38);
+            }
+            catch {}
+        }
+
+        return loadedTitleFonts[selectedTitleFontIndex];
     }
 
     private Texture2D LoadSplashTexture()
@@ -69,7 +85,12 @@ public class PlayModeUI : MonoBehaviour
         if (splashArtTex != null) return splashArtTex;
 
         splashArtTex = Resources.Load<Texture2D>("UI/BeanstalkWar_TitleSplash");
-        if (splashArtTex != null) return splashArtTex;
+        if (splashArtTex != null)
+        {
+            splashArtTex.filterMode = FilterMode.Bilinear;
+            splashArtTex.wrapMode = TextureWrapMode.Clamp;
+            return splashArtTex;
+        }
 
         string directPath = System.IO.Path.Combine(Application.dataPath, "Resources/UI/BeanstalkWar_TitleSplash.png");
         if (!System.IO.File.Exists(directPath))
@@ -82,6 +103,8 @@ public class PlayModeUI : MonoBehaviour
             byte[] fileData = System.IO.File.ReadAllBytes(directPath);
             splashArtTex = new Texture2D(2, 2);
             splashArtTex.LoadImage(fileData);
+            splashArtTex.filterMode = FilterMode.Bilinear;
+            splashArtTex.wrapMode = TextureWrapMode.Clamp;
         }
 
         return splashArtTex;
@@ -226,31 +249,36 @@ public class PlayModeUI : MonoBehaviour
         float sw = Screen.width;
         float sh = Screen.height;
 
-        // 1. Full Screen Splash Background Art with Subtle Breathing Scale Animation
+        // 1. Full Screen Splash Background Art (Completely Static, Crystal-Clear & Resample-Free)
         Texture2D splash = LoadSplashTexture();
         if (splash != null)
         {
-            float breathe = 1.0f + Mathf.Sin(Time.time * 0.45f) * 0.02f;
+            if (splash.filterMode != FilterMode.Bilinear) splash.filterMode = FilterMode.Bilinear;
+            if (splash.wrapMode != TextureWrapMode.Clamp) splash.wrapMode = TextureWrapMode.Clamp;
+
             float imgAspect = (float)splash.width / (float)splash.height;
             float screenAspect = sw / sh;
             float dw, dh;
             if (screenAspect > imgAspect)
             {
-                dw = sw * breathe;
-                dh = (sw / imgAspect) * breathe;
+                dw = sw;
+                dh = sw / imgAspect;
             }
             else
             {
-                dh = sh * breathe;
-                dw = (sh * imgAspect) * breathe;
+                dh = sh;
+                dw = sh * imgAspect;
             }
-            float dx = (sw - dw) * 0.5f;
-            float dy = (sh - dh) * 0.5f;
-            GUI.color = Color.white;
-            GUI.DrawTexture(new Rect(dx, dy, dw, dh), splash, ScaleMode.StretchToFill);
+            int idx = Mathf.RoundToInt((sw - dw) * 0.5f);
+            int idy = Mathf.RoundToInt((sh - dh) * 0.5f);
+            int idw = Mathf.RoundToInt(dw);
+            int idh = Mathf.RoundToInt(dh);
 
-            // Subtle dark fantasy vignette to make golden title & buttons pop
-            GUI.color = new Color(0.02f, 0.05f, 0.03f, 0.32f);
+            GUI.color = Color.white;
+            GUI.DrawTexture(new Rect(idx, idy, idw, idh), splash, ScaleMode.StretchToFill);
+
+            // Subtle dark fantasy atmospheric vignette at top & bottom so title and buttons rest with high contrast
+            GUI.color = new Color(0.01f, 0.03f, 0.02f, 0.38f);
             GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
             GUI.color = Color.white;
         }
@@ -262,27 +290,7 @@ public class PlayModeUI : MonoBehaviour
             GUI.color = Color.white;
         }
 
-        // 2. Animated Floating Golden Spores & Glowing Nature Dust
-        InitTitleParticles();
-        for (int i = 0; i < titleParticles.Length; i++)
-        {
-            titleParticles[i].y -= titleParticles[i].speed * Time.deltaTime;
-            if (titleParticles[i].y < -0.05f) titleParticles[i].y = 1.05f;
-
-            float sway = Mathf.Sin(Time.time * 1.5f + titleParticles[i].seed) * 0.018f;
-            float px = (titleParticles[i].x + sway) * sw;
-            float py = titleParticles[i].y * sh;
-
-            float pulse = 0.65f + 0.35f * Mathf.Sin(Time.time * 3f + titleParticles[i].seed);
-            Color pCol = titleParticles[i].color;
-            pCol.a *= pulse;
-
-            GUI.color = pCol;
-            GUI.DrawTexture(new Rect(px, py, titleParticles[i].size, titleParticles[i].size), Texture2D.whiteTexture);
-        }
-        GUI.color = Color.white;
-
-        // 3. Decorative Ancient Gold Corner Filigree Frame
+        // 2. Decorative Ancient Gold Corner Filigree Frame
         EnchantedNatureGUI.DrawCrispBorder(new Rect(12f, 12f, sw - 24f, sh - 24f), new Color(0.85f, 0.72f, 0.32f, 0.65f), 1.5f);
         EnchantedNatureGUI.DrawCornerFiligree(new Rect(16f, 16f, sw - 32f, sh - 32f), new Color(0.95f, 0.82f, 0.38f, 0.85f), 24f);
 
@@ -309,43 +317,49 @@ public class PlayModeUI : MonoBehaviour
             }
         }
 
-        // 4. Grand Game Title Plaque (Center-Top)
-        float titleBoxW = Mathf.Min(sw * 0.88f, 860f);
+        // 3. Grand Game Title Plaque (Center-Top)
+        float titleBoxW = Mathf.Min(sw * 0.88f, 880f);
         float titleBoxH = 152f;
         float titleBoxX = (sw - titleBoxW) * 0.5f;
-        float titleBoxY = Mathf.Max(30f, sh * 0.10f);
+        float titleBoxY = Mathf.Max(26f, sh * 0.08f);
 
         Rect titleRect = new Rect(titleBoxX, titleBoxY, titleBoxW, titleBoxH);
-        EnchantedNatureGUI.DrawWoodPlate(titleRect, new Color(0.08f, 0.14f, 0.09f, 0.92f), new Color(0.92f, 0.78f, 0.30f, 0.95f));
+        EnchantedNatureGUI.DrawWoodPlate(titleRect, new Color(0.08f, 0.14f, 0.09f, 0.94f), new Color(0.92f, 0.78f, 0.30f, 0.95f));
 
         // Floating Title Shimmer
         float titleGlow = (Mathf.Sin(Time.time * 2.5f) + 1f) * 0.5f;
         Color glowingGold = Color.Lerp(new Color(0.95f, 0.82f, 0.28f), new Color(1f, 0.98f, 0.65f), titleGlow);
 
         string grandTitle = LanguageSelectionUI.Localize(
-            "🌿 BEANSTALK WAR 🌿",
-            ar: "🌿 حَرْبُ شَجَرَةِ الفَاصُولِيَاء 🌿",
-            fa: "🌿 جنگ ساقه لوبیا 🌿",
-            ru: "🌿 БИТВА ЗА БОБОВЫЙ СТЕБЕЛЬ 🌿",
-            de: "🌿 KRIEG DER BOHNENRANKE 🌿",
-            it: "🌿 GUERRA DEL FAGIOLO SACRO 🌿",
-            tr: "🌿 FASULYE SIRIĞI SAVAŞI 🌿",
-            es: "🌿 LA GUERRA DEL TALLO SAGRADO 🌿",
-            fr: "🌿 LA GUERRE DU HARICOT SACRÉ 🌿",
-            zh: "🌿 巨藤神树之战 🌿",
-            ja: "🌿 聖なる巨木の戦い 🌿",
-            hi: "🌿 सेम के पौधे का महायुद्ध 🌿",
-            pt: "🌿 A GUERRA DO PÉ DE FEIJÃO 🌿"
+            "BEANSTALK WAR",
+            ar: "حَرْبُ شَجَرَةِ الفَاصُولِيَاء",
+            fa: "جنگ ساقه لوبیا",
+            ru: "БИТВА ЗА БОБОВЫЙ СТЕБЕЛЬ",
+            de: "KRIEG DER BOHNENRANKE",
+            it: "GUERRA DEL FAGIOLO SACRO",
+            tr: "FASULYE SIRIĞI SAVAŞI",
+            es: "LA GUERRA DEL TALLO SAGRADO",
+            fr: "LA GUERRE DU HARICOT SACRÉ",
+            zh: "巨藤神树之战",
+            ja: "聖なる巨木の戦い",
+            hi: "सेम के पौधे का महायुद्ध",
+            pt: "A GUERRA DO PÉ DE FEIJÃO"
         );
 
+        Font customTitleFont = GetSelectedFont();
         GUIStyle mainTitleStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.038f), 26, 42),
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.038f), 26, 44),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
+        if (customTitleFont != null)
+        {
+            mainTitleStyle.font = customTitleFont;
+        }
+
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(titleBoxX + 10f, titleBoxY + 14f, titleBoxW - 20f, 52f),
+            new Rect(titleBoxX + 10f, titleBoxY + 12f, titleBoxW - 20f, 56f),
             grandTitle,
             mainTitleStyle,
             glowingGold,
@@ -408,6 +422,36 @@ public class PlayModeUI : MonoBehaviour
             normal = { textColor = new Color(0.85f, 0.92f, 0.85f, 0.85f) }
         };
         GUI.Label(new Rect(titleBoxX + 10f, titleBoxY + 110f, titleBoxW - 20f, 24f), factionInfo, factionStyle);
+
+        // 4. Interactive Classical Font Selector Button
+        string[] fontLabelsAr = new string[] {
+            "🔤 خَـطُّ العُنْوَان: خـط الثـلث الكلاسيكي",
+            "🔤 خَـطُّ العُنْوَان: خـط الديـواني السلطـاني",
+            "🔤 خَـطُّ العُنْوَان: خـط الرقعـة الفنـي العريض",
+            "🔤 خَـطُّ العُنْوَان: الخـط الأميـري الملكي",
+            "🔤 خَـطُّ العُنْوَان: الخط العربي التقليدي"
+        };
+        string[] fontLabelsEn = new string[] {
+            "🔤 Title Font: Classical Thuluth",
+            "🔤 Title Font: Royal Diwani",
+            "🔤 Title Font: Aref Ruqaa Bold",
+            "🔤 Title Font: Royal Amiri Bold",
+            "🔤 Title Font: Traditional Arabic"
+        };
+        string currentFontLabel = LanguageSelectionUI.IsArabic
+            ? fontLabelsAr[selectedTitleFontIndex]
+            : fontLabelsEn[selectedTitleFontIndex];
+
+        float fontBtnW = 330f;
+        float fontBtnH = 34f;
+        float fontBtnX = (sw - fontBtnW) * 0.5f;
+        float fontBtnY = titleBoxY + titleBoxH + 12f;
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(fontBtnX, fontBtnY, fontBtnW, fontBtnH), currentFontLabel, EnchantedNatureGUI.AntiqueGoldBright, 11))
+        {
+            selectedTitleFontIndex = (selectedTitleFontIndex + 1) % 5;
+            PlayerPrefs.SetInt("TitleFontIdx", selectedTitleFontIndex);
+            PlayerPrefs.Save();
+        }
 
         // 5. Grand Interactive Call-to-Action (Center-Bottom)
         float startBtnW = Mathf.Clamp(sw * 0.50f, 360f, 560f);
