@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// واجهة طور الأصدقاء (Friendly Match Lobby)
 /// تتيح للاعب إنشاء غرفة أو الانضمام إليها، وتقسيم الفرق (Protectors vs Destroyers) بحرية تامة
-/// مع إمكانية بدء المباراة من قبل المضيف
+/// مع إمكانية بدء المباراة من قبل المضيف ودعم خصوصية الغرفة للأصدقاء والانضمام الفوري.
 /// </summary>
 public class FriendlyLobbyUI : MonoBehaviour
 {
@@ -15,6 +15,7 @@ public class FriendlyLobbyUI : MonoBehaviour
     private string roomCode = "ROOM-7782";
     private string connectIP = "127.0.0.1";
     private bool fillBots = true;
+    public bool openToFriends = true; // مفتوحة للأصدقاء في قائمة الأصدقاء
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
@@ -59,6 +60,8 @@ public class FriendlyLobbyUI : MonoBehaviour
     public void LeaveLobbyAndReturn()
     {
         CloseLobby();
+        FriendsManager.ClearLocalPlayerRoomHosting();
+
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             NetworkManager.Singleton.Shutdown();
@@ -68,6 +71,44 @@ public class FriendlyLobbyUI : MonoBehaviour
         {
             PlayModeUI.Instance.ResetMenu();
         }
+    }
+
+    /// <summary>
+    /// انضمام فوري لغرفة صديق محددة بنقرة زر واحدة من واجهة الأصدقاء
+    /// </summary>
+    public void JoinFriendRoom(string ip, string targetRoomCode)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) ip = "127.0.0.1";
+        connectIP = ip;
+        roomCode = !string.IsNullOrEmpty(targetRoomCode) ? targetRoomCode : "ROOM-" + Random.Range(1000, 9999);
+        PlayModeUI.SelectedMode = PlayModeUI.PlayMode.Friendly;
+        OpenLobby();
+
+        if (NetworkManager.Singleton != null)
+        {
+            if (NetworkManager.Singleton.IsListening)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+
+            var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+            if (transport != null)
+            {
+                transport.ConnectionData.Address = connectIP;
+            }
+            NetworkManager.Singleton.StartClient();
+            PlayerProgressionAndShopUI.Instance?.ShowNotification($"🚀 Joining friend's room {roomCode} ({connectIP})...");
+        }
+    }
+
+    void OnDisable()
+    {
+        FriendsManager.ClearLocalPlayerRoomHosting();
+    }
+
+    void OnDestroy()
+    {
+        FriendsManager.ClearLocalPlayerRoomHosting();
     }
 
     void Update()
@@ -100,8 +141,8 @@ public class FriendlyLobbyUI : MonoBehaviour
         }
 
         // رسم نافذة اللوبي في منتصف الشاشة
-        float winWidth = Mathf.Min(640f, Screen.width - 20f);
-        float winHeight = Mathf.Min(480f, Screen.height - 20f);
+        float winWidth = Mathf.Min(680f, Screen.width - 20f);
+        float winHeight = Mathf.Min(520f, Screen.height - 20f);
         float winX = (Screen.width - winWidth) / 2f;
         float winY = (Screen.height - winHeight) / 2f;
 
@@ -182,12 +223,29 @@ public class FriendlyLobbyUI : MonoBehaviour
 
         GUI.Label(new Rect(winX, winY + 42, winWidth, 20), $"Room Code: {roomCode}  |  Status: {netStatus}", infoStyle);
 
+        // زر تبديل الخصوصية (مفتوحة للأصدقاء vs برمز خاص فقط)
+        string privacyLabel = openToFriends
+            ? LanguageSelectionUI.Localize("🌐 Room Privacy: Open to Friends (Friends can join)", ar: "🌐 خصوصية الغرفة: مفتوحة للأصدقاء (يمكن للأصدقاء الانضمام)", fa: "🌐 حریم اتاق: باز برای دوستان")
+            : LanguageSelectionUI.Localize("🔒 Room Privacy: Private Code Only (Invite only)", ar: "🔒 خصوصية الغرفة: برمز خاص فقط (دعوة خاصة)", fa: "🔒 حریم اتاق: فقط با کد اختصاصی");
+
+        Color privCol = openToFriends ? new Color(0.25f, 0.85f, 0.45f) : new Color(1f, 0.65f, 0.25f);
+        GUI.color = privCol;
+        if (GUI.Button(new Rect(winX + (winWidth - 360f) / 2f, winY + 64, 360f, 26f), privacyLabel))
+        {
+            openToFriends = !openToFriends;
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            {
+                FriendsManager.SetLocalPlayerRoomHosting(roomCode, connectIP, openToFriends);
+            }
+        }
+        GUI.color = Color.white;
+
         // ==========================================
         // Connection Setup (if not listening yet)
         // ==========================================
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
-            float boxY = winY + 85;
+            float boxY = winY + 100;
             GUI.Label(new Rect(winX + 40, boxY, winWidth - 80, 24), "Enter Host IP address or host your own room:", infoStyle);
 
             connectIP = GUI.TextField(new Rect(winX + (winWidth - 200) / 2f, boxY + 30, 200, 30), connectIP);
@@ -197,6 +255,7 @@ public class FriendlyLobbyUI : MonoBehaviour
                 if (NetworkManager.Singleton != null)
                 {
                     NetworkManager.Singleton.StartHost();
+                    FriendsManager.SetLocalPlayerRoomHosting(roomCode, connectIP, openToFriends);
                 }
             }
 
@@ -225,10 +284,10 @@ public class FriendlyLobbyUI : MonoBehaviour
         // Team Selection (Protectors vs Destroyers)
         // ==========================================
         float colWidth = (winWidth - 50) / 2f;
-        float colHeight = winHeight - 165;
+        float colHeight = winHeight - 175;
         float leftX = winX + 18;
         float rightX = winX + 32 + colWidth;
-        float colY = winY + 75;
+        float colY = winY + 98;
 
         // Tree Protectors Column
         DrawTeamBox(leftX, colY, colWidth, colHeight, PlayerMovement.TeamType.Protector, "🛡️ TREE PROTECTORS", new Color(0.15f, 0.6f, 1f));
@@ -359,6 +418,7 @@ public class FriendlyLobbyUI : MonoBehaviour
     void StartFriendlyMatch(bool autoFillBots)
     {
         CloseLobby();
+        FriendsManager.ClearLocalPlayerRoomHosting();
 
         PlayerMovement localPlayer = GetLocalPlayerMovement();
 

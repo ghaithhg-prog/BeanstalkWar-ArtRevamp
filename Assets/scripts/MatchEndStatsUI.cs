@@ -7,8 +7,8 @@ using System.Collections.Generic;
 /// Handles the grand match conclusion when Protectors deliver the Crystal or Destroyers chop down the tree:
 /// 1. Tracks match-wide statistics for all players & bots (Kills, Deaths, Damage, Bosses, Crystal)
 /// 2. Displays an ancient enchanted parchment victory screen with full hero statistics
-/// 3. Awards bonus account XP (+500) and Acorn Coins (+250) to the player profile
-/// 4. Provides options to Play Again or Return to Main Menu
+/// 3. Awards bonus account XP (+500), Acorn Coins (+250), and Rating Score for Leaderboards & 10 Ranked Tiers
+/// 4. Provides options to Play Again, Return to Grove, or Add Opponents/Teammates as Friends directly (+👤)
 /// </summary>
 public class MatchEndStatsUI : MonoBehaviour
 {
@@ -43,6 +43,7 @@ public class MatchEndStatsUI : MonoBehaviour
     private float gameOverTime = 0f;
     private Vector2 scrollPos = Vector2.zero;
     private bool isLocalPlayerWinner = false;
+    private int awardedRatingScore = 0;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
@@ -209,9 +210,19 @@ public class MatchEndStatsUI : MonoBehaviour
                 PlayerProfile.Instance.DeductCoins(60, "Match Defeat Stake");
                 PlayerProfile.Instance.AddAccountXP(100);
             }
+
+            // Award Rating Score for Leaderboards & 10 Ranked Tiers
+            PlayerMatchStat localStat = null;
+            foreach (var st in stats.Values)
+            {
+                if (st != null && st.isLocalPlayer) { localStat = st; break; }
+            }
+            int matchScore = localStat != null ? localStat.CalculateScore() : (isLocalPlayerWinner ? 400 : 150);
+            bool isOnline = (PlayModeUI.SelectedMode == PlayModeUI.PlayMode.Online || PlayModeUI.SelectedMode == PlayModeUI.PlayMode.Friendly);
+            awardedRatingScore = PlayerProfile.Instance.AddRatingScore(matchScore, isOnline);
         }
 
-        Debug.Log($"🏆 [MatchEndStatsUI] Victory sequence active for: {winner}! Local player won: {isLocalPlayerWinner}");
+        Debug.Log($"🏆 [MatchEndStatsUI] Victory sequence active for: {winner}! Local player won: {isLocalPlayerWinner} | Rating Award: +{awardedRatingScore}");
     }
 
     void OnGUI()
@@ -223,8 +234,8 @@ public class MatchEndStatsUI : MonoBehaviour
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        float boxWidth = Mathf.Min(Screen.width * 0.94f, 760f);
-        float boxHeight = Mathf.Min(Screen.height * 0.90f, 590f);
+        float boxWidth = Mathf.Min(Screen.width * 0.94f, 800f);
+        float boxHeight = Mathf.Min(Screen.height * 0.90f, 600f);
         float startX = (Screen.width - boxWidth) / 2f;
         float startY = (Screen.height - boxHeight) / 2f;
 
@@ -306,7 +317,7 @@ public class MatchEndStatsUI : MonoBehaviour
         subStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
         GUI.Label(subRect, subtitleText, subStyle);
 
-        // Match Stakes & Rewards Banner with 13-Language Support
+        // Match Stakes & Rewards Banner with Rating Score & 10-Tier info
         Rect rewardRect = new Rect(startX + 20f, startY + 82f, boxWidth - 40f, 22f);
         GUIStyle rewardStyle = new GUIStyle(GUI.skin.label)
         {
@@ -347,7 +358,12 @@ public class MatchEndStatsUI : MonoBehaviour
                 it: "⚔️ SCONFITTA: -60 Monete Ghianda detratte (+100 ESP) ⚔️",
                 tr: "⚔️ YENİLGİ: -60 Palamut bahis bedeli kesildi (+100 DP) ⚔️"
             );
-        GUI.Label(rewardRect, rewardStr, rewardStyle);
+
+        var curTier = PlayerProfile.Instance != null ? PlayerProfile.Instance.CurrentTier : default;
+        string ratingSuffix = awardedRatingScore > 0 
+            ? $" | 🏆 +{awardedRatingScore} Rating Pts ({curTier.badgeIcon} {curTier.GetLocalizedTitle()})"
+            : "";
+        GUI.Label(rewardRect, rewardStr + ratingSuffix, rewardStyle);
 
         // 3. Stats Table Header with Radiant Golden Polish
         float tableY = startY + 112f;
@@ -374,11 +390,13 @@ public class MatchEndStatsUI : MonoBehaviour
         colX += 48f;
         GUI.Label(new Rect(colX, tableY + 4f, 65f, 20f), LanguageSelectionUI.Localize("DAMAGE", "ضرر", "УРОН", "DAÑO", "DÉGÂTS", "SCHADEN", "क्षति", "伤害", "ダメージ", "DANO"), colHeaderStyle);
         colX += 68f;
-        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉس", "首领", "ボス", "CHEFE"), colHeaderStyle);
+        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉस", "首领", "ボス", "CHEFE"), colHeaderStyle);
         colX += 48f;
         GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("CRYSTAL", "كريستال", "КРИСТАЛЛ", "CRISTAL", "CRISTAL", "KRISTALL", "क्रिस्टल", "水晶", "クリスタル", "CRISTAL"), colHeaderStyle);
         colX += 62f;
         GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("SCORE", "نقاط", "СЧЕТ", "PUNTOS", "SCORE", "PUNKTE", "स्कोर", "积分", "スコア", "PONTUAÇÃO"), colHeaderStyle);
+        colX += 62f;
+        GUI.Label(new Rect(colX, tableY + 4f, 40f, 20f), "+👤", colHeaderStyle);
 
         // 4. Scrollable Stats Rows (Strictly 10 Players & Bots - Bosses Excluded)
         float listY = tableY + 32f;
@@ -452,6 +470,25 @@ public class MatchEndStatsUI : MonoBehaviour
             GUIStyle scoreStyle = new GUIStyle(rowTextStyle);
             scoreStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
             GUI.Label(new Rect(rX, currRowY + 4f, 58f, 20f), s.CalculateScore().ToString(), scoreStyle);
+            rX += 62f;
+
+            // زر إضافة كصديق مباشرة
+            if (!s.isLocalPlayer && FriendsManager.Instance != null)
+            {
+                if (!FriendsManager.Instance.IsFriend(s.heroName) && !FriendsManager.Instance.HasPendingRequest(s.heroName))
+                {
+                    if (GUI.Button(new Rect(rX, currRowY + 3f, 36f, 22f), "+👤"))
+                    {
+                        FriendsManager.Instance.SendFriendRequest(s.heroName);
+                    }
+                }
+                else if (FriendsManager.Instance.IsFriend(s.heroName))
+                {
+                    GUIStyle frStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 11 };
+                    frStyle.normal.textColor = new Color(0.35f, 0.95f, 0.5f);
+                    GUI.Label(new Rect(rX, currRowY + 4f, 36f, 20f), "🤝", frStyle);
+                }
+            }
         }
 
         GUI.EndScrollView();
@@ -630,6 +667,8 @@ public class MatchEndStatsUI : MonoBehaviour
         {
             CharacterSelectionUI.Instance.Hide();
         }
+        LeaderboardUI.CloseLeaderboard();
+        FriendsUI.CloseFriends();
 
         // 6. Safely shut down Netcode without destroying the GameObject (Unity will reload the scene's NetworkManager cleanly)
         if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)

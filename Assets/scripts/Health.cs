@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -117,6 +117,28 @@ public class Health : MonoBehaviour
             if (bot != null && bot.enabled)
             {
                 bot.OnTakeDamageFrom(attacker, amount);
+            }
+
+            // منح خبرة الاشتباك الفعال للمهاجم (أبطال أو زعماء)
+            PlayerXP attackerXP = attacker.GetComponent<PlayerXP>();
+            if (attackerXP != null)
+            {
+                LevelBoss bossTarget = GetComponent<LevelBoss>();
+                if (bossTarget != null)
+                {
+                    attackerXP.AddBossHitXP(amount);
+                }
+                else
+                {
+                    attackerXP.AddCombatHitXP(amount);
+                }
+            }
+
+            // منح خبرة الصمود وتلقي الضربات للمتلقي
+            PlayerXP victimXP = GetComponent<PlayerXP>();
+            if (victimXP != null)
+            {
+                victimXP.AddDamageTakenXP(amount);
             }
         }
         TakeDamage(amount);

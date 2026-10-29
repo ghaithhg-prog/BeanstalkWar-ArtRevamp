@@ -10,10 +10,14 @@ public class PlayerXP : NetworkBehaviour
 {
     [Header("XP Settings")]
     public int maxLevel = 10;
-    public int[] xpPerLevel = { 0, 100, 220, 360, 520, 700, 900, 1120, 1360, 1620 };
+    public int[] xpPerLevel = { 0, 100, 240, 420, 640, 900, 1200, 1550, 1950, 2400 };
     public int xpPerKill = 80;
+    public int xpPerCombatHit = 7;     // ~14-15 ضربة فعالة تنقلك للمستوى 2 فوراً!
+    public int xpPerBossHit = 12;      // تشجيع قتال الزعماء
+    public int xpPerDamageTaken = 2;   // مكافأة الصمود في الاشتباك
+    public int xpPerTreeHit = 8;
+    public int xpPerTreeHeal = 8;
     public int xpPerAssist = 30;
-    public int xpPerTreeHit = 5;
 
     [Header("Level Bonuses")]
     // مضاعف الضرر لكل مستوى (1.0 = بدون زيادة)
@@ -22,6 +26,8 @@ public class PlayerXP : NetworkBehaviour
     public float healthMultiplierPerLevel = 0.08f;
     // مضاعف السرعة لكل مستوى (أقل حتى لا يصبح سريعاً جداً)
     public float speedMultiplierPerLevel = 0.03f;
+    // تخفيض وقت انتظار الضربة بنسبة 5% لكل مستوى لتسريع الضربات والشعور بالقوة
+    public float cooldownReductionPerLevel = 0.05f;
 
     [Header("Level 5 Ultimate")]
     // ضربة ساحقة - ضرر كبير في منطقة واسعة
@@ -65,6 +71,7 @@ public class PlayerXP : NetworkBehaviour
     private float baseAttackDamage;
     private float baseMaxHealth;
     private float baseMoveSpeed;
+    private float baseAttackCooldown = 1.0f;
 
     void Start()
     {
@@ -73,7 +80,11 @@ public class PlayerXP : NetworkBehaviour
         movement = GetComponent<PlayerMovement>();
 
         // حفظ القيم الأساسية
-        if (combat != null) baseAttackDamage = combat.attackDamage;
+        if (combat != null)
+        {
+            baseAttackDamage = combat.attackDamage;
+            baseAttackCooldown = combat.attackCooldown;
+        }
         if (health != null) baseMaxHealth = health.maxHealth;
         if (movement != null) baseMoveSpeed = movement.walkSpeed;
     }
@@ -92,33 +103,79 @@ public class PlayerXP : NetworkBehaviour
     {
         ApplyLevelBonuses();
 
-        if (current >= 5 && previous < 5)
+        if (current > previous && IsOwner && GetComponent<BotController>() == null)
         {
-            Debug.Log(gameObject.name + " reached Level 5! Ultimate ability unlocked!");
+            string lvlMsg = LanguageSelectionUI.Localize(
+                $"⭐ HERO LEVEL UP! Now Level {current}!",
+                ar: $"⭐ ترقية البطل! أصبحت بالمستوى {current}!",
+                fa: $"⭐ ارتقای قهرمان! اکنون سطح {current}!",
+                ru: $"⭐ НОВЫЙ УРОВЕНЬ {current}!",
+                de: $"⭐ HELDEN-STUFENAUFSTIEG! Jetzt Stufe {current}!",
+                it: $"⭐ LIVELLO EROE AUMENTATO! Ora Livello {current}!",
+                tr: $"⭐ KAHRAMAN SEVİYE ATLADI! Şimdi Seviye {current}!",
+                fr: $"⭐ NIVEAU HÉROS SUPÉRIEUR ! Niveau {current} !",
+                es: $"⭐ ¡SUBIDA DE NIVEL! ¡Ahora Nivel {current}!",
+                zh: $"⭐ 英雄升级！达到第 {current} 级！",
+                ja: $"⭐ 英雄レベルアップ！レベル {current}！",
+                hi: $"⭐ नायक स्तर बढ़ा! अब स्तर {current}!",
+                pt: $"⭐ NÍVEL DE HERÓI SUBIU! Agora Nível {current}!"
+            );
+            PlayerProgressionAndShopUI.Instance?.ShowNotification(lvlMsg);
         }
     }
 
     // =========================
-    // إضافة XP
+    // إضافة XP ديناميكي بالمعركة
     // =========================
+
+    public void AddCombatHitXP(float damage = 0f)
+    {
+        AddXP(xpPerCombatHit);
+    }
+
+    public void AddBossHitXP(float damage = 0f)
+    {
+        AddXP(xpPerBossHit);
+    }
+
+    public void AddDamageTakenXP(float damage = 0f)
+    {
+        AddXP(xpPerDamageTaken);
+    }
+
+    public void AddTreeHealXP()
+    {
+        AddXP(xpPerTreeHeal);
+    }
 
     /// <summary>
     /// يُستدعى من السيرفر عند قتل عدو
     /// </summary>
     public void AddKillXP()
     {
-        if (!IsServer) return;
+        if (IsServer)
+        {
+            killCount.Value++;
+            AddXP(xpPerKill);
+        }
+        else
+        {
+            RequestAddKillXpRpc();
+        }
+    }
 
+    [Rpc(SendTo.Server)]
+    void RequestAddKillXpRpc()
+    {
         killCount.Value++;
         AddXP(xpPerKill);
     }
 
     /// <summary>
-    /// يُستدعى من السيرفر عند ضرب الشجرة
+    /// يُستدعى عند ضرب الشجرة
     /// </summary>
     public void AddTreeHitXP()
     {
-        if (!IsServer) return;
         AddXP(xpPerTreeHit);
     }
 
@@ -127,7 +184,14 @@ public class PlayerXP : NetworkBehaviour
     /// </summary>
     public void AddXP(int amount)
     {
-        if (!IsServer) return;
+        if (amount <= 0) return;
+
+        bool isServerOrSingle = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
+        if (!isServerOrSingle)
+        {
+            RequestAddXpRpc(amount);
+            return;
+        }
 
         currentXP.Value += amount;
 
@@ -143,18 +207,18 @@ public class PlayerXP : NetworkBehaviour
                 ApplyLevelBonuses();
                 PlayLevelUpFxRpc(currentLevel.Value);
                 Debug.Log(gameObject.name + " leveled up to " + currentLevel.Value + "!");
-
-                // فتح القدرة الخاصة عند المستوى 5
-                if (currentLevel.Value >= 5)
-                {
-                    ultimateReady.Value = true;
-                }
             }
             else
             {
                 break;
             }
         }
+    }
+
+    [Rpc(SendTo.Server)]
+    void RequestAddXpRpc(int amount)
+    {
+        AddXP(amount);
     }
 
     // =========================
@@ -173,12 +237,15 @@ public class PlayerXP : NetworkBehaviour
         if (baseAttackDamage <= 0 && combat != null) baseAttackDamage = combat.attackDamage;
         if (baseMaxHealth <= 0 && health != null) baseMaxHealth = health.maxHealth;
         if (baseMoveSpeed <= 0 && movement != null) baseMoveSpeed = movement.walkSpeed;
+        if (baseAttackCooldown <= 0 && combat != null) baseAttackCooldown = combat.attackCooldown;
 
         float levelBonus = (level - 1); // المستوى 1 = بدون مكافأة
 
         if (combat != null)
         {
             combat.attackDamage = baseAttackDamage * (1f + levelBonus * damageMultiplierPerLevel);
+            // تسريع الضربات (-5% من وقت الانتظار لكل مستوى)
+            combat.attackCooldown = Mathf.Max(0.25f, baseAttackCooldown * (1f - levelBonus * cooldownReductionPerLevel));
         }
 
         if (health != null)
@@ -186,7 +253,7 @@ public class PlayerXP : NetworkBehaviour
             float oldMaxHealth = health.maxHealth;
             health.maxHealth = baseMaxHealth * (1f + levelBonus * healthMultiplierPerLevel);
 
-            // شفاء نسبي عند الترقية
+            // شفاء فوري لمقدار الصحة المكتسبة عند الترقية!
             if (health.maxHealth > oldMaxHealth)
             {
                 float healAmount = health.maxHealth - oldMaxHealth;
@@ -411,20 +478,21 @@ public class PlayerXP : NetworkBehaviour
         string essenceText = LanguageSelectionUI.Localize($"🍃 Essence: {currentXP.Value} / {nextLevelXP} XP", ar: $"🍃 الجوهر: {currentXP.Value} / {nextLevelXP} XP", ru: $"🍃 Эссенция: {currentXP.Value} / {nextLevelXP} XP", es: $"🍃 Esencia: {currentXP.Value} / {nextLevelXP} XP", fr: $"🍃 Essence: {currentXP.Value} / {nextLevelXP} XP");
         GUI.Label(new Rect(x, y + 48f, crestW, 16f), essenceText, subStyle);
 
-        if (currentLevel.Value >= 5)
-        {
-            bool ready = Time.time >= nextUltimateTime;
-            subStyle.normal.textColor = ready ? new Color(0.3f, 0.95f, 1f) : Color.gray;
-            string ultReady = LanguageSelectionUI.Localize("✨ [R] NATURE AWAKENING READY! ✨", ar: "✨ [R] صحوة الطبيعة جاهزة! ✨", ru: "✨ [R] ПРОБУЖДЕНИЕ ГОТОВО! ✨", es: "✨ ¡[R] DESPERTAR LISTO! ✨", fr: "✨ [R] ÉVEIL PRÊT ! ✨");
-            string ultCharge = LanguageSelectionUI.Localize("⏳ Channelling Ultimate...", ar: "⏳ شحن القدرة الخارقة...", ru: "⏳ Зарядка ульты...", es: "⏳ Canalizando definitiva...", fr: "⏳ Chargement de l'ultime...");
-            GUI.Label(new Rect(x, y + 66f, crestW, 18f), ready ? ultReady : ultCharge, subStyle);
-        }
-        else
-        {
-            subStyle.normal.textColor = new Color(0.85f, 0.75f, 0.35f);
-            string ultLvl5 = LanguageSelectionUI.Localize("🌿 Ultimate Awakes at Level 5 🌿", ar: "🌿 تفتح القدرة الخارقة في المستوى 5 🌿", ru: "🌿 Ульта откроется на 5 уровне 🌿", es: "🌿 La definitiva se activa al nivel 5 🌿", fr: "🌿 L'ultime se débloque au niveau 5 🌿");
-            GUI.Label(new Rect(x, y + 66f, crestW, 18f), ultLvl5, subStyle);
-        }
+        int dmgPct = Mathf.RoundToInt((currentLevel.Value - 1) * damageMultiplierPerLevel * 100f);
+        int hpPct = Mathf.RoundToInt((currentLevel.Value - 1) * healthMultiplierPerLevel * 100f);
+        int spdPct = Mathf.RoundToInt((currentLevel.Value - 1) * speedMultiplierPerLevel * 100f);
+        int cdPct = Mathf.RoundToInt((currentLevel.Value - 1) * cooldownReductionPerLevel * 100f);
+
+        subStyle.normal.textColor = new Color(0.95f, 0.85f, 0.45f);
+        string statsSummary = LanguageSelectionUI.Localize(
+            $"⚔️ +{dmgPct}% Dmg  |  🛡️ +{hpPct}% HP  |  ⚡ +{spdPct}% Spd  |  ⏱️ -{cdPct}% CD",
+            ar: $"⚔️ ضرر +{dmgPct}%  |  🛡️ صحة +{hpPct}%  |  ⚡ سرعة +{spdPct}%  |  ⏱️ تسريع ضرب +{cdPct}%",
+            fa: $"⚔️ آسیب +{dmgPct}%  |  🛡️ سلامت +{hpPct}%  |  ⚡ سرعت +{spdPct}%",
+            ru: $"⚔️ +{dmgPct}% Урон  |  🛡️ +{hpPct}% ХП  |  ⚡ +{spdPct}% Скор",
+            es: $"⚔️ +{dmgPct}% Daño  |  🛡️ +{hpPct}% Salud  |  ⚡ +{spdPct}% Vel",
+            fr: $"⚔️ +{dmgPct}% Dégâts |  🛡️ +{hpPct}% PV  |  ⚡ +{spdPct}% Vit"
+        );
+        GUI.Label(new Rect(x, y + 66f, crestW, 18f), statsSummary, subStyle);
 
         // Top-Right Acorn Purse & Match Stakes (Wager style like 8-Ball Pool)
         if (PlayerProfile.Instance != null)

@@ -58,6 +58,8 @@ public class InGamePauseMenuUI : MonoBehaviour
         if (LanguageSelectionUI.IsLanguageModalOpen) return;
         if (GameIntroBriefingUI.IsBriefingOpen) return;
         if (CharacterSelectionUI.IsSelectionOpen) return;
+        if (LeaderboardUI.IsLeaderboardOpen) return;
+        if (FriendsUI.IsFriendsOpen) return;
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {

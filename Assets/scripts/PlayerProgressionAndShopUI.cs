@@ -142,12 +142,20 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
             return;
         }
 
-        // عند فتح شاشات اللوبي، واختيار الفرق، واختيار الأبطال، نخفي الشريط العلوي حتى لا يحجب أزرار الرجوع
+        // عند فتح شاشات اللوبي، واختيار الفرق، واختيار الأبطال، أو شاشة البداية، نخفي الشريط العلوي
+        if (PlayModeUI.isTitleScreenActive)
+        {
+            DrawNotificationBanner();
+            return;
+        }
+
         bool isModalOrLobbyOpen = CharacterSelectionUI.IsSelectionOpen || 
                                   TeamSelectionUI.IsTeamSelectionOpen || 
                                   (FriendlyLobbyUI.Instance != null && FriendlyLobbyUI.Instance.isLobbyActive) ||
                                   InGamePauseMenuUI.IsPauseMenuOpen ||
-                                  LanguageSelectionUI.IsLanguageModalOpen;
+                                  LanguageSelectionUI.IsLanguageModalOpen ||
+                                  LeaderboardUI.IsLeaderboardOpen ||
+                                  FriendsUI.IsFriendsOpen;
 
         if (isModalOrLobbyOpen && !showShopModal && !isWatchingAd)
         {
@@ -177,9 +185,9 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
     {
         if (PlayerProfile.Instance == null) return;
 
-        float barWidth = 475f;
-        float barHeight = 38f;
-        float x = 12f;
+        float barWidth = 455f;
+        float barHeight = 36f;
+        float x = 140f;
         float y = 8f;
 
         // Antique Gold & Obsidian Glass Plaque
@@ -193,7 +201,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
         // Acorns / Coins
         string acornsLabel = LanguageSelectionUI.Localize("Acorns", ar: "بلوط", ru: "Желуди", es: "Bellotas", fr: "Glands");
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(x + 12f, y + 2f, 105f, barHeight - 4f),
+            new Rect(x + 10f, y + 2f, 100f, barHeight - 4f),
             $"🪙 {PlayerProfile.Instance.Coins} {acornsLabel}",
             textStyle,
             EnchantedNatureGUI.AntiqueGoldBright,
@@ -204,7 +212,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
         // Gems / Emeralds
         string gemsLabel = LanguageSelectionUI.Localize("Gems", ar: "جواهر", ru: "Гемы", es: "Gemas", fr: "Gemmes");
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(x + 120f, y + 2f, 95f, barHeight - 4f),
+            new Rect(x + 112f, y + 2f, 90f, barHeight - 4f),
             $"💎 {PlayerProfile.Instance.Gems} {gemsLabel}",
             textStyle,
             new Color(0.35f, 0.92f, 1f),
@@ -215,7 +223,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
         // Account Level / Druid Rank
         string lvlLabel = LanguageSelectionUI.Localize($"⭐ Lv.{PlayerProfile.Instance.AccountLevel}", ar: $"⭐ مستوى {PlayerProfile.Instance.AccountLevel}", ru: $"⭐ Ур.{PlayerProfile.Instance.AccountLevel}", es: $"⭐ Nvl.{PlayerProfile.Instance.AccountLevel}", fr: $"⭐ Niv.{PlayerProfile.Instance.AccountLevel}");
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(x + 218f, y + 2f, 75f, barHeight - 4f),
+            new Rect(x + 204f, y + 2f, 75f, barHeight - 4f),
             lvlLabel,
             textStyle,
             new Color(1f, 0.88f, 0.45f),
@@ -225,7 +233,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
 
         // Forest Ad Blessing Button
         string giftLabel = LanguageSelectionUI.Localize("🍃 +80 🪙", ar: "🍃 +80 🪙", ru: "🍃 +80 🪙", es: "🍃 +80 🪙", fr: "🍃 +80 🪙");
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x + 296f, y + 4f, 80f, 30f), giftLabel, EnchantedNatureGUI.EmeraldAccent, 10, false))
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x + 282f, y + 3f, 78f, 30f), giftLabel, EnchantedNatureGUI.EmeraldAccent, 10, false))
         {
             StartAdSimulation();
         }
@@ -234,9 +242,27 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
         string shopBtnLabel = showShopModal 
             ? LanguageSelectionUI.Localize("❌ Close", ar: "❌ إغلاق", ru: "❌ Закрыть", es: "❌ Cerrar", fr: "❌ Fermer") 
             : LanguageSelectionUI.Localize("🌿 Emporium", ar: "🌿 المتجر", ru: "🌿 Магазин", es: "🌿 Tienda", fr: "🌿 Boutique");
-        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x + 382f, y + 4f, 85f, 30f), shopBtnLabel, EnchantedNatureGUI.AntiqueGoldBright, 10, true))
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x + 364f, y + 3f, 85f, 30f), shopBtnLabel, EnchantedNatureGUI.AntiqueGoldBright, 10, true))
         {
             showShopModal = !showShopModal;
+        }
+
+        // Leaderboards Button (🏆 المتصدرون)
+        float leadX = x + barWidth + 8f;
+        float leadW = 115f;
+        string leadLabel = LanguageSelectionUI.Localize("🏆 Leaders", ar: "🏆 المتصدرون", fa: "🏆 برترین‌ها", ru: "🏆 Лидеры");
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(leadX, y + 1f, leadW, 34f), leadLabel, EnchantedNatureGUI.AntiqueGoldBright, 11, LeaderboardUI.IsLeaderboardOpen))
+        {
+            LeaderboardUI.ToggleLeaderboard();
+        }
+
+        // Friends Hub Button (👥 الأصدقاء)
+        float friendsX = leadX + leadW + 6f;
+        float friendsW = 95f;
+        string friendsLabel = LanguageSelectionUI.Localize("👥 Friends", ar: "👥 الأصدقاء", fa: "👥 دوستان", ru: "👥 Друзья");
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(friendsX, y + 1f, friendsW, 34f), friendsLabel, EnchantedNatureGUI.EmeraldAccent, 11, FriendsUI.IsFriendsOpen))
+        {
+            FriendsUI.ToggleFriends();
         }
     }
 

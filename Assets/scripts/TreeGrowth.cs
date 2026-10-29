@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -965,23 +965,31 @@ public class TreeGrowth : MonoBehaviour
     {
         if (isDead) return;
 
+        bool shieldActive = IsShieldActive;
+        float minAllowedHealth = shieldActive ? (maxHealth * 0.35f) : 0f;
+        bool isAlreadyAtShieldFloor = shieldActive && (currentHealth <= minAllowedHealth + 0.05f);
+
         if (attacker != null)
         {
             MatchEndStatsUI.Instance?.RegisterDamage(attacker, amount);
+
+            // منح خبرة ضرب الشجرة للمدمر فقط إذا كانت الشجرة تقبل الضرر ولم تبلغ حد الدرع الحصين
+            if (!isAlreadyAtShieldFloor && currentHealth > minAllowedHealth)
+            {
+                PlayerXP pxp = attacker.GetComponent<PlayerXP>();
+                if (pxp != null) pxp.AddTreeHitXP();
+            }
         }
 
         currentHealth -= amount;
-
-        // درع الأختام الثلاثة والعد التنازلي لـ 10 ثوانٍ: لا يمكن إسقاط الشجرة أو إنزال صحتها تحت 35% طالما الدرع فعال!
-        bool shieldActive = IsShieldActive;
-        float minAllowedHealth = shieldActive ? (maxHealth * 0.35f) : 0f;
-
         currentHealth = Mathf.Clamp(currentHealth, minAllowedHealth, maxHealth);
     }
 
-    public void Heal(float amount)
+    public void Heal(float amount, GameObject healer = null)
     {
         if (isDead) return;
+
+        bool wasNotFull = currentHealth < maxHealth;
 
         if (isCritical)
         {
@@ -992,7 +1000,19 @@ public class TreeGrowth : MonoBehaviour
                 ExitCriticalState();
             }
 
+            if (healer != null)
+            {
+                PlayerXP pxp = healer.GetComponent<PlayerXP>();
+                if (pxp != null) pxp.AddTreeHealXP();
+            }
             return;
+        }
+
+        // منح خبرة معالجة الشجرة للحامي فقط إذا كانت صحة الشجرة ناقصة فعلياً
+        if (wasNotFull && healer != null)
+        {
+            PlayerXP pxp = healer.GetComponent<PlayerXP>();
+            if (pxp != null) pxp.AddTreeHealXP();
         }
 
         currentHealth += amount;

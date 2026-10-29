@@ -484,8 +484,8 @@ public class PlayModeUI : MonoBehaviour
     void DrawMainModeSelect()
     {
         // 0. Top-Left: Return to Title Screen Button
-        float backBtnW = 145f;
-        float backBtnH = 38f;
+        float backBtnW = 120f;
+        float backBtnH = 34f;
         float backX = 12f;
         float backY = 8f;
         string backText = LanguageSelectionUI.Localize(

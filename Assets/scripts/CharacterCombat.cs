@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using Unity.Netcode;
 
@@ -303,7 +303,7 @@ public class CharacterCombat : NetworkBehaviour
                 }
                 else if (team == PlayerMovement.TeamType.Protector)
                 {
-                    targetTree.Heal(amount);
+                    targetTree.Heal(amount, gameObject);
                 }
             }
         }
@@ -584,9 +584,8 @@ public class CharacterCombat : NetworkBehaviour
                             }
                             else
                             {
-                                tree.Heal(finalAmount);
+                                tree.Heal(finalAmount, gameObject);
                             }
-                            if (xp != null) xp.AddTreeHitXP();
                         }
                     }
                 }
