@@ -321,6 +321,24 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
+    // =========================
+    // Team Live Voice Chat Network RPCs
+    // =========================
+    [Rpc(SendTo.Server)]
+    public void SendVoiceDataServerRpc(string senderName, int team, byte[] audioBytes, int sampleRate)
+    {
+        ReceiveVoiceDataClientRpc(senderName, team, audioBytes, sampleRate);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void ReceiveVoiceDataClientRpc(string senderName, int team, byte[] audioBytes, int sampleRate)
+    {
+        if (TeamVoiceChatManager.Instance != null)
+        {
+            TeamVoiceChatManager.Instance.OnReceiveVoiceData(senderName, (TeamType)team, audioBytes, sampleRate);
+        }
+    }
+
     [Rpc(SendTo.ClientsAndHost)]
     public void StartGameCountdownRpc(float duration)
     {

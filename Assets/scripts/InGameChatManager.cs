@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
@@ -527,6 +527,7 @@ public class InGameChatManager : MonoBehaviour
     {
         lastBotMessageTime = Time.time;
         ReceiveMessageLocal(botName, channel, text, true, isQuickPing, pingType, icon);
+        TeamVoiceChatManager.Instance?.TriggerBotRadioTransmission(botName);
     }
 
     private string GetFriendlyBotName(ChatChannel channel)

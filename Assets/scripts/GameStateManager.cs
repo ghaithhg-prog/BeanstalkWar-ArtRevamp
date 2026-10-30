@@ -231,6 +231,7 @@ public class GameStateManager : MonoBehaviour
             GameState.Playing;
 
         InGameChatManager.Instance?.NotifyMatchStarted();
+        TeamVoiceChatManager.Instance?.NotifyMatchStarted();
 
         Debug.Log(
             "MATCH STARTED!"

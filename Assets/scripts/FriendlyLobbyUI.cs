@@ -61,6 +61,10 @@ public class FriendlyLobbyUI : MonoBehaviour
     public void LeaveLobbyAndReturn()
     {
         CloseLobby();
+        if (!TeamVoiceChatManager.HasConfiguredVoicePreference)
+        {
+            TeamVoiceChatUI.OpenPreMatchPrompt();
+        }
         FriendsManager.ClearLocalPlayerRoomHosting();
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
@@ -461,6 +465,10 @@ public class FriendlyLobbyUI : MonoBehaviour
     void StartFriendlyMatch(bool autoFillBots)
     {
         CloseLobby();
+        if (!TeamVoiceChatManager.HasConfiguredVoicePreference)
+        {
+            TeamVoiceChatUI.OpenPreMatchPrompt();
+        }
         FriendsManager.ClearLocalPlayerRoomHosting();
 
         PlayerMovement localPlayer = GetLocalPlayerMovement();

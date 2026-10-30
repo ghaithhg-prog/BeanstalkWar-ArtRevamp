@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Unity.Netcode;
@@ -576,6 +576,10 @@ public class CharacterSelectionUI : MonoBehaviour
         if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(backX, backY, backW, backH), backText, new Color(0.85f, 0.45f, 0.35f), 11))
         {
             Hide();
+        if (!TeamVoiceChatManager.HasConfiguredVoicePreference)
+        {
+            TeamVoiceChatUI.OpenPreMatchPrompt();
+        }
             PlayerMovement player = GetLocalPlayer();
             if (player != null)
             {
@@ -1935,6 +1939,10 @@ public class CharacterSelectionUI : MonoBehaviour
         }
 
         Hide();
+        if (!TeamVoiceChatManager.HasConfiguredVoicePreference)
+        {
+            TeamVoiceChatUI.OpenPreMatchPrompt();
+        }
     }
 
     public static string GetLocalizedSkinName(string rawName, int index)

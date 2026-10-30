@@ -161,7 +161,7 @@ public class InGamePauseMenuUI : MonoBehaviour
         GUI.color = Color.white;
 
         float modalW = Mathf.Min(520f, Screen.width - 24f);
-        float modalH = Mathf.Min(600f, Screen.height - 20f);
+        float modalH = Mathf.Min(645f, Screen.height - 16f);
         float mx = (Screen.width - modalW) / 2f;
         float my = (Screen.height - modalH) / 2f;
 
@@ -390,7 +390,33 @@ public class InGamePauseMenuUI : MonoBehaviour
 
         contentY += 50f;
 
-        // 6. Return to Main Menu / Leave Match Button
+        // 6. Live Team Voice Chat Toggle Button
+        bool isVoiceEnabled = TeamVoiceChatManager.IsVoiceChatEnabled;
+        string voiceToggleText = isVoiceEnabled
+            ? LanguageSelectionUI.Localize(
+                "🎙️ LIVE TEAM VOICE CALLS: ENABLED (Click to Disable)",
+                ar: "🎙️ التواصل الصوتي المباشر: مفعّل (انقر للتعطيل)",
+                fa: "🎙️ مکالمات صوتی زنده: فعال (کلیک برای غیرفعال‌سازی)",
+                ru: "🎙️ ЖИВОЙ ГОЛОСОВОЙ ЧАТ: ВКЛЮЧЕН (Отключить)",
+                fr: "🎙️ APPELS VOCAUX EN DIRECT : ACTIVÉS (Désactiver)",
+                es: "🎙️ LLAMADAS DE VOZ EN VIVO: ACTIVADAS (Desactivar)")
+            : LanguageSelectionUI.Localize(
+                "🎙️ LIVE TEAM VOICE CALLS: DISABLED (Click to Enable)",
+                ar: "🎙️ التواصل الصوتي المباشر: معطّل (انقر للتفعيل)",
+                fa: "🎙️ مکالمات صوتی زنده: غیرفعال (کلیک برای فعال‌سازی)",
+                ru: "🎙️ ЖИВОЙ ГОЛОСОВОЙ ЧАТ: ВЫКЛЮЧЕН (Включить)",
+                fr: "🎙️ APPELS VOCAUX EN DIRECT : DÉSACTIVÉS (Activer)",
+                es: "🎙️ LLAMADAS DE VOZ EN VIVO: DESACTIVADAS (Activar)");
+
+        Color voiceBtnCol = isVoiceEnabled ? new Color(0.25f, 0.95f, 0.45f) : new Color(0.75f, 0.75f, 0.75f);
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), voiceToggleText, voiceBtnCol, 12))
+        {
+            TeamVoiceChatManager.SetVoiceChatOption(!isVoiceEnabled, true);
+        }
+
+        contentY += 50f;
+
+        // 7. Return to Main Menu / Leave Match Button
         string leaveBtnText = LanguageSelectionUI.Localize(
             "🚪 RETURN TO GROVE / MAIN MENU",
             ar: "🚪 مغادرة المعركة والعودة للبداية",
