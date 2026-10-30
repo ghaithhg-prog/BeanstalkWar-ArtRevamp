@@ -1181,8 +1181,10 @@ public class LanguageSelectionUI : MonoBehaviour
             return;
         }
 
-        // Draw top-right Language Quick Toggle button during main menus or gameplay
-        if (!CharacterSelectionUI.IsSelectionOpen && 
+        // Draw top-right Language Quick Toggle button during main menus (hidden during active battle to prevent HUD overlap)
+        bool isPlaying = GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying();
+        if (!isPlaying &&
+            !CharacterSelectionUI.IsSelectionOpen && 
             !PlayerProgressionAndShopUI.IsShopOpen && 
             !GameIntroBriefingUI.IsBriefingOpen)
         {

@@ -418,36 +418,28 @@ public class PlayerXP : NetworkBehaviour
         if (GameStateManager.Instance == null || !GameStateManager.Instance.IsPlaying()) return;
         if (Camera.main == null) return;
 
-        // Symmetrical Butterfly-Wing / Celtic Leaf Crest HUD in bottom-left
-        float crestW = 280f;
-        float crestH = 92f;
-        float x = 14f;
-        float y = Screen.height - crestH - 14f;
+        // =========================================================================
+        // AAA Mobile MOBA / Battle Royale Style (Free Fire & LoL: Wild Rift)
+        // 1. Bottom-Left Joystick Quadrant is 100% CLEAR: Zero overlays on thumb movement!
+        // 2. Sleek, Translucent Level & XP Pill positioned cleanly at Top-Left beneath Pause.
+        // =========================================================================
 
-        // Draw organic symmetrical butterfly crest
-        EnchantedNatureGUI.DrawButterflyCrest(new Rect(x, y, crestW, crestH), Color.white);
+        float pillW = 215f;
+        float pillH = 26f;
+        float x = 16f;
+        float y = 52f; // Sits neatly under [⚙️ إيقاف (ESC)]
 
-        GUIStyle levelStyle = new GUIStyle(GUI.skin.label);
-        levelStyle.fontSize = 13;
-        levelStyle.fontStyle = FontStyle.Bold;
-        levelStyle.alignment = TextAnchor.MiddleLeft;
-        levelStyle.normal.textColor = new Color(0.98f, 0.88f, 0.35f);
+        Rect pillRect = new Rect(x, y, pillW, pillH);
 
-        GUIStyle killsStyle = new GUIStyle(GUI.skin.label);
-        killsStyle.fontSize = 12;
-        killsStyle.fontStyle = FontStyle.Bold;
-        killsStyle.alignment = TextAnchor.MiddleRight;
-        killsStyle.normal.textColor = new Color(1f, 0.45f, 0.35f);
+        // 1. Translucent Obsidian & Forest Glass Background
+        GUI.color = new Color(0.04f, 0.08f, 0.05f, 0.72f);
+        GUI.DrawTexture(pillRect, Texture2D.whiteTexture);
+        GUI.color = Color.white;
 
-        // Left Wing: Level
-        string lvlText = LanguageSelectionUI.Localize($"⭐ LVL {currentLevel.Value}", ar: $"⭐ مستوى {currentLevel.Value}", ru: $"⭐ УР {currentLevel.Value}", es: $"⭐ NVL {currentLevel.Value}", fr: $"⭐ NIV {currentLevel.Value}");
-        GUI.Label(new Rect(x + 22f, y + 10f, 110f, 22f), lvlText, levelStyle);
+        // Crisp Fine Emerald & Gold Rim
+        EnchantedNatureGUI.DrawCrispBorder(pillRect, new Color(0.35f, 0.88f, 0.50f, 0.85f), 1.2f);
 
-        // Right Wing: Kills
-        string killsText = LanguageSelectionUI.Localize($"⚔️ {killCount.Value} KILLS", ar: $"⚔️ {killCount.Value} قتلات", ru: $"⚔️ {killCount.Value} УБИЙСТВ", es: $"⚔️ {killCount.Value} BAJAS", fr: $"⚔️ {killCount.Value} ÉLIMINATIONS");
-        GUI.Label(new Rect(x + crestW - 132f, y + 10f, 110f, 22f), killsText, killsStyle);
-
-        // Symmetrical Leaf XP Progress Curve
+        // Symmetrical XP Progress Calculation
         int nextLevelXP = currentLevel.Value < xpPerLevel.Length ? xpPerLevel[currentLevel.Value] : xpPerLevel[xpPerLevel.Length - 1];
         int prevLevelXP = (currentLevel.Value - 1) >= 0 && (currentLevel.Value - 1) < xpPerLevel.Length 
             ? xpPerLevel[currentLevel.Value - 1] : 0;
@@ -457,78 +449,79 @@ public class PlayerXP : NetworkBehaviour
             xpProgress = (float)(currentXP.Value - prevLevelXP) / (nextLevelXP - prevLevelXP);
         xpProgress = Mathf.Clamp01(xpProgress);
 
-        // XP Fill Bar (Lush Emerald Glow)
-        float barX = x + 24f;
-        float barY = y + 36f;
-        float barW = crestW - 48f;
-        float barH = 10f;
+        // A. Level Badge (⭐ Lv.X)
+        GUIStyle levelStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft
+        };
+        levelStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
 
-        GUI.color = new Color(0.08f, 0.16f, 0.10f, 0.85f);
+        string lvlText = LanguageSelectionUI.Localize(
+            $"⭐ Lv.{currentLevel.Value}",
+            ar: $"⭐ مست.{currentLevel.Value}",
+            fa: $"⭐ سط.{currentLevel.Value}",
+            ru: $"⭐ Ур.{currentLevel.Value}",
+            es: $"⭐ Nvl.{currentLevel.Value}",
+            fr: $"⭐ Niv.{currentLevel.Value}"
+        );
+        GUI.Label(new Rect(x + 6f, y + 2f, 56f, pillH - 4f), lvlText, levelStyle);
+
+        // B. Slender Emerald XP Fill Bar
+        float barX = x + 64f;
+        float barY = y + 9f;
+        float barW = 92f;
+        float barH = 8f;
+
+        GUI.color = new Color(0.08f, 0.16f, 0.10f, 0.90f);
         GUI.DrawTexture(new Rect(barX, barY, barW, barH), Texture2D.whiteTexture);
 
-        GUI.color = new Color(0.25f, 0.88f, 0.45f);
+        GUI.color = new Color(0.25f, 0.92f, 0.45f, 0.95f);
         GUI.DrawTexture(new Rect(barX, barY, barW * xpProgress, barH), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        // XP and Ultimate Info
-        GUIStyle subStyle = new GUIStyle(GUI.skin.label);
-        subStyle.fontSize = 10;
-        subStyle.alignment = TextAnchor.MiddleCenter;
-        subStyle.normal.textColor = new Color(0.75f, 0.90f, 0.80f);
+        // C. Kills Indicator (⚔️ X)
+        GUIStyle killsStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleRight
+        };
+        killsStyle.normal.textColor = new Color(1f, 0.45f, 0.35f);
 
-        string essenceText = LanguageSelectionUI.Localize($"🍃 Essence: {currentXP.Value} / {nextLevelXP} XP", ar: $"🍃 الجوهر: {currentXP.Value} / {nextLevelXP} XP", ru: $"🍃 Эссенция: {currentXP.Value} / {nextLevelXP} XP", es: $"🍃 Esencia: {currentXP.Value} / {nextLevelXP} XP", fr: $"🍃 Essence: {currentXP.Value} / {nextLevelXP} XP");
-        GUI.Label(new Rect(x, y + 48f, crestW, 16f), essenceText, subStyle);
+        string killsText = LanguageSelectionUI.Localize(
+            $"⚔️ {killCount.Value}",
+            ar: $"⚔️ {killCount.Value}",
+            fa: $"⚔️ {killCount.Value}",
+            ru: $"⚔️ {killCount.Value}",
+            es: $"⚔️ {killCount.Value}",
+            fr: $"⚔️ {killCount.Value}"
+        );
+        GUI.Label(new Rect(x + pillW - 56f, y + 2f, 50f, pillH - 4f), killsText, killsStyle);
 
+        // D. Sleek Compact Stat Buffs Ribbon directly under the pill
         int dmgPct = Mathf.RoundToInt((currentLevel.Value - 1) * damageMultiplierPerLevel * 100f);
         int hpPct = Mathf.RoundToInt((currentLevel.Value - 1) * healthMultiplierPerLevel * 100f);
         int spdPct = Mathf.RoundToInt((currentLevel.Value - 1) * speedMultiplierPerLevel * 100f);
         int cdPct = Mathf.RoundToInt((currentLevel.Value - 1) * cooldownReductionPerLevel * 100f);
 
-        subStyle.normal.textColor = new Color(0.95f, 0.85f, 0.45f);
-        string statsSummary = LanguageSelectionUI.Localize(
-            $"⚔️ +{dmgPct}% Dmg  |  🛡️ +{hpPct}% HP  |  ⚡ +{spdPct}% Spd  |  ⏱️ -{cdPct}% CD",
-            ar: $"⚔️ ضرر +{dmgPct}%  |  🛡️ صحة +{hpPct}%  |  ⚡ سرعة +{spdPct}%  |  ⏱️ تسريع ضرب +{cdPct}%",
-            fa: $"⚔️ آسیب +{dmgPct}%  |  🛡️ سلامت +{hpPct}%  |  ⚡ سرعت +{spdPct}%",
-            ru: $"⚔️ +{dmgPct}% Урон  |  🛡️ +{hpPct}% ХП  |  ⚡ +{spdPct}% Скор",
-            es: $"⚔️ +{dmgPct}% Daño  |  🛡️ +{hpPct}% Salud  |  ⚡ +{spdPct}% Vel",
-            fr: $"⚔️ +{dmgPct}% Dégâts |  🛡️ +{hpPct}% PV  |  ⚡ +{spdPct}% Vit"
-        );
-        GUI.Label(new Rect(x, y + 66f, crestW, 18f), statsSummary, subStyle);
-
-        // Top-Right Acorn Purse & Match Stakes (Wager style like 8-Ball Pool)
-        if (PlayerProfile.Instance != null)
+        GUIStyle subStyle = new GUIStyle(GUI.skin.label)
         {
-            float purseW = 230f;
-            float purseH = 28f;
-            float px = Screen.width - purseW - 12f;
-            float py = 44f;
+            fontSize = 9,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft
+        };
+        subStyle.normal.textColor = new Color(0.85f, 0.95f, 0.75f, 0.90f);
 
-            EnchantedNatureGUI.DrawWoodPlate(new Rect(px, py, purseW, purseH), new Color(0.10f, 0.15f, 0.10f, 0.92f), new Color(0.95f, 0.80f, 0.35f, 0.92f));
-
-            GUIStyle purseStyle = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 11,
-                fontStyle = FontStyle.Bold
-            };
-            purseStyle.normal.textColor = new Color(1f, 0.92f, 0.45f);
-
-            string purseText = LanguageSelectionUI.Localize(
-                $"🌰 {PlayerProfile.Instance.Coins}  |  Stake: -60 (Win: +350)",
-                ar: $"🌰 {PlayerProfile.Instance.Coins}  |  الرهان: -60 (الفوز: +350)",
-                fa: $"🌰 {PlayerProfile.Instance.Coins}  |  هزینه: -۶۰ (پیروزی: +۳۵۰)",
-                ru: $"🌰 {PlayerProfile.Instance.Coins}  |  Ставка: -60 (Победа: +350)",
-                de: $"🌰 {PlayerProfile.Instance.Coins}  |  Einsatz: -60 (Sieg: +350)",
-                it: $"🌰 {PlayerProfile.Instance.Coins}  |  Posta: -60 (Vittoria: +350)",
-                tr: $"🌰 {PlayerProfile.Instance.Coins}  |  Bahis: -60 (Zafer: +350)",
-                es: $"🌰 {PlayerProfile.Instance.Coins}  |  Apuesta: -60 (Ganar: +350)",
-                fr: $"🌰 {PlayerProfile.Instance.Coins}  |  Mise: -60 (Victoire: +350)",
-                zh: $"🌰 {PlayerProfile.Instance.Coins}  |  底注: -60 (获胜: +350)",
-                ja: $"🌰 {PlayerProfile.Instance.Coins}  |  賭け金: -60 (勝利: +350)",
-                pt: $"🌰 {PlayerProfile.Instance.Coins}  |  Aposta: -60 (Vitória: +350)"
-            );
-
-            GUI.Label(new Rect(px, py, purseW, purseH), purseText, purseStyle);
-        }
+        string statsSummary = LanguageSelectionUI.Localize(
+            $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%  ⏱️-{cdPct}%",
+            ar: $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%  ⏱️+{cdPct}%",
+            fa: $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%",
+            ru: $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%",
+            es: $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%",
+            fr: $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%"
+        );
+        GUI.Label(new Rect(x + 2f, y + pillH + 1f, pillW + 60f, 14f), statsSummary, subStyle);
     }
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 
@@ -153,6 +153,8 @@ public class InGamePauseMenuUI : MonoBehaviour
         }
     }
 
+    private Vector2 pauseScrollPos = Vector2.zero;
+
     private void DrawPauseModal()
     {
         // Full screen dimmed emerald vignette
@@ -160,8 +162,8 @@ public class InGamePauseMenuUI : MonoBehaviour
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        float modalW = Mathf.Min(520f, Screen.width - 24f);
-        float modalH = Mathf.Min(645f, Screen.height - 16f);
+        float modalW = Mathf.Min(560f, Screen.width - 24f);
+        float modalH = Mathf.Min(680f, Screen.height - 20f);
         float mx = (Screen.width - modalW) / 2f;
         float my = (Screen.height - modalH) / 2f;
 
@@ -194,35 +196,29 @@ public class InGamePauseMenuUI : MonoBehaviour
             ja: "❦ 一時停止と設定 ❦",
             pt: "❦ PAUSA E CONFIGURAÇÕES ❦"
         );
-        GUI.Label(new Rect(mx, my + 18f, modalW, 28f), headerText, titleStyle);
+        GUI.Label(new Rect(mx, my + 14f, modalW, 26f), headerText, titleStyle);
 
-        // Subtitle
+        // Subtitle & Match Stake Status
         GUIStyle subStyle = new GUIStyle(GUI.skin.label);
         subStyle.fontSize = 11;
         subStyle.fontStyle = FontStyle.Italic;
         subStyle.alignment = TextAnchor.MiddleCenter;
         subStyle.normal.textColor = new Color(0.6f, 0.88f, 0.7f);
 
-        string subText = LanguageSelectionUI.Localize(
-            "~ Sacred Grove Sanctuary & Expedition Controls ~",
-            ar: "~ ملاذ الغابة المقدسة وضوابط الرحلة ~",
-            fa: "~ پناهگاه بیشه مقدس و تنظیمات سفر ~",
-            de: "~ Heiliger Hain und Expeditionssteuerung ~",
-            it: "~ Santuario del bosco sacro e controlli ~",
-            tr: "~ Kutsal Koru Sığınağı ve Sefer Kontrolleri ~",
-            ru: "~ Священная роща и управление экспедицией ~",
-            fr: "~ Sanctuaire du bosquet sacré et commandes ~",
-            es: "~ Santuario sagrado y controles de expedición ~",
-            hi: "~ पवित्र ग्रोव अभयारण्य और अभियान नियंत्रण ~",
-            zh: "~ 神圣树林圣所与远征控制 ~",
-            ja: "~ 聖なる森の聖域と遠征設定 ~",
-            pt: "~ Santuário do bosque sagrado e controles ~"
-        );
-        GUI.Label(new Rect(mx + 20f, my + 46f, modalW - 40f, 20f), subText, subStyle);
+        string stakeInfo = PlayerProfile.Instance != null 
+            ? $"🌰 {PlayerProfile.Instance.Coins}  |  " + LanguageSelectionUI.Localize("Stake: -60 (Win: +350)", ar: "الرهان: -60 (الفوز: +350)", fa: "هزینه: -۶۰ (پیروزی: +۳۵۰)", fr: "Mise: -60 (Gain: +350)")
+            : "";
+        GUI.Label(new Rect(mx + 20f, my + 40f, modalW - 40f, 20f), stakeInfo, subStyle);
 
-        float contentY = my + 80f;
-        float itemW = modalW - 60f;
-        float itemX = mx + 30f;
+        // Scroll Area for all settings
+        Rect scrollOuter = new Rect(mx + 16f, my + 64f, modalW - 32f, modalH - 80f);
+        float itemW = scrollOuter.width - 24f;
+        float totalVirtualH = 680f;
+        Rect scrollInner = new Rect(0, 0, itemW, totalVirtualH);
+
+        pauseScrollPos = GUI.BeginScrollView(scrollOuter, pauseScrollPos, scrollInner);
+
+        float curY = 4f;
 
         // 1. Resume Game Button
         string resumeText = LanguageSelectionUI.Localize(
@@ -241,14 +237,34 @@ public class InGamePauseMenuUI : MonoBehaviour
             pt: "▶ CONTINUAR PARTIDA (ESC)"
         );
 
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 46f), resumeText, new Color(0.25f, 0.95f, 0.45f), 13))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 44f), resumeText, new Color(0.25f, 0.95f, 0.45f), 13))
         {
             ClosePauseMenu();
         }
 
-        contentY += 56f;
+        curY += 50f;
 
-        // 2. Change Language Button
+        // 2. Guide & Boss Seals Button
+        string guideBtnText = LanguageSelectionUI.Localize(
+            "📖 HOW TO PLAY & BOSS SEALS GUIDE",
+            ar: "📖 دليل اللعبة وتوجيهات أختام الزعماء",
+            fa: "📖 راهنمای بازی و مهرهای غول‌ها",
+            ru: "📖 РУКОВОДСТВО ПО ИГРЕ И БОССАМ",
+            fr: "📖 GUIDE DU JEU & SCEAUX DES BOSS",
+            es: "📖 GUÍA DEL JUEGO Y SELLOS DE JEFES"
+        );
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), guideBtnText, EnchantedNatureGUI.AntiqueGoldBright, 11))
+        {
+            ClosePauseMenu();
+            if (GameIntroBriefingUI.Instance != null)
+            {
+                GameIntroBriefingUI.Instance.OpenBriefing();
+            }
+        }
+
+        curY += 46f;
+
+        // 3. Change Language Button
         string langBtnText = LanguageSelectionUI.Localize(
             "🌐 GAME LANGUAGE: " + LanguageSelectionUI.CurrentLanguageCode.ToUpperInvariant(),
             ar: "🌐 تغيير لغة اللعبة (العربية)",
@@ -265,7 +281,7 @@ public class InGamePauseMenuUI : MonoBehaviour
             pt: "🌐 MUDAR IDIOMA"
         );
 
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 44f), langBtnText, new Color(0.35f, 0.85f, 0.98f), 12))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), langBtnText, new Color(0.35f, 0.85f, 0.98f), 11))
         {
             ClosePauseMenu();
             if (LanguageSelectionUI.Instance != null)
@@ -274,14 +290,14 @@ public class InGamePauseMenuUI : MonoBehaviour
             }
         }
 
-        contentY += 56f;
+        curY += 46f;
 
-        // 3. Audio & Volume Section Plate
-        Rect audioPlateRect = new Rect(itemX, contentY, itemW, 86f);
+        // 4. Audio & Volume Section Plate
+        Rect audioPlateRect = new Rect(0, curY, itemW, 82f);
         EnchantedNatureGUI.DrawWoodPlate(audioPlateRect, new Color(0.06f, 0.12f, 0.08f, 0.95f), new Color(0.4f, 0.85f, 0.6f));
 
         GUIStyle audioTitleStyle = new GUIStyle(GUI.skin.label);
-        audioTitleStyle.fontSize = 12;
+        audioTitleStyle.fontSize = 11;
         audioTitleStyle.fontStyle = FontStyle.Bold;
         audioTitleStyle.alignment = TextAnchor.MiddleLeft;
         audioTitleStyle.normal.textColor = new Color(1f, 0.9f, 0.45f);
@@ -291,22 +307,15 @@ public class InGamePauseMenuUI : MonoBehaviour
             $"🔊 MASTER AUDIO: {volPercent}%",
             ar: $"🔊 مستوى الصوت الرئيسي: {volPercent}%",
             fa: $"🔊 صدای کلی: {volPercent}%",
-            de: $"🔊 LAUTSTÄRKE: {volPercent}%",
-            it: $"🔊 AUDIO PRINCIPALE: {volPercent}%",
-            tr: $"🔊 ANA SES: %{volPercent}",
             ru: $"🔊 ГРОМКОСТЬ ЗВУКА: {volPercent}%",
             fr: $"🔊 VOLUME GÉNÉRAL : {volPercent}%",
-            es: $"🔊 VOLUMEN PRINCIPAL: {volPercent}%",
-            hi: $"🔊 मुख्य ध्वनि: {volPercent}%",
-            zh: $"🔊 主音量: {volPercent}%",
-            ja: $"🔊 マスター音量: {volPercent}%",
-            pt: $"🔊 VOLUME PRINCIPAL: {volPercent}%"
+            es: $"🔊 VOLUMEN PRINCIPAL: {volPercent}%"
         );
-        GUI.Label(new Rect(itemX + 16f, contentY + 10f, itemW - 130f, 22f), audioLabel, audioTitleStyle);
+        GUI.Label(new Rect(14f, curY + 8f, itemW - 130f, 20f), audioLabel, audioTitleStyle);
 
         // Mute / Unmute Button
         string muteBtnText = isMuted ? "🔇 UNMUTE" : "🔊 MUTE";
-        if (GUI.Button(new Rect(itemX + itemW - 110f, contentY + 10f, 96f, 26f), muteBtnText))
+        if (GUI.Button(new Rect(itemW - 105f, curY + 8f, 92f, 24f), muteBtnText))
         {
             isMuted = !isMuted;
             if (isMuted)
@@ -322,8 +331,8 @@ public class InGamePauseMenuUI : MonoBehaviour
         }
 
         // Horizontal Volume Slider
-        float sliderY = contentY + 46f;
-        float newVol = GUI.HorizontalSlider(new Rect(itemX + 16f, sliderY, itemW - 32f, 24f), isMuted ? 0f : currentVolume, 0f, 1f);
+        float sliderY = curY + 42f;
+        float newVol = GUI.HorizontalSlider(new Rect(14f, sliderY, itemW - 28f, 24f), isMuted ? 0f : currentVolume, 0f, 1f);
         if (Mathf.Abs(newVol - (isMuted ? 0f : currentVolume)) > 0.01f)
         {
             currentVolume = newVol;
@@ -331,92 +340,92 @@ public class InGamePauseMenuUI : MonoBehaviour
             AudioListener.volume = isMuted ? 0f : currentVolume;
         }
 
-        contentY += 98f;
+        curY += 92f;
 
-        // 4. Music Jukebox Selector Button
+        // 5. Music Jukebox Selector Button
         string jukeboxText = LanguageSelectionUI.Localize(
-            "🎵 MUSIC JUKEBOX (تغيير نمط الموسيقى)",
-            ar: "🎵 خزانة الموسيقى (تغيير النمط)",
-            fa: "🎵 جعبه موسیقی (تغییر سبک)",
+            "🎵 MUSIC JUKEBOX & TRACKS (مشغل الموسيقى)",
+            ar: "🎵 خزانة الموسيقى وقائمة الأغاني",
+            fa: "🎵 جعبه موسیقی و آهنگ‌ها",
             ru: "🎵 МУЗЫКАЛЬНЫЙ АВТОМАТ",
-            fr: "🎵 JUKEBOX MUSICAL",
-            es: "🎵 JUKEBOX MUSICAL"
+            fr: "🎵 JUKEBOX MUSICAL & PISTES",
+            es: "🎵 JUKEBOX MUSICAL Y PISTAS"
         );
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), jukeboxText, new Color(0.95f, 0.82f, 0.35f), 12))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), jukeboxText, new Color(0.95f, 0.82f, 0.35f), 11))
         {
             ClosePauseMenu();
             ForestBGMManager.OpenJukebox();
         }
 
-        contentY += 52f;
+        curY += 46f;
 
-        // 5. Team Chat Mute / Unmute Toggle Button
+        // 6. Mobile Touch HUD Toggle (F2 / Click)
+        bool isMobileHudForced = MobileUI.ForceShowMobileControls;
+        string hudToggleText = isMobileHudForced
+            ? LanguageSelectionUI.Localize("📱 TOUCH HUD: ENABLED (Click to Hide)", ar: "📱 أزرار اللمس بالهاتف: ظاهرة (انقر للإخفاء)", fr: "📱 CONTRÔLES TACTILES : ACTIVÉS")
+            : LanguageSelectionUI.Localize("📱 TOUCH HUD: DISABLED (Click to Show)", ar: "📱 أزرار اللمس بالهاتف: مخفية (انقر للإظهار)", fr: "📱 CONTRÔLES TACTILES : DÉSACTIVÉS");
+
+        Color hudBtnColor = isMobileHudForced ? new Color(0.25f, 0.95f, 0.45f) : new Color(0.70f, 0.70f, 0.70f);
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), hudToggleText, hudBtnColor, 11))
+        {
+            MobileUI.ForceShowMobileControls = !MobileUI.ForceShowMobileControls;
+        }
+
+        curY += 46f;
+
+        // 7. Team Chat Mute / Unmute Toggle Button
         bool isChatMuted = InGameChatUI.IsChatMuted;
         string chatToggleText = isChatMuted
             ? LanguageSelectionUI.Localize(
                 "🔕 TEAM CHAT: MUTED (Click to Enable)",
                 ar: "🔕 محادثة الفريق: صامتة ومخفية (انقر للتفعيل)",
                 fa: "🔕 گفتگوی تیم: غیرفعال (کلیک برای فعال‌سازی)",
-                de: "🔕 TEAM-CHAT: STUMMGESCHALTET (Aktivieren)",
-                it: "🔕 CHAT DI SQUADRA: DISATTIVATA (Attiva)",
-                tr: "🔕 TAKIM SOHBETİ: SESSIZ (Aç)",
                 ru: "🔕 ЧАТ КОМАНДЫ: ОТКЛЮЧЕН (Включить)",
                 fr: "🔕 CHAT D'ÉQUIPE : DÉSACTIVÉ (Activer)",
-                es: "🔕 CHAT DE EQUIPO: SILENCIADO (Activar)",
-                hi: "🔕 टीम चैट: म्यूट है (सक्षम करने के लिए क्लिक करें)",
-                zh: "🔕 队伍聊天：已静音隐藏（点击开启）",
-                ja: "🔕 チームチャット：ミュート中（クリックで有効化）",
-                pt: "🔕 CHAT DE EQUIPE: SILENCIADO (Ativar)")
+                es: "🔕 CHAT DE EQUIPO: SILENCIADO (Activar)")
             : LanguageSelectionUI.Localize(
                 "💬 TEAM CHAT: ACTIVE (Click to Mute)",
                 ar: "💬 محادثة الفريق: مفعّلة (انقر للإسكات والإخفاء)",
                 fa: "💬 گفتگوی تیم: فعال (کلیک برای بی‌صدا کردن)",
-                de: "💬 TEAM-CHAT: AKTIV (Stummschalten)",
-                it: "💬 CHAT DI SQUADRA: ATTIVA (Disattiva)",
-                tr: "💬 TAKIM SOHBETİ: AÇIK (Sessize Al)",
                 ru: "💬 ЧАТ КОМАНДЫ: ВКЛЮЧЕН (Заглушить)",
                 fr: "💬 CHAT D'ÉQUIPE : ACTIF (Désactiver)",
-                es: "💬 CHAT DE EQUIPO: ACTIVO (Silenciar)",
-                hi: "💬 टीम चैट: सक्रिय है (म्यूट करने के लिए क्लिक करें)",
-                zh: "💬 队伍聊天：已开启（点击静音）",
-                ja: "💬 チームチャット：有効（クリックでミュート）",
-                pt: "💬 CHAT DE EQUIPE: ATIVO (Silenciar)");
+                es: "💬 CHAT DE EQUIPO: ACTIVO (Silenciar)");
 
         Color chatBtnColor = isChatMuted ? new Color(0.95f, 0.45f, 0.35f) : new Color(0.35f, 0.88f, 0.95f);
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), chatToggleText, chatBtnColor, 12))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), chatToggleText, chatBtnColor, 11))
         {
             InGameChatUI.ToggleChatMute();
         }
 
-        contentY += 50f;
+        curY += 46f;
 
-        // 6. Live Team Voice Chat Toggle Button
+        // 8. Live Team Voice Chat Toggle Button
         bool isVoiceEnabled = TeamVoiceChatManager.IsVoiceChatEnabled;
         string voiceToggleText = isVoiceEnabled
             ? LanguageSelectionUI.Localize(
-                "🎙️ LIVE TEAM VOICE CALLS: ENABLED (Click to Disable)",
+                "🎙️ TEAM VOICE CALLS: ENABLED (Click to Disable)",
                 ar: "🎙️ التواصل الصوتي المباشر: مفعّل (انقر للتعطيل)",
                 fa: "🎙️ مکالمات صوتی زنده: فعال (کلیک برای غیرفعال‌سازی)",
-                ru: "🎙️ ЖИВОЙ ГОЛОСОВОЙ ЧАТ: ВКЛЮЧЕН (Отключить)",
-                fr: "🎙️ APPELS VOCAUX EN DIRECT : ACTIVÉS (Désactiver)",
-                es: "🎙️ LLAMADAS DE VOZ EN VIVO: ACTIVADAS (Desactivar)")
+                ru: "🎙️ ГОЛОСОВОЙ ЧАТ: ВКЛЮЧЕН (Отключить)",
+                fr: "🎙️ APPELS VOCAUX : ACTIVÉS (Désactiver)",
+                es: "🎙️ LLAMADAS DE VOZ: ACTIVADAS (Desactivar)")
             : LanguageSelectionUI.Localize(
-                "🎙️ LIVE TEAM VOICE CALLS: DISABLED (Click to Enable)",
+                "🎙️ TEAM VOICE CALLS: DISABLED (Click to Enable)",
                 ar: "🎙️ التواصل الصوتي المباشر: معطّل (انقر للتفعيل)",
                 fa: "🎙️ مکالمات صوتی زنده: غیرفعال (کلیک برای فعال‌سازی)",
-                ru: "🎙️ ЖИВОЙ ГОЛОСОВОЙ ЧАТ: ВЫКЛЮЧЕН (Включить)",
-                fr: "🎙️ APPELS VOCAUX EN DIRECT : DÉSACTIVÉS (Activer)",
-                es: "🎙️ LLAMADAS DE VOZ EN VIVO: DESACTIVADAS (Activar)");
+                ru: "🎙️ ГОЛОСОВОЙ ЧАТ: ВЫКЛЮЧЕН (Включить)",
+                fr: "🎙️ APPELS VOCAUX : DÉSACTIVÉS (Activer)",
+                es: "🎙️ LLAMADAS DE VOZ: DESACTIVADAS (Activar)");
 
         Color voiceBtnCol = isVoiceEnabled ? new Color(0.25f, 0.95f, 0.45f) : new Color(0.75f, 0.75f, 0.75f);
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), voiceToggleText, voiceBtnCol, 12))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), voiceToggleText, voiceBtnCol, 11))
         {
             TeamVoiceChatManager.SetVoiceChatOption(!isVoiceEnabled, true);
         }
 
-        contentY += 50f;
+        curY += 46f;
 
-        // 7. Return to Main Menu / Leave Match Button
+        // 9. Return to Main Menu / Leave Match Button
         string leaveBtnText = LanguageSelectionUI.Localize(
             "🚪 RETURN TO GROVE / MAIN MENU",
             ar: "🚪 مغادرة المعركة والعودة للبداية",
@@ -433,15 +442,15 @@ public class InGamePauseMenuUI : MonoBehaviour
             pt: "🚪 SAIR PARA O MENU PRINCIPAL"
         );
 
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 44f), leaveBtnText, new Color(0.95f, 0.65f, 0.25f), 12))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 42f), leaveBtnText, new Color(0.95f, 0.65f, 0.25f), 11))
         {
             ClosePauseMenu();
             MatchEndStatsUI.ExecuteCleanGameRestart();
         }
 
-        contentY += 54f;
+        curY += 48f;
 
-        // 5. Exit Game to Desktop Button
+        // 10. Exit Game to Desktop Button
         string quitBtnText = LanguageSelectionUI.Localize(
             "❌ QUIT GAME TO DESKTOP",
             ar: "❌ الخروج النهائي من اللعبة",
@@ -458,7 +467,7 @@ public class InGamePauseMenuUI : MonoBehaviour
             pt: "❌ SAIR DO JOGO"
         );
 
-        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), quitBtnText, new Color(0.85f, 0.35f, 0.30f), 12))
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(0, curY, itemW, 40f), quitBtnText, new Color(0.85f, 0.35f, 0.30f), 11))
         {
             #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -466,5 +475,7 @@ public class InGamePauseMenuUI : MonoBehaviour
             Application.Quit();
             #endif
         }
+
+        GUI.EndScrollView();
     }
 }

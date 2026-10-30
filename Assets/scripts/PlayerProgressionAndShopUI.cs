@@ -124,7 +124,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
 
     void OnGUI()
     {
-        if (MatchEndStatsUI.IsGameOverActive) return;
+        if (MatchEndStatsUI.IsGameOverActive || (GameStateManager.Instance != null && GameStateManager.Instance.currentState == GameStateManager.GameState.Ended)) return;
         if (GameIntroBriefingUI.IsBriefingOpen) return;
 
         bool isPlaying = GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying();

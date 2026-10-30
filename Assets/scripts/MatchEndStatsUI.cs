@@ -171,29 +171,37 @@ public class MatchEndStatsUI : MonoBehaviour
             if (b != null) GetOrCreateStat(b.gameObject);
         }
 
-        // Determine if local player won
+        // Determine if local player won or if match is a peaceful Draw
+        bool isDraw = winner.ToLower().Contains("draw") || winner.ToLower().Contains("tie") || winner.ToLower().Contains("peace");
         bool isProtWin = winner.ToLower().Contains("protector");
         PlayerMovement.TeamType winningTeam = isProtWin ? PlayerMovement.TeamType.Protector : PlayerMovement.TeamType.Destroyer;
 
-        isLocalPlayerWinner = false;
-        foreach (var stat in stats.Values)
+        if (isDraw)
         {
-            if (stat != null && stat.isLocalPlayer)
-            {
-                isLocalPlayerWinner = (stat.team == winningTeam);
-                break;
-            }
+            isLocalPlayerWinner = true; // Both teams receive positive peaceful rewards!
         }
-
-        // Fallback search directly on player gameobjects if not found in dictionary
-        if (!isLocalPlayerWinner)
+        else
         {
-            foreach (var p in allPlayers)
+            isLocalPlayerWinner = false;
+            foreach (var stat in stats.Values)
             {
-                if (p != null && p.IsOwner && p.team == winningTeam)
+                if (stat != null && stat.isLocalPlayer)
                 {
-                    isLocalPlayerWinner = true;
+                    isLocalPlayerWinner = (stat.team == winningTeam);
                     break;
+                }
+            }
+
+            // Fallback search directly on player gameobjects if not found in dictionary
+            if (!isLocalPlayerWinner)
+            {
+                foreach (var p in allPlayers)
+                {
+                    if (p != null && p.IsOwner && p.team == winningTeam)
+                    {
+                        isLocalPlayerWinner = true;
+                        break;
+                    }
                 }
             }
         }
@@ -201,7 +209,12 @@ public class MatchEndStatsUI : MonoBehaviour
         // Award match victory bounties or deduct match stake
         if (PlayerProfile.Instance != null)
         {
-            if (isLocalPlayerWinner)
+            if (isDraw)
+            {
+                PlayerProfile.Instance.AddCoins(250, "Mutual Peace & Harmony Bounty");
+                PlayerProfile.Instance.AddAccountXP(350);
+            }
+            else if (isLocalPlayerWinner)
             {
                 PlayerProfile.Instance.AddCoins(350, "Match Victory Bounty");
                 PlayerProfile.Instance.AddAccountXP(500);
@@ -218,12 +231,44 @@ public class MatchEndStatsUI : MonoBehaviour
             {
                 if (st != null && st.isLocalPlayer) { localStat = st; break; }
             }
-            int matchScore = localStat != null ? localStat.CalculateScore() : (isLocalPlayerWinner ? 400 : 150);
+            int matchScore = localStat != null ? localStat.CalculateScore() : (isDraw ? 300 : (isLocalPlayerWinner ? 400 : 150));
             bool isOnline = (PlayModeUI.SelectedMode == PlayModeUI.PlayMode.Online || PlayModeUI.SelectedMode == PlayModeUI.PlayMode.Friendly);
             awardedRatingScore = PlayerProfile.Instance.AddRatingScore(matchScore, isOnline);
         }
 
-        Debug.Log($"🏆 [MatchEndStatsUI] Victory sequence active for: {winner}! Local player won: {isLocalPlayerWinner} | Rating Award: +{awardedRatingScore}");
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        Debug.Log($"🏆 [MatchEndStatsUI] Victory sequence active for: {winner}! IsDraw: {isDraw} | Local player won: {isLocalPlayerWinner} | Rating Award: +{awardedRatingScore}");
+    }
+
+    /// <summary>
+    /// Dynamically converts an active single-winner end screen to a mutual Draw & Peace condition
+    /// when the opposing team completes their objective within the simultaneous climax window.
+    /// </summary>
+    public void ConvertToDraw()
+    {
+        if (winningTeamName == "Draw") return;
+        Debug.Log("🕊️ [MatchEndStatsUI] Converting active victory screen to CELESTIAL PEACE & DRAW!");
+
+        if (PlayerProfile.Instance != null)
+        {
+            // If player was defeated, refund stake and give peace rewards
+            if (!isLocalPlayerWinner)
+            {
+                PlayerProfile.Instance.AddCoins(60, "Refund Match Defeat Stake");
+                PlayerProfile.Instance.AddCoins(250, "Mutual Peace & Harmony Bounty");
+                PlayerProfile.Instance.AddAccountXP(250);
+            }
+            else
+            {
+                // Player was given 350, peace bounty is 250 (-100 difference)
+                PlayerProfile.Instance.DeductCoins(100, "Adjust to Peace Bounty");
+            }
+        }
+
+        winningTeamName = "Draw";
+        isLocalPlayerWinner = true;
     }
 
     void OnGUI()
@@ -248,10 +293,53 @@ public class MatchEndStatsUI : MonoBehaviour
         Rect mainRect = new Rect(startX, startY, boxWidth, boxHeight);
         EnchantedNatureGUI.DrawLeafPlaque(mainRect, new Color(0.10f, 0.16f, 0.10f, 0.97f), glowingBorder);
 
-        // 2. Victory Header Banner with 10-Language Support
+        // 2. Victory / Draw Header Banner with Multi-Language Support
+        bool isDraw = winningTeamName.ToLower().Contains("draw") || winningTeamName.ToLower().Contains("tie") || winningTeamName.ToLower().Contains("peace");
         bool isProt = winningTeamName.ToLower().Contains("protector");
-        string titleText = isProt
-            ? LanguageSelectionUI.Localize(
+
+        string titleText;
+        string subtitleText;
+        Color bannerColor;
+
+        if (isDraw)
+        {
+            titleText = LanguageSelectionUI.Localize(
+                "🕊️ CELESTIAL PEACE & DRAW! HARMONY RESTORED! 🕊️",
+                ar: "🕊️ تعادل وحال سلام! عمّ السلام الغابة المقدسة! 🕊️",
+                fa: "🕊️ صلح آسمانی و برابری! هماهنگی برقرار شد! 🕊️",
+                ru: "🕊️ НЕБЕСНЫЙ МИР И НИЧЬЯ! ГАРМОНИЯ ВОССТАНОВЛЕНА! 🕊️",
+                fr: "🕊️ PAIX CÉLESTE & ÉGALITÉ ! L'HARMONIE EST RESTAURÉE ! 🕊️",
+                es: "🕊️ ¡PAZ CELESTIAL Y EMPATE! ¡LA ARMONÍA HA SIDO RESTAURADA! 🕊️",
+                de: "🕊️ HIMMLISCHER FRIEDEN & UNENTSCHIEDEN! 🕊️",
+                it: "🕊️ PACE CELESTE E PAREGGIO! ARMONIA RESTAURATA! 🕊️",
+                tr: "🕊️ İLAHİ BARIŞ VE BERABERLİK! ARMONİ YENİDEN SAĞLANDI! 🕊️",
+                hi: "🕊️ दिव्य शांति और बराबरी! सामंजस्य पुनः स्थापित! 🕊️",
+                zh: "🕊️ 天界和平与平局！森林重归和谐！🕊️",
+                ja: "🕊️ 天上の平和と引き分け！調和が取り戻された！🕊️",
+                pt: "🕊️ PAZ CELESTIAL E EMPATE! A HARMONIA FOI RESTAURADA! 🕊️"
+            );
+
+            subtitleText = LanguageSelectionUI.Localize(
+                "🌿 The Sacred Tree Fell and The Crystal Arrived Together — Neither Side is Defeated! 🌿",
+                ar: "🌿 دُمّرت الشجرة ووصلت الكريستالة في آنٍ واحد، لم يُهزم أحد وعمّ السلام! 🌿",
+                fa: "🌿 درخت سقوط کرد و کریستال همزمان رسید — هیچ‌کس شکست نخورد! 🌿",
+                ru: "🌿 Древо пало, и Кристалл доставлен одновременно — Никто не побежден! 🌿",
+                fr: "🌿 L'Arbre est tombé et le Cristal est arrivé ensemble — Personne n'est vaincu ! 🌿",
+                es: "🌿 ¡El Árbol cayó y el Cristal llegó a la vez — Nadie fue derrotado! 🌿",
+                de: "🌿 Der Baum fiel und der Kristall kam zeitgleich an — Niemand ist besiegt! 🌿",
+                it: "🌿 L'Albero è caduto e il Cristallo è arrivato insieme — Nessuno è sconfitto! 🌿",
+                tr: "🌿 Ağaç devrildi ve Kristal aynı anda ulaştı — Kimse yenilmedi! 🌿",
+                hi: "🌿 पवित्र पेड़ गिरा और क्रिस्टल एक साथ पहुँचा — कोई नहीं हारा! 🌿",
+                zh: "🌿 神树倾覆而圣水晶同时送达——无人落败，森林和谐！🌿",
+                ja: "🌿 神木は倒れ、水晶も同時に届いた——誰も敗北せず、調和が訪れた！🌿",
+                pt: "🌿 A Árvore caiu e o Cristal chegou juntos — Ninguém foi derrotado! 🌿"
+            );
+
+            bannerColor = new Color(0.95f, 0.95f, 1f); // Radiant Celestial White-Gold
+        }
+        else if (isProt)
+        {
+            titleText = LanguageSelectionUI.Localize(
                 "🌟 THE SACRED CRYSTAL REACHED THE SANCTUARY! PROTECTORS WIN! 🌟",
                 "🌟 لقد وصلت الكريستالة للمذبح، فاز الحماة! 🌟",
                 "🌟 КРИСТАЛЛ ДОСТИГ АЛТАРЯ! ЗАЩИТНИКИ ПОБЕДИЛИ! 🌟",
@@ -261,8 +349,25 @@ public class MatchEndStatsUI : MonoBehaviour
                 "🌟 क्रिस्टल वेदी पर पहुंच गया, संरक्षकों की विजय हुई! 🌟",
                 "🌟 水晶已送达圣坛，守护者获胜！🌟",
                 "🌟 水晶が祭壇に到達した、守護者の勝利！🌟",
-                "🌟 O CRISTAL CHEGOU AO ALTAR, OS PROTETORES VENCERAM! 🌟")
-            : LanguageSelectionUI.Localize(
+                "🌟 O CRISTAL CHEGOU AO ALTAR, OS PROTETORES VENCERAM! 🌟");
+
+            subtitleText = LanguageSelectionUI.Localize(
+                "🌿 THE SACRED GROVE IS SAVED! 🌿",
+                "🌿 تم إنقاذ الغابة المقدسة بسلام! 🌿",
+                "🌿 СВЯЩЕННАЯ РОЩА СПАСЕНА! 🌿",
+                "🌿 ¡EL BOSQUE SAGRADO ESTÁ SALVADO! 🌿",
+                "🌿 LE BOSQUET SACRÉ EST SAUVÉ ! 🌿",
+                "🌿 DER HEILIGE HAIN IST GERETTET! 🌿",
+                "🌿 पवित्र उपवन बच गया! 🌿",
+                "🌿 神圣森林得救了！🌿",
+                "🌿 聖なる森は救われた！🌿",
+                "🌿 O BOSQUE SAGRADO FOI SALVO! 🌿");
+
+            bannerColor = new Color(0.2f, 0.9f, 0.4f);
+        }
+        else
+        {
+            titleText = LanguageSelectionUI.Localize(
                 "🔥 THE GREAT BEANSTALK HAS FALLEN! 🔥",
                 "🔥 سقطت شجرة الفاصولياء العظيمة! 🔥",
                 "🔥 ВЕЛИКИЙ СТЕБЕЛЬ ПАЛ! 🔥",
@@ -274,19 +379,7 @@ public class MatchEndStatsUI : MonoBehaviour
                 "🔥 巨大な豆の木が倒れた！🔥",
                 "🔥 O GRANDE PÉ DE FEIJÃO CAIU! 🔥");
 
-        string subtitleText = isProt
-            ? LanguageSelectionUI.Localize(
-                "🌿 THE SACRED GROVE IS SAVED! 🌿",
-                "🌿 تم إنقاذ الغابة المقدسة بسلام! 🌿",
-                "🌿 СВЯЩЕННАЯ РОЩА СПАСЕНА! 🌿",
-                "🌿 ¡EL BOSQUE SAGRADO ESTÁ SALVADO! 🌿",
-                "🌿 LE BOSQUET SACRÉ EST SAUVÉ ! 🌿",
-                "🌿 DER HEILIGE HAIN IST GERETTET! 🌿",
-                "🌿 पवित्र उपवन बच गया! 🌿",
-                "🌿 神圣森林得救了！🌿",
-                "🌿 聖なる森は救われた！🌿",
-                "🌿 O BOSQUE SAGRADO FOI SALVO! 🌿")
-            : LanguageSelectionUI.Localize(
+            subtitleText = LanguageSelectionUI.Localize(
                 "⚔️ DESTROYERS VICTORIOUS! ⚔️",
                 "⚔️ انتصار فريق المدمرين! ⚔️",
                 "⚔️ ПОБЕДА РАЗРУШИТЕЛЕЙ! ⚔️",
@@ -298,7 +391,8 @@ public class MatchEndStatsUI : MonoBehaviour
                 "⚔️ 破壊者の勝利！⚔️",
                 "⚔️ VITÓRIA DOS DESTRUIDORES! ⚔️");
 
-        Color bannerColor = isProt ? new Color(0.2f, 0.9f, 0.4f) : new Color(1f, 0.35f, 0.2f);
+            bannerColor = new Color(1f, 0.35f, 0.2f);
+        }
 
         Rect titleRect = new Rect(startX + 20f, startY + 20f, boxWidth - 40f, 32f);
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
@@ -317,7 +411,7 @@ public class MatchEndStatsUI : MonoBehaviour
             fontSize = 17,
             fontStyle = FontStyle.Bold
         };
-        subStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
+        subStyle.normal.textColor = isDraw ? new Color(0.85f, 0.95f, 1f) : new Color(1f, 0.88f, 0.35f);
         GUI.Label(subRect, subtitleText, subStyle);
 
         // Match Stakes & Rewards Banner with Rating Score & 10-Tier info
@@ -328,10 +422,32 @@ public class MatchEndStatsUI : MonoBehaviour
             fontSize = 12,
             fontStyle = FontStyle.Italic
         };
-        rewardStyle.normal.textColor = isLocalPlayerWinner ? new Color(0.85f, 1f, 0.85f) : new Color(1f, 0.85f, 0.65f);
+        rewardStyle.normal.textColor = isDraw 
+            ? new Color(0.95f, 0.95f, 1f)
+            : (isLocalPlayerWinner ? new Color(0.85f, 1f, 0.85f) : new Color(1f, 0.85f, 0.65f));
 
-        string rewardStr = isLocalPlayerWinner
-            ? LanguageSelectionUI.Localize(
+        string rewardStr;
+        if (isDraw)
+        {
+            rewardStr = LanguageSelectionUI.Localize(
+                "🕊️ PEACE & HARMONY BOUNTY: +250 Acorn Coins & +350 Account XP Awarded to All! 🕊️",
+                ar: "🕊️ مكافأة الهدنة والسلام: تم منح الجميع +250 عملة بلوط و +350 خبرة حساب! 🕊️",
+                fa: "🕊️ پاداش صلح و برابری: دریافت +۲۵۰ سکه بلوط و +۳۵۰ تجربه برای همه! 🕊️",
+                ru: "🕊️ НАГРАДА ЗА МИР: +250 Желудей и +350 Опыта всем игрокам! 🕊️",
+                fr: "🕊️ PRIME DE PAIX & HARMONIE : +250 Glands & +350 EXP accordés à tous ! 🕊️",
+                es: "🕊️ ¡RECOMPENSA DE PAZ Y ARMONÍA: +250 Bellotas y +350 EXP para todos! 🕊️",
+                de: "🕊️ FRIEDENS- & HARMONIEPRÄMIE: +250 Eichel-Münzen & +350 EP an alle! 🕊️",
+                it: "🕊️ PREMIO DI PACE E ARMONIA: +250 Monete Ghianda & +350 ESP a tutti! 🕊️",
+                tr: "🕊️ BARIŞ VE ARMONİ ÖDÜLÜ: Herkese +250 Palamut Parası & +350 DP! 🕊️",
+                hi: "🕊️ शांति और सामंजस्य पुरस्कार: सभी को +250 बलूत सिक्के और +350 अनुभव! 🕊️",
+                zh: "🕊️ 和平与和谐赏金：全体玩家获得 +250 橡果金币与 +350 经验！🕊️",
+                ja: "🕊️ 平和と調和の報酬：全プレイヤーに +250 ドングリコイン ＆ +350 経験値！🕊️",
+                pt: "🕊️ RECOMPENSA DE PAZ E HARMONIA: +250 Moedas de Bolota & +350 XP para todos! 🕊️"
+            );
+        }
+        else if (isLocalPlayerWinner)
+        {
+            rewardStr = LanguageSelectionUI.Localize(
                 "✨ VICTORY BOUNTY: +350 Acorn Coins & +500 Account XP Awarded! ✨",
                 ar: "✨ مكافأة الفوز: تم منحك +350 عملة بلوط و +500 خبرة حساب! ✨",
                 ru: "✨ НАГРАДА ЗА ПОБЕДУ: +350 Желудей и +500 Опыта! ✨",
@@ -345,8 +461,11 @@ public class MatchEndStatsUI : MonoBehaviour
                 fa: "✨ پاداش پیروزی: دریافت +۳۵۰ سکه بلوط و +۵۰۰ تجربه! ✨",
                 it: "✨ PREMIO VITTORIA: +350 Monete Ghianda & +500 ESP! ✨",
                 tr: "✨ ZAFER ÖDÜLÜ: +350 Palamut Parası & +500 DP! ✨"
-            )
-            : LanguageSelectionUI.Localize(
+            );
+        }
+        else
+        {
+            rewardStr = LanguageSelectionUI.Localize(
                 "⚔️ DEFEAT: -60 Acorn Match Stake Deducted (+100 XP Consolidation) ⚔️",
                 ar: "⚔️ الهزيمة: تم خصم -60 عملة بلوط رهان اللقاء (+100 خبرة ترضية) ⚔️",
                 ru: "⚔️ ПОРАЖЕНИЕ: Списана ставка -60 Желудей (+100 Опыта) ⚔️",
@@ -361,6 +480,7 @@ public class MatchEndStatsUI : MonoBehaviour
                 it: "⚔️ SCONFITTA: -60 Monete Ghianda detratte (+100 ESP) ⚔️",
                 tr: "⚔️ YENİLGİ: -60 Palamut bahis bedeli kesildi (+100 DP) ⚔️"
             );
+        }
 
         var curTier = PlayerProfile.Instance != null ? PlayerProfile.Instance.CurrentTier : default;
         string ratingSuffix = awardedRatingScore > 0 

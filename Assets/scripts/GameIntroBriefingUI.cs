@@ -279,13 +279,18 @@ public class GameIntroBriefingUI : MonoBehaviour
             return;
         }
 
-        // Hide the corner button while in Character Selection, Shop, or Language Selection so each screen stays 100% clean
-        if (!CharacterSelectionUI.IsSelectionOpen && !PlayerProgressionAndShopUI.IsShopOpen && !LanguageSelectionUI.IsLanguageModalOpen)
+        bool isPlaying = GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying();
+
+        // Hide top-right Guide & Jukebox buttons during active combat to keep the battlefield completely clear.
+        // Both Guide & Jukebox are fully accessible via InGamePauseMenuUI (⚙️ PAUSE / ESC) during match.
+        if (!isPlaying && 
+            !CharacterSelectionUI.IsSelectionOpen && 
+            !PlayerProgressionAndShopUI.IsShopOpen && 
+            !LanguageSelectionUI.IsLanguageModalOpen &&
+            !MatchEndStatsUI.IsGameOverActive)
         {
             DrawHowToPlayToggleButton();
         }
-
-        bool isPlaying = GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying();
 
         // During gameplay, Boss Seal & Shield status is rendered clearly in TreeGrowth directly under health bar.
         // Duplicate black box (DrawBossSealsStatusHUD) is removed as requested by user to keep the view clean.

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -70,6 +70,7 @@ public class TreeGrowth : MonoBehaviour
     private bool isCritical = false;
     private bool criticalUsed = false;
     private bool isDead = false;
+    public bool IsTreeDead => isDead;
     private bool isFalling = false;
 
     private float shakeTimer = 0f;
@@ -516,6 +517,8 @@ public class TreeGrowth : MonoBehaviour
         if (isDead) return;
         isDead = true;
         isFalling = true;
+
+        GameStateManager.Instance?.NotifyTreeDestroyed();
 
         Debug.Log("🌲💥 Tree permanently destroyed! Initiating cinematic collapse sequence...");
         StartCoroutine(CinematicTreeCollapseRoutine());

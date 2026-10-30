@@ -490,109 +490,14 @@ public class MobileUI : MonoBehaviour
 
     private void SetupTopUtilityBar()
     {
-        // 1. Pause & Settings Button (⚙️ - ESC on PC)
-        settingsButton = CreateStyledCircularButton(
-            "FF_SettingsBtn",
-            hudRoot,
-            new Vector2(1f, 1f),
-            new Vector2(-50f, -45f),
-            new Vector2(55f, 55f),
-            GetSettingsSprite(),
-            () =>
-            {
-                if (InGamePauseMenuUI.Instance != null)
-                    InGamePauseMenuUI.Instance.OpenPauseMenu();
-            }
-        );
-
-        // 2. Language Selection Button (🌐 - L on PC)
-        languageButton = CreateStyledCircularButton(
-            "FF_LanguageBtn",
-            hudRoot,
-            new Vector2(1f, 1f),
-            new Vector2(-115f, -45f),
-            new Vector2(55f, 55f),
-            GetLanguageSprite(),
-            () =>
-            {
-                if (LanguageSelectionUI.Instance != null)
-                    LanguageSelectionUI.Instance.OpenModal();
-            }
-        );
-
-        // 3. Shop & Progression Button (🎒 - B on PC)
-        shopButton = CreateStyledCircularButton(
-            "FF_ShopBtn",
-            hudRoot,
-            new Vector2(1f, 1f),
-            new Vector2(-180f, -45f),
-            new Vector2(55f, 55f),
-            GetShopSprite(),
-            () =>
-            {
-                if (PlayerProgressionAndShopUI.Instance != null)
-                    PlayerProgressionAndShopUI.Instance.OpenShop();
-            }
-        );
-
-        // 4. Guide & Boss Seals Button (📖 - H / F1 on PC)
-        guideButton = CreateStyledCircularButton(
-            "FF_GuideBtn",
-            hudRoot,
-            new Vector2(1f, 1f),
-            new Vector2(-245f, -45f),
-            new Vector2(55f, 55f),
-            GetGuideSprite(),
-            () =>
-            {
-                if (GameIntroBriefingUI.Instance != null)
-                    GameIntroBriefingUI.Instance.OpenBriefing();
-            }
-        );
-
-        // 5. Video Walkthrough Button (🎬 - V on PC)
-        videoGuideButton = CreateStyledCircularButton(
-            "FF_VideoBtn",
-            hudRoot,
-            new Vector2(1f, 1f),
-            new Vector2(-310f, -45f),
-            new Vector2(55f, 55f),
-            GetVideoGuideSprite(),
-            () =>
-            {
-                if (GameIntroBriefingUI.Instance != null)
-                    GameIntroBriefingUI.Instance.OpenVideoGuide();
-            }
-        );
-
-        // 6. PC / Mobile HUD Switcher Button (F2 on PC)
-        pcToggleButton = CreateStyledCapsuleButton(
-            "FF_PCToggleBtn",
-            hudRoot,
-            new Vector2(0f, 1f),
-            new Vector2(65f, -45f),
-            new Vector2(75f, 32f),
-            GetInteractPillSprite(),
-            () =>
-            {
-                ForceShowMobileControls = !ForceShowMobileControls;
-            }
-        );
-
-        GameObject toggleLabel = new GameObject("Label", typeof(RectTransform), typeof(Text));
-        toggleLabel.transform.SetParent(pcToggleButton.transform, false);
-        RectTransform tlRT = toggleLabel.GetComponent<RectTransform>();
-        tlRT.anchorMin = Vector2.zero;
-        tlRT.anchorMax = Vector2.one;
-        tlRT.sizeDelta = Vector2.zero;
-        Text t = toggleLabel.GetComponent<Text>();
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (t.font == null) t.font = Font.CreateDynamicFontFromOSFont("Arial", 12);
-        t.fontSize = 11;
-        t.fontStyle = FontStyle.Bold;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.color = new Color(0.35f, 0.85f, 1f);
-        t.text = "📱 HUD";
+        // Consolidated into InGamePauseMenuUI (ESC) to keep active combat HUD 100% clean and AAA polished.
+        // Prevents duplicate Canvas buttons/circles from overlapping underneath top ribbons and Pause.
+        settingsButton = null;
+        languageButton = null;
+        shopButton = null;
+        guideButton = null;
+        videoGuideButton = null;
+        pcToggleButton = null;
     }
 
     // =========================================================================

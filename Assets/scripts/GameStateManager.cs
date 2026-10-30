@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -61,12 +61,24 @@ public class GameStateManager : MonoBehaviour
         }
     }
 
+    [Header("Mutual Climax & Draw Detection")]
+    public float TreeDestroyedTime { get; private set; } = -1f;
+    public float CrystalConsecratedTime { get; private set; } = -1f;
+    public bool IsDrawMatch { get; private set; } = false;
+    private float matchEndedTimestamp = -1f;
+    private string finalWinner = "";
+
     public void ResetStateForNewMatch()
     {
         StopAllCoroutines();
         currentState = GameState.WaitingForPlayers;
         countdownStarted = false;
         countdownDisplayString = "";
+        TreeDestroyedTime = -1f;
+        CrystalConsecratedTime = -1f;
+        IsDrawMatch = false;
+        matchEndedTimestamp = -1f;
+        finalWinner = "";
         if (countdownText != null)
         {
             countdownText.gameObject.SetActive(false);
@@ -239,18 +251,101 @@ public class GameStateManager : MonoBehaviour
     }
 
     // =========================
-    // End Match
+    // End Match & Mutual Climax Resolution
     // =========================
+
+    public void NotifyTreeDestroyed()
+    {
+        if (TreeDestroyedTime > 0f) return;
+        TreeDestroyedTime = Time.time;
+        Debug.Log($"[GameStateManager] 🌲 Tree Destroyed timestamp recorded at {TreeDestroyedTime:F2}s");
+
+        // If Crystal was already consecrated within 3.5s window
+        if (CrystalConsecratedTime > 0f && Mathf.Abs(TreeDestroyedTime - CrystalConsecratedTime) <= 3.5f)
+        {
+            DeclareDraw();
+            return;
+        }
+
+        // If game was already marked ended for Protectors within 3.0s, convert to Draw!
+        if (currentState == GameState.Ended && (Time.time - matchEndedTimestamp <= 3.0f))
+        {
+            DeclareDraw();
+        }
+    }
+
+    public void NotifyCrystalConsecrated()
+    {
+        if (CrystalConsecratedTime > 0f) return;
+        CrystalConsecratedTime = Time.time;
+        Debug.Log($"[GameStateManager] 🌟 Crystal Consecrated timestamp recorded at {CrystalConsecratedTime:F2}s");
+
+        // If Tree was already destroyed within 3.5s window, OR Tree is currently dead and collapsing
+        bool isTreeDead = (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead);
+        if (TreeDestroyedTime > 0f || isTreeDead)
+        {
+            DeclareDraw();
+            return;
+        }
+
+        // If game was already marked ended for Destroyers within 3.0s, convert to Draw!
+        if (currentState == GameState.Ended && (Time.time - matchEndedTimestamp <= 3.0f))
+        {
+            DeclareDraw();
+        }
+    }
+
+    public void DeclareDraw()
+    {
+        if (IsDrawMatch) return;
+        IsDrawMatch = true;
+        finalWinner = "Draw";
+        Debug.Log("🕊️ [GameStateManager] MUTUAL CLIMAX! Both Sacred Tree fell and Crystal was consecrated within the time window. DECLARING CELESTIAL PEACE & DRAW!");
+
+        if (currentState == GameState.Ended)
+        {
+            if (MatchEndStatsUI.Instance != null)
+            {
+                MatchEndStatsUI.Instance.ConvertToDraw();
+            }
+        }
+        else
+        {
+            EndGame("Draw");
+        }
+    }
 
     public void EndGame(
         string winner)
     {
-        if (currentState ==
-            GameState.Ended)
+        if (currentState == GameState.Ended)
+        {
+            // If match already ended within the last 3.0s, check for mutual tie
+            if (!IsDrawMatch && (Time.time - matchEndedTimestamp <= 3.0f))
+            {
+                if ((winner == "Destroyers" && finalWinner.ToLower().Contains("protector")) ||
+                    (winner == "Protectors" && finalWinner.ToLower().Contains("destroyer")) ||
+                    winner == "Draw")
+                {
+                    DeclareDraw();
+                }
+            }
             return;
+        }
 
-        currentState =
-            GameState.Ended;
+        // Check mutual climax conditions before locking
+        bool isTreeDead = (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead);
+        if (winner == "Draw" || IsDrawMatch ||
+            (winner.ToLower().Contains("protector") && (TreeDestroyedTime > 0f || isTreeDead)) ||
+            (winner.ToLower().Contains("destroyer") && (CrystalConsecratedTime > 0f)))
+        {
+            winner = "Draw";
+            IsDrawMatch = true;
+        }
+
+        currentState = GameState.Ended;
+        matchEndedTimestamp = Time.time;
+        finalWinner = winner;
 
         Debug.Log(
             "Game Ended! Winner: " +
