@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -6,6 +6,8 @@ using UnityEngine;
 /// 1. Sleek collapsible Messenger-style Team Chat during matches with 13-language Tactical Quick Pings.
 /// 2. Floating HUD Toasts that automatically fade in/out so players never miss tactical calls during combat.
 /// 3. In-Lobby Room Chat embedded inside Friendly Rooms to chat with friends before match begins.
+/// 4. Complete Mute / Silence mode: allows players to completely silence & hide chat and notifications.
+/// 5. Top-ribbon mini toggle button safely isolated from battle action and mobile touch controls.
 /// </summary>
 public class InGameChatUI : MonoBehaviour
 {
@@ -13,6 +15,7 @@ public class InGameChatUI : MonoBehaviour
 
     public static bool IsChatOpen { get; set; } = false;
     public static bool IsTyping { get; private set; } = false;
+    public static bool IsChatMuted { get; private set; } = false;
 
     private string currentInput = "";
     private Vector2 chatScrollPos = Vector2.zero;
@@ -34,6 +37,7 @@ public class InGameChatUI : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            IsChatMuted = PlayerPrefs.GetInt("Beanstalk_Chat_Muted", 0) == 1;
             DontDestroyOnLoad(gameObject);
         }
         else if (Instance != this)
@@ -60,6 +64,9 @@ public class InGameChatUI : MonoBehaviour
 
     private void HandleIncomingMessage(InGameChatManager.ChatMessage msg)
     {
+        // When chat is muted, completely suppress toasts and unread counter!
+        if (IsChatMuted) return;
+
         if (!IsChatOpen)
         {
             unreadMessagesCount++;
@@ -119,9 +126,10 @@ public class InGameChatUI : MonoBehaviour
                     CloseChat();
                 }
             }
-            else if (Input.GetKeyDown(KeyCode.C) && !IsTyping && !IsChatOpen)
+            else if (Input.GetKeyDown(KeyCode.C) && !IsTyping)
             {
-                OpenChat();
+                if (IsChatOpen) CloseChat();
+                else OpenChat();
             }
         }
 
@@ -134,6 +142,11 @@ public class InGameChatUI : MonoBehaviour
 
     public static void OpenChat()
     {
+        if (IsChatMuted)
+        {
+            SetChatMuted(false);
+        }
+
         IsChatOpen = true;
         if (Instance != null)
         {
@@ -149,6 +162,48 @@ public class InGameChatUI : MonoBehaviour
         GUI.FocusControl(null);
     }
 
+    public static void ToggleChatMute()
+    {
+        SetChatMuted(!IsChatMuted);
+    }
+
+    public static void SetChatMuted(bool muted)
+    {
+        IsChatMuted = muted;
+        PlayerPrefs.SetInt("Beanstalk_Chat_Muted", IsChatMuted ? 1 : 0);
+        PlayerPrefs.Save();
+
+        if (Instance != null)
+        {
+            Instance.activeToasts.Clear();
+            Instance.unreadMessagesCount = 0;
+            if (IsChatMuted)
+            {
+                IsChatOpen = false;
+                IsTyping = false;
+                GUI.FocusControl(null);
+            }
+        }
+
+        string toastMsg = IsChatMuted
+            ? LanguageSelectionUI.Localize(
+                "🔕 Team chat muted & hidden. Click 🔕 at top or press [C] to re-open.",
+                ar: "🔕 تم كتم وإخفاء المحادثة! اضغط على 🔕 في الأعلى أو ضغط [C] لإعادتها.",
+                fa: "🔕 چت تیم بی‌صدا شد! برای بازگشت روی 🔕 بالا کلیک کنید یا [C] بزنید.",
+                ru: "🔕 Чат заглушен! Нажмите 🔕 сверху или [C], чтобы включить.",
+                fr: "🔕 Chat d'équipe masqué ! Cliquez sur 🔕 en haut ou [C] pour rouvrir.",
+                es: "🔕 Chat silenciado! Pulsa 🔕 arriba o [C] para reactivarlo.")
+            : LanguageSelectionUI.Localize(
+                "💬 Team chat activated!",
+                ar: "💬 تم تفعيل محادثة الفريق مجددًا!",
+                fa: "💬 چت تیم فعال شد!",
+                ru: "💬 Чат команды включен!",
+                fr: "💬 Chat d'équipe activé !",
+                es: "💬 ¡Chat de equipo activado!");
+
+        PlayerProgressionAndShopUI.Instance?.ShowNotification(toastMsg);
+    }
+
     void OnGUI()
     {
         // Completely hidden on Game Over, Title Screen, or Language Modal
@@ -160,22 +215,30 @@ public class InGameChatUI : MonoBehaviour
         if (gameFont != null) GUI.skin.font = gameFont;
 
         bool isPlaying = GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying();
-        bool isInFriendlyLobby = FriendlyLobbyUI.Instance != null && FriendlyLobbyUI.Instance.isLobbyActive;
 
-        // 1. In-Match Team Chat & Toasts
+        // 1. In-Match Team Chat & Controls
         if (isPlaying)
         {
-            DrawActiveToasts();
+            // Top Mini Chat Toggle (Safe from battle action & mobile joystick)
+            GUI.depth = -100;
+            DrawTopMiniChatToggle();
 
             if (IsChatOpen)
             {
                 GUI.depth = -150;
                 DrawInMatchTeamChatWindow();
             }
-            else
+            else if (!IsChatMuted)
             {
-                GUI.depth = -100;
-                DrawFloatingMessengerButton();
+                // Active toasts and bottom button only when NOT muted
+                DrawActiveToasts();
+
+                // On desktop when not muted, also offer bottom floating button
+                if (!MobileUI.IsMobileActive)
+                {
+                    GUI.depth = -100;
+                    DrawFloatingMessengerButton();
+                }
             }
         }
     }
@@ -186,7 +249,7 @@ public class InGameChatUI : MonoBehaviour
 
     private void DrawActiveToasts()
     {
-        if (IsChatOpen || activeToasts.Count == 0) return;
+        if (IsChatMuted || IsChatOpen || activeToasts.Count == 0) return;
 
         GUI.depth = -80;
         float toastW = Mathf.Clamp(Screen.width * 0.45f, 260f, 440f);
@@ -231,21 +294,42 @@ public class InGameChatUI : MonoBehaviour
     }
 
     // ==========================================
-    // 2. Floating Messenger Circular / Pill Button
+    // 2. Top-Ribbon Mini Chat Toggle (Safe from Joystick)
+    // ==========================================
+
+    private void DrawTopMiniChatToggle()
+    {
+        // Placed in top ribbon next to [⚙️ PAUSE (ESC)] button (x=16, w=145 -> x=169)
+        float pauseW = 145f;
+        float x = 16f + pauseW + 8f;
+        float y = 14f;
+        float h = 34f;
+        float w = IsChatMuted ? 44f : (unreadMessagesCount > 0 ? 56f : 44f);
+
+        string label = IsChatMuted ? "🔕" : ((unreadMessagesCount > 0) ? $"💬 {unreadMessagesCount}" : "💬");
+        Color accent = IsChatMuted
+            ? new Color(1f, 0.40f, 0.30f)
+            : ((unreadMessagesCount > 0) ? new Color(0.2f, 0.95f, 0.45f) : EnchantedNatureGUI.AntiqueGoldBright);
+
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x, y, w, h), label, accent, 11, IsChatMuted))
+        {
+            if (IsChatOpen) CloseChat();
+            else OpenChat();
+        }
+    }
+
+    // ==========================================
+    // 3. Floating Messenger Button (Desktop)
     // ==========================================
 
     private void DrawFloatingMessengerButton()
     {
+        if (IsChatMuted) return;
+
         float btnW = 54f;
         float btnH = 40f;
         float x = 16f;
         float y = Screen.height - 130f;
-
-        // Position slightly higher if mobile controls are active
-        if (MobileUI.IsMobileActive)
-        {
-            y = Screen.height - 180f;
-        }
 
         Rect btnRect = new Rect(x, y, btnW, btnH);
 
@@ -272,7 +356,7 @@ public class InGameChatUI : MonoBehaviour
     }
 
     // ==========================================
-    // 3. Expanded Messenger Team Chat Window
+    // 4. Expanded Messenger Team Chat Window
     // ==========================================
 
     private void DrawInMatchTeamChatWindow()
@@ -332,7 +416,7 @@ public class InGameChatUI : MonoBehaviour
             alignment = TextAnchor.MiddleLeft
         };
         headerStyle.normal.textColor = teamBorderCol;
-        GUI.Label(new Rect(x + 12f, y + 8f, winW - 50f, 22f), teamTitle, headerStyle);
+        GUI.Label(new Rect(x + 12f, y + 8f, winW - 120f, 22f), teamTitle, headerStyle);
 
         // Subtitle: Private Team Notice
         GUIStyle subNoticeStyle = new GUIStyle(GUI.skin.label)
@@ -356,11 +440,20 @@ public class InGameChatUI : MonoBehaviour
             hi: "🔒 सुरक्षित टीम चैनल। विरोधी इसे नहीं पढ़ सकते।",
             zh: "🔒 队伍加密通讯，敌方无法窥视。",
             ja: "🔒 チーム暗号化チャンネル。敵には見えません。");
-        GUI.Label(new Rect(x + 12f, y + 27f, winW - 50f, 16f), subNotice, subNoticeStyle);
+        GUI.Label(new Rect(x + 12f, y + 27f, winW - 120f, 16f), subNotice, subNoticeStyle);
+
+        // Mute / Silence Button (🔕 كتم الشات)
+        float muteW = 66f;
+        string muteTip = LanguageSelectionUI.Localize("🔕 Mute", ar: "🔕 كتم", fa: "🔕 بی‌صدا", ru: "🔕 Загл.", fr: "🔕 Muet", es: "🔕 Silenc.");
+        if (EnchantedNatureGUI.DrawAncientGoldButton(new Rect(x + winW - 36f - muteW, y + 7f, muteW, 25f), muteTip, new Color(1f, 0.65f, 0.35f), 10, false))
+        {
+            SetChatMuted(true);
+            return;
+        }
 
         // Close (✕) Button
         GUI.color = new Color(0.9f, 0.3f, 0.3f);
-        if (GUI.Button(new Rect(x + winW - 32f, y + 8f, 24f, 22f), "✕"))
+        if (GUI.Button(new Rect(x + winW - 30f, y + 7f, 24f, 25f), "✕"))
         {
             CloseChat();
             return;
@@ -465,7 +558,7 @@ public class InGameChatUI : MonoBehaviour
     }
 
     // ==========================================
-    // 4. Quick Tactical Pings Grid (8 Pings)
+    // 5. Quick Tactical Pings Grid (8 Pings)
     // ==========================================
 
     private void DrawQuickPingsGrid(float startX, float startY, float totalWidth, bool inLobby)
@@ -529,7 +622,7 @@ public class InGameChatUI : MonoBehaviour
     }
 
     // ==========================================
-    // 5. Embedded Friendly Lobby Room Chat
+    // 6. Embedded Friendly Lobby Room Chat
     // ==========================================
 
     public void DrawEmbeddedRoomChat(Rect rect)

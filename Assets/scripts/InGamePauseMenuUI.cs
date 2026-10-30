@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 
@@ -161,7 +161,7 @@ public class InGamePauseMenuUI : MonoBehaviour
         GUI.color = Color.white;
 
         float modalW = Mathf.Min(520f, Screen.width - 24f);
-        float modalH = Mathf.Min(545f, Screen.height - 24f);
+        float modalH = Mathf.Min(600f, Screen.height - 20f);
         float mx = (Screen.width - modalW) / 2f;
         float my = (Screen.height - modalH) / 2f;
 
@@ -350,7 +350,47 @@ public class InGamePauseMenuUI : MonoBehaviour
 
         contentY += 52f;
 
-        // 5. Return to Main Menu / Leave Match Button
+        // 5. Team Chat Mute / Unmute Toggle Button
+        bool isChatMuted = InGameChatUI.IsChatMuted;
+        string chatToggleText = isChatMuted
+            ? LanguageSelectionUI.Localize(
+                "🔕 TEAM CHAT: MUTED (Click to Enable)",
+                ar: "🔕 محادثة الفريق: صامتة ومخفية (انقر للتفعيل)",
+                fa: "🔕 گفتگوی تیم: غیرفعال (کلیک برای فعال‌سازی)",
+                de: "🔕 TEAM-CHAT: STUMMGESCHALTET (Aktivieren)",
+                it: "🔕 CHAT DI SQUADRA: DISATTIVATA (Attiva)",
+                tr: "🔕 TAKIM SOHBETİ: SESSIZ (Aç)",
+                ru: "🔕 ЧАТ КОМАНДЫ: ОТКЛЮЧЕН (Включить)",
+                fr: "🔕 CHAT D'ÉQUIPE : DÉSACTIVÉ (Activer)",
+                es: "🔕 CHAT DE EQUIPO: SILENCIADO (Activar)",
+                hi: "🔕 टीम चैट: म्यूट है (सक्षम करने के लिए क्लिक करें)",
+                zh: "🔕 队伍聊天：已静音隐藏（点击开启）",
+                ja: "🔕 チームチャット：ミュート中（クリックで有効化）",
+                pt: "🔕 CHAT DE EQUIPE: SILENCIADO (Ativar)")
+            : LanguageSelectionUI.Localize(
+                "💬 TEAM CHAT: ACTIVE (Click to Mute)",
+                ar: "💬 محادثة الفريق: مفعّلة (انقر للإسكات والإخفاء)",
+                fa: "💬 گفتگوی تیم: فعال (کلیک برای بی‌صدا کردن)",
+                de: "💬 TEAM-CHAT: AKTIV (Stummschalten)",
+                it: "💬 CHAT DI SQUADRA: ATTIVA (Disattiva)",
+                tr: "💬 TAKIM SOHBETİ: AÇIK (Sessize Al)",
+                ru: "💬 ЧАТ КОМАНДЫ: ВКЛЮЧЕН (Заглушить)",
+                fr: "💬 CHAT D'ÉQUIPE : ACTIF (Désactiver)",
+                es: "💬 CHAT DE EQUIPO: ACTIVO (Silenciar)",
+                hi: "💬 टीम चैट: सक्रिय है (म्यूट करने के लिए क्लिक करें)",
+                zh: "💬 队伍聊天：已开启（点击静音）",
+                ja: "💬 チームチャット：有効（クリックでミュート）",
+                pt: "💬 CHAT DE EQUIPE: ATIVO (Silenciar)");
+
+        Color chatBtnColor = isChatMuted ? new Color(0.95f, 0.45f, 0.35f) : new Color(0.35f, 0.88f, 0.95f);
+        if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(itemX, contentY, itemW, 42f), chatToggleText, chatBtnColor, 12))
+        {
+            InGameChatUI.ToggleChatMute();
+        }
+
+        contentY += 50f;
+
+        // 6. Return to Main Menu / Leave Match Button
         string leaveBtnText = LanguageSelectionUI.Localize(
             "🚪 RETURN TO GROVE / MAIN MENU",
             ar: "🚪 مغادرة المعركة والعودة للبداية",
