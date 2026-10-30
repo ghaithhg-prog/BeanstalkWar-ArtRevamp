@@ -119,7 +119,8 @@ public class MobileUI : MonoBehaviour
             CharacterSelectionUI.IsSelectionOpen || 
             PlayerProgressionAndShopUI.IsShopOpen || 
             PlayModeUI.IsPlayModeMenuOpen ||
-            GameIntroBriefingUI.IsBriefingOpen)
+            GameIntroBriefingUI.IsBriefingOpen ||
+            MatchEndStatsUI.IsGameOverActive)
         {
             shouldShow = false;
         }

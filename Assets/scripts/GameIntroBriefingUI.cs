@@ -259,6 +259,7 @@ public class GameIntroBriefingUI : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (LanguageSelectionUI.IsLanguageModalOpen) return;
 
         // Ensure Guide button and modals are ALWAYS in front of any screen overlay or background haze!

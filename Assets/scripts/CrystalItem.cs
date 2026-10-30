@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
@@ -537,6 +537,8 @@ public class CrystalItem : NetworkBehaviour
         {
             if (currentCarrierObj == null) ResolveCarrierObject();
             if (droppedAuraEffect != null) droppedAuraEffect.Stop();
+            string carrierName = currentCarrierObj != null ? currentCarrierObj.name : "A Protector Hero";
+            InGameChatManager.Instance?.NotifyCrystalPickedUp(carrierName);
         }
         else
         {
@@ -553,6 +555,8 @@ public class CrystalItem : NetworkBehaviour
         else
         {
             if (droppedAuraEffect != null) droppedAuraEffect.Stop();
+            string carrierName = currentCarrierObj != null ? currentCarrierObj.name : "A Protector Hero";
+            InGameChatManager.Instance?.NotifyCrystalPickedUp(carrierName);
         }
     }
 

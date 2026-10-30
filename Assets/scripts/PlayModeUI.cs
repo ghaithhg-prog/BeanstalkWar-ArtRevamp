@@ -188,6 +188,7 @@ public class PlayModeUI : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (LanguageSelectionUI.IsLanguageModalOpen) return;
         if (!isMenuVisible || SelectedMode != PlayMode.None) return;
         if (GameIntroBriefingUI.IsBriefingOpen) return;

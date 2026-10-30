@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -229,6 +229,8 @@ public class GameStateManager : MonoBehaviour
 
         currentState =
             GameState.Playing;
+
+        InGameChatManager.Instance?.NotifyMatchStarted();
 
         Debug.Log(
             "MATCH STARTED!"

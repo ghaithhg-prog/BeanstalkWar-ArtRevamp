@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// طاقة الجبار (Titan Power Buff):
@@ -121,6 +121,7 @@ public class TitanPowerBuff : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (!isActive) return;
 
         PlayerMovement pm = GetComponent<PlayerMovement>();

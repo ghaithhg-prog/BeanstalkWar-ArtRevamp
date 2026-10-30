@@ -124,6 +124,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (GameIntroBriefingUI.IsBriefingOpen) return;
 
         bool isPlaying = GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying();
@@ -143,7 +144,7 @@ public class PlayerProgressionAndShopUI : MonoBehaviour
         }
 
         // عند فتح شاشات اللوبي، واختيار الفرق، واختيار الأبطال، أو شاشة البداية، نخفي الشريط العلوي
-        if (PlayModeUI.isTitleScreenActive)
+        if (PlayModeUI.isTitleScreenActive || PlayModeUI.SelectedMode != PlayModeUI.PlayMode.None)
         {
             DrawNotificationBanner();
             return;

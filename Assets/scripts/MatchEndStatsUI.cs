@@ -39,6 +39,7 @@ public class MatchEndStatsUI : MonoBehaviour
 
     private Dictionary<int, PlayerMatchStat> stats = new Dictionary<int, PlayerMatchStat>();
     private bool isGameOver = false;
+    public static bool IsGameOverActive => Instance != null && Instance.isGameOver;
     private string winningTeamName = "Protectors";
     private float gameOverTime = 0f;
     private Vector2 scrollPos = Vector2.zero;
@@ -229,15 +230,17 @@ public class MatchEndStatsUI : MonoBehaviour
     {
         if (!isGameOver) return;
 
+        GUI.depth = -500;
+
         // Dim background overlay
         GUI.color = new Color(0f, 0f, 0f, 0.78f);
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        float boxWidth = Mathf.Min(Screen.width * 0.94f, 800f);
-        float boxHeight = Mathf.Min(Screen.height * 0.90f, 600f);
+        float boxWidth = Mathf.Min(Screen.width * 0.94f, 820f);
+        float boxHeight = Mathf.Min(Screen.height * 0.92f, 610f);
         float startX = (Screen.width - boxWidth) / 2f;
-        float startY = (Screen.height - boxHeight) / 2f;
+        float startY = Mathf.Max(20f, (Screen.height - boxHeight) / 2f);
 
         // 1. Ancient Parchment Background Frame with Radiant Pulsing Border
         float glowPulse = (Mathf.Sin(Time.time * 3.5f) + 1f) * 0.5f;
@@ -301,7 +304,7 @@ public class MatchEndStatsUI : MonoBehaviour
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = 20,
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.024f), 15, 20),
             fontStyle = FontStyle.Bold
         };
         titleStyle.normal.textColor = bannerColor;

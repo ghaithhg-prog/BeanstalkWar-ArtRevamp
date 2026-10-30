@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections.Generic;
 
@@ -15,7 +15,8 @@ public class FriendlyLobbyUI : MonoBehaviour
     private string roomCode = "ROOM-7782";
     private string connectIP = "127.0.0.1";
     private bool fillBots = true;
-    public bool openToFriends = true; // مفتوحة للأصدقاء في قائمة الأصدقاء
+    public bool openToFriends = true;
+    private bool showLobbyChatTabOnMobile = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
@@ -141,8 +142,9 @@ public class FriendlyLobbyUI : MonoBehaviour
         }
 
         // رسم نافذة اللوبي في منتصف الشاشة
-        float winWidth = Mathf.Min(680f, Screen.width - 20f);
-        float winHeight = Mathf.Min(520f, Screen.height - 20f);
+        bool inActiveRoom = (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening);
+        float winWidth = inActiveRoom ? Mathf.Min(960f, Screen.width - 20f) : Mathf.Min(680f, Screen.width - 20f);
+        float winHeight = Mathf.Min(530f, Screen.height - 20f);
         float winX = (Screen.width - winWidth) / 2f;
         float winY = (Screen.height - winHeight) / 2f;
 
@@ -283,17 +285,58 @@ public class FriendlyLobbyUI : MonoBehaviour
         // ==========================================
         // Team Selection (Protectors vs Destroyers)
         // ==========================================
-        float colWidth = (winWidth - 50) / 2f;
+        bool isWideLayout = (winWidth >= 880f);
         float colHeight = winHeight - 175;
-        float leftX = winX + 18;
-        float rightX = winX + 32 + colWidth;
         float colY = winY + 98;
 
-        // Tree Protectors Column
-        DrawTeamBox(leftX, colY, colWidth, colHeight, PlayerMovement.TeamType.Protector, "🛡️ TREE PROTECTORS", new Color(0.15f, 0.6f, 1f));
+        if (isWideLayout)
+        {
+            float chatWidth = 285f;
+            float teamColWidth = (winWidth - chatWidth - 56f) / 2f;
+            float leftX = winX + 16;
+            float rightX = leftX + teamColWidth + 12f;
+            float chatX = rightX + teamColWidth + 12f;
 
-        // Tree Destroyers Column
-        DrawTeamBox(rightX, colY, colWidth, colHeight, PlayerMovement.TeamType.Destroyer, "⚔️ TREE DESTROYERS", new Color(1f, 0.3f, 0.15f));
+            // Tree Protectors Column
+            DrawTeamBox(leftX, colY, teamColWidth, colHeight, PlayerMovement.TeamType.Protector, "🛡️ TREE PROTECTORS", new Color(0.15f, 0.6f, 1f));
+
+            // Tree Destroyers Column
+            DrawTeamBox(rightX, colY, teamColWidth, colHeight, PlayerMovement.TeamType.Destroyer, "⚔️ TREE DESTROYERS", new Color(1f, 0.3f, 0.15f));
+
+            // Embedded Room Chat Column
+            if (InGameChatUI.Instance != null)
+            {
+                InGameChatUI.Instance.DrawEmbeddedRoomChat(new Rect(chatX, colY, chatWidth, colHeight));
+            }
+        }
+        else
+        {
+            // Compact / Mobile Layout: Tabs for [Teams] and [Chat]
+            float tabW = (winWidth - 40f) / 2f;
+            float tabY = winY + 92f;
+            float contentY = winY + 124f;
+            float contentH = winHeight - 195f;
+
+            string teamsTab = LanguageSelectionUI.Localize("👥 Teams", ar: "👥 الفرق", fa: "👥 تیم‌ها", ru: "👥 Команды");
+            string chatTab = LanguageSelectionUI.Localize("💬 Room Chat", ar: "💬 محادثة الغرفة", fa: "💬 گفتگوی اتاق", ru: "💬 Чат комнаты");
+
+            if (GUI.Button(new Rect(winX + 16f, tabY, tabW, 26f), teamsTab)) showLobbyChatTabOnMobile = false;
+            if (GUI.Button(new Rect(winX + 24f + tabW, tabY, tabW, 26f), chatTab)) showLobbyChatTabOnMobile = true;
+
+            if (showLobbyChatTabOnMobile)
+            {
+                if (InGameChatUI.Instance != null)
+                {
+                    InGameChatUI.Instance.DrawEmbeddedRoomChat(new Rect(winX + 16f, contentY, winWidth - 32f, contentH));
+                }
+            }
+            else
+            {
+                float colW = (winWidth - 44f) / 2f;
+                DrawTeamBox(winX + 16f, contentY, colW, contentH, PlayerMovement.TeamType.Protector, "🛡️ PROTECTORS", new Color(0.15f, 0.6f, 1f));
+                DrawTeamBox(winX + 28f + colW, contentY, colW, contentH, PlayerMovement.TeamType.Destroyer, "⚔️ DESTROYERS", new Color(1f, 0.3f, 0.15f));
+            }
+        }
 
         // Bottom Controls
         float btmY = winY + winHeight - 55;

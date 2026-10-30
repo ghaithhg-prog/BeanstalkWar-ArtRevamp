@@ -414,6 +414,7 @@ public class PlayerXP : NetworkBehaviour
     void OnGUI()
     {
         if (!IsOwner) return;
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (GameStateManager.Instance == null || !GameStateManager.Instance.IsPlaying()) return;
         if (Camera.main == null) return;
 

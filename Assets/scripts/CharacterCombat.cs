@@ -139,6 +139,13 @@ public class CharacterCombat : NetworkBehaviour
             return;
         }
 
+        // Do not fire attacks while typing in chat or while chat is open
+        if (InGameChatUI.IsTyping || InGameChatUI.IsChatOpen)
+        {
+            attackButtonPressed = false;
+            return;
+        }
+
         AlignWithCamera();
 
         bool mouseAttack = Input.GetMouseButtonDown(0);

@@ -983,6 +983,7 @@ public class TreeGrowth : MonoBehaviour
 
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, minAllowedHealth, maxHealth);
+        InGameChatManager.Instance?.NotifyTreeHealthChanged(currentHealth, maxHealth);
     }
 
     public void Heal(float amount, GameObject healer = null)
@@ -1043,6 +1044,7 @@ public class TreeGrowth : MonoBehaviour
     // =========================
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (GameStateManager.Instance != null && !GameStateManager.Instance.IsPlaying()) return;
 
         if (isCollapsingBannerActive)

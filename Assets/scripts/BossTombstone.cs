@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 
@@ -199,6 +199,7 @@ public class BossTombstone : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (isCollected) return;
 
         PlayerMovement localPlayer = GetLocalPlayer();

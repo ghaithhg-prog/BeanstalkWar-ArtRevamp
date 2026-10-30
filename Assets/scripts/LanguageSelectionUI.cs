@@ -1172,6 +1172,7 @@ public class LanguageSelectionUI : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (showLanguageModal)
         {
             // Highest priority depth ensures language screen is strictly in front of everything

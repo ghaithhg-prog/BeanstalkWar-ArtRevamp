@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -245,6 +245,7 @@ public class Health : MonoBehaviour
 
     IEnumerator RespawnCoroutine()
     {
+
         PlayerMovement player = GetComponent<PlayerMovement>();
         BotController bot = GetComponent<BotController>();
         bool isHumanOwner = player != null && player.IsOwner && bot == null;
@@ -377,6 +378,7 @@ public class Health : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         PlayerMovement player = GetComponent<PlayerMovement>();
         BotController bot = GetComponent<BotController>();
         bool isHumanOwner = player != null && player.IsOwner && bot == null;

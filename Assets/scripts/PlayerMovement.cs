@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 
 public class PlayerMovement : NetworkBehaviour
@@ -301,6 +301,24 @@ public class PlayerMovement : NetworkBehaviour
 
         // Apply immediately locally so visuals, 3D model, and stats are responsive
         ApplyCharacter(characterID);
+    }
+
+    // =========================
+    // In-Game Team & Room Chat Network RPCs
+    // =========================
+    [Rpc(SendTo.Server)]
+    public void SendChatMessageServerRpc(string senderName, int channel, string text, bool isBot, bool isQuickPing, int pingType)
+    {
+        ReceiveChatMessageClientRpc(senderName, channel, text, isBot, isQuickPing, pingType);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void ReceiveChatMessageClientRpc(string senderName, int channel, string text, bool isBot, bool isQuickPing, int pingType)
+    {
+        if (InGameChatManager.Instance != null)
+        {
+            InGameChatManager.Instance.ReceiveMessageFromNetwork(senderName, (InGameChatManager.ChatChannel)channel, text, isBot, isQuickPing, (InGameChatManager.QuickPingType)pingType);
+        }
     }
 
     [Rpc(SendTo.ClientsAndHost)]
@@ -914,6 +932,16 @@ public class PlayerMovement : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
         {
             SprintToggleActive = !SprintToggleActive;
+        }
+
+        // Pause character movement, sprint, and jump when typing in chat
+        if (InGameChatUI.IsTyping)
+        {
+            if (rb != null && !rb.isKinematic)
+            {
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            }
+            return;
         }
 
         CheckGroundedRaycast();

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.AI;
 using System.Collections;
@@ -111,6 +111,7 @@ public class LevelBoss : NetworkBehaviour
             isAwaitingLevelUnlock = false;
             gameObject.SetActive(true);
             SetBossDormant(false);
+        InGameChatManager.Instance?.NotifyBossSpawned(bossTitle);
 
             GameObject lvl1Obj = GameObject.Find("Level_1");
             myPlatformObject = lvl1Obj;
@@ -173,6 +174,7 @@ public class LevelBoss : NetworkBehaviour
             isDormant = false;
             isAwaitingLevelUnlock = false;
             SetBossDormant(false);
+        InGameChatManager.Instance?.NotifyBossSpawned(bossTitle);
         }
         else
         {
@@ -491,6 +493,7 @@ public class LevelBoss : NetworkBehaviour
         guardCenter = new Vector3(platformPos.x, y, platformPos.z);
         transform.position = guardCenter;
         SetBossDormant(false);
+        InGameChatManager.Instance?.NotifyBossSpawned(bossTitle);
 
         maxBossHealth = GetExpectedMaxHealth();
         attackDamage = GetExpectedAttackDamage();
@@ -793,6 +796,7 @@ public class LevelBoss : NetworkBehaviour
 
         GameObject killer = health != null ? health.lastAttacker : null;
         string killerName = killer != null ? killer.name : "A Brave Champion";
+        InGameChatManager.Instance?.NotifyBossDefeated(bossTitle, killerName);
         PlayerMovement.TeamType killerTeam = PlayerMovement.TeamType.Protector;
 
         if (killer != null)
@@ -1049,6 +1053,7 @@ public class LevelBoss : NetworkBehaviour
     // =========================
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
         if (isDormant || isDefeated || health == null || health.isDead) return;
         if (Camera.main == null) return;
 

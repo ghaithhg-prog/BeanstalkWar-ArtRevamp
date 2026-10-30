@@ -70,8 +70,8 @@ public class InGamePauseMenuUI : MonoBehaviour
             else
             {
                 // Only allow pause menu if in active match or character is active
-                if ((GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying()) ||
-                    (PlayerMovement.LocalPlayer != null && PlayerMovement.LocalPlayer.hasSelectedCharacter.Value))
+                if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying())
+    
                 {
                     OpenPauseMenu();
                 }
@@ -99,6 +99,8 @@ public class InGamePauseMenuUI : MonoBehaviour
 
     void OnGUI()
     {
+        if (MatchEndStatsUI.IsGameOverActive) return;
+
         // 1. In-Game Pause & Settings Corner HUD Button (always visible during active gameplay when pause menu is closed)
         if (!isMenuOpen && 
             !LanguageSelectionUI.IsLanguageModalOpen && 
@@ -106,8 +108,8 @@ public class InGamePauseMenuUI : MonoBehaviour
             !CharacterSelectionUI.IsSelectionOpen &&
             !PlayerProgressionAndShopUI.IsShopOpen)
         {
-            if ((GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying()) ||
-                (PlayerMovement.LocalPlayer != null && PlayerMovement.LocalPlayer.hasSelectedCharacter.Value))
+            if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying())
+
             {
                 GUI.depth = -100;
                 DrawPauseCornerButton();
