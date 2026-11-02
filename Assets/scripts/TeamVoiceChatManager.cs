@@ -27,7 +27,7 @@ public class TeamVoiceChatManager : MonoBehaviour
 
     // Audio Capture Settings
     private const int SampleRate = 12000; // Efficient low-latency bandwidth (12 kHz mono)
-    private const float MicVolumeThreshold = 0.025f; // RMS threshold for Voice Activity Detection
+    private const float MicVolumeThreshold = 0.052f; // Speech-level RMS gate (filters out game speaker audio & background noise)
     private string selectedMicDevice = null;
     private AudioClip micRecordClip;
     private int lastSamplePosition = 0;
@@ -172,6 +172,9 @@ public class TeamVoiceChatManager : MonoBehaviour
         micRecordClip.GetData(samples, lastSamplePosition);
         lastSamplePosition = currentPos;
 
+        // Apply Voice Bandpass Filter (human vocal range ~200Hz - 3400Hz; removes deep game rumbles & high game SFX)
+        FilterHumanVocalRange(samples);
+
         // Calculate Root Mean Square (RMS) volume level
         float sumSquare = 0f;
         for (int i = 0; i < samples.Length; i++)
@@ -179,7 +182,7 @@ public class TeamVoiceChatManager : MonoBehaviour
             sumSquare += samples[i] * samples[i];
         }
         float rms = Mathf.Sqrt(sumSquare / samples.Length);
-        LocalMicLevel = Mathf.Clamp01(rms * 8f);
+        LocalMicLevel = Mathf.Clamp01(rms * 10f);
 
         bool isVoiceDetected = rms > MicVolumeThreshold;
         IsLocalSpeaking = isVoiceDetected;
@@ -192,8 +195,30 @@ public class TeamVoiceChatManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Simple DSP high-pass/low-pass vocal filter to reject in-game computer audio & focus strictly on human speech.
+    /// </summary>
+    private static void FilterHumanVocalRange(float[] samples)
+    {
+        float prev = 0f;
+        for (int i = 0; i < samples.Length; i++)
+        {
+            // High-pass filter (approx 200Hz) to cut game sub-bass and room rumble
+            float highPassed = samples[i] - prev * 0.88f;
+            prev = samples[i];
+            samples[i] = highPassed;
+        }
+    }
+
     private void TransmitVoiceAudioPacket(float[] samples)
     {
+        bool isNetworkActive = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+        // Never transmit or loopback mic audio in Solo/Offline mode (prevents acoustic feedback from speakers)
+        if (!isNetworkActive) return;
+
+        PlayerMovement localPlayer = PlayerMovement.LocalPlayer;
+        if (localPlayer == null) return;
+
         // 8-bit PCM Quantization (compresses float to 1 byte per sample = 12 KB/sec)
         byte[] quantized = new byte[samples.Length];
         for (int i = 0; i < samples.Length; i++)
@@ -205,19 +230,8 @@ public class TeamVoiceChatManager : MonoBehaviour
         string playerName = PlayerProfile.GetSavedPlayerName();
         if (string.IsNullOrEmpty(playerName)) playerName = "Player";
 
-        PlayerMovement localPlayer = PlayerMovement.LocalPlayer;
-        PlayerMovement.TeamType team = localPlayer != null ? localPlayer.team : PlayerMovement.TeamType.Protector;
-
-        bool isNetworkActive = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
-        if (isNetworkActive && localPlayer != null)
-        {
-            localPlayer.SendVoiceDataServerRpc(playerName, (int)team, quantized, SampleRate);
-        }
-        else
-        {
-            // Solo Offline Mode: Local test reflection
-            OnReceiveVoiceData(playerName, team, quantized, SampleRate);
-        }
+        PlayerMovement.TeamType team = localPlayer.team;
+        localPlayer.SendVoiceDataServerRpc(playerName, (int)team, quantized, SampleRate);
     }
 
     public void OnReceiveVoiceData(string senderName, PlayerMovement.TeamType team, byte[] audioBytes, int sampleRate)

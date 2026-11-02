@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.AI;
 using System.Collections;
@@ -787,6 +787,34 @@ public class LevelBoss : NetworkBehaviour
     }
 
     public bool IsAwakenedAndAlive => !isDormant && !isAwaitingLevelUnlock && !isDefeated && (health == null || !health.isDead);
+    public float CurrentHealth => health != null ? health.currentHealth : maxBossHealth;
+    public float MaxHealth => health != null ? health.maxHealth : maxBossHealth;
+
+    public void ApplyNetworkDamage(float damage, GameObject attacker)
+    {
+        if (health != null && !health.isDead)
+        {
+            health.TakeDamage(damage, attacker);
+            if (health.isDead)
+            {
+                OnBossDefeated();
+            }
+        }
+    }
+
+    public void SetSyncedHealth(float syncedCurrentHealth, float maxHp)
+    {
+        if (health != null)
+        {
+            health.maxHealth = maxHp;
+            health.currentHealth = syncedCurrentHealth;
+            if (syncedCurrentHealth <= 0f && !health.isDead)
+            {
+                health.isDead = true;
+                OnBossDefeated();
+            }
+        }
+    }
 
     public void OnBossDefeated()
     {

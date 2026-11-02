@@ -393,8 +393,8 @@ public class FreeFireCombatAudio : MonoBehaviour
         if (Instance == null || Instance.sfxSource2D == null) return;
         GenerateClips();
         AudioClip clip = isHeavy ? clipSwingHeavy : clipSwingLight;
-        Instance.sfxSource2D.pitch = UnityEngine.Random.Range(0.94f, 1.06f);
-        Instance.sfxSource2D.PlayOneShot(clip, 0.42f);
+        Instance.sfxSource2D.pitch = UnityEngine.Random.Range(0.96f, 1.04f);
+        Instance.sfxSource2D.PlayOneShot(clip, 0.10f); // Very soft, subtle whoosh
     }
 
     public static void PlayHitImpact(Vector3 pos, HitMaterial material)
@@ -408,20 +408,20 @@ public class FreeFireCombatAudio : MonoBehaviour
         {
             case HitMaterial.Wood:
                 clip = clipHitWood;
-                vol = 0.68f;
+                vol = 0.14f; // Soft muted wood impact
                 break;
             case HitMaterial.Armor:
                 clip = clipHitArmor;
-                vol = 0.65f;
+                vol = 0.12f; // Soft metallic clink
                 break;
             case HitMaterial.Flesh:
             default:
                 clip = clipHitFlesh;
-                vol = 0.58f;
+                vol = 0.11f; // Faint, subtle strike
                 break;
         }
 
-        Instance.sfxSource2D.pitch = UnityEngine.Random.Range(0.92f, 1.08f);
+        Instance.sfxSource2D.pitch = UnityEngine.Random.Range(0.95f, 1.05f);
         Instance.sfxSource2D.PlayOneShot(clip, vol);
     }
 
@@ -430,8 +430,8 @@ public class FreeFireCombatAudio : MonoBehaviour
         if (Instance == null || Instance.footstepSource == null) return;
         GenerateClips();
 
-        Instance.footstepSource.pitch = UnityEngine.Random.Range(0.88f, 1.14f);
-        float vol = isSprint ? 0.38f : 0.24f;
+        Instance.footstepSource.pitch = UnityEngine.Random.Range(0.92f, 1.08f);
+        float vol = isSprint ? 0.08f : 0.05f; // Extremely gentle, unobtrusive footsteps
         Instance.footstepSource.PlayOneShot(clipFootstep, vol);
     }
 

@@ -544,6 +544,9 @@ public class TreeGrowth : MonoBehaviour
             yield break;
         }
 
+        // تجميد كافة اللاعبين والبوتات فوراً لمشاهدة مشهد الدمار والسقوط
+        PlayerMovement.FreezeAllPlayers(true);
+
         // المرحلة الأولى: هزة عنيفة وتشقق الجذع واهتزاز الشاشة وصوت التصدع (0.5 ثانية)
         ThirdPersonCamera.Shake(1.2f, 0.55f);
         SpawnCollapseDebris(transform.position + Vector3.up * 2.5f, 16);
@@ -587,17 +590,17 @@ public class TreeGrowth : MonoBehaviour
 
         pivot.rotation = startRot * Quaternion.AngleAxis(90f, fallAxis);
 
-        // المرحلة الثالثة: الارتطام الكارثي بالأرض ومؤثرات الانفجار السريعة (0.3 ثانية لتكتمل الـ 2.0 ثانية بالضبط)
-        ThirdPersonCamera.Shake(1.6f, 0.85f);
+        // المرحلة الثالثة: الارتطام الكارثي بالأرض واحتفال الدمار لـ 5 ثوانٍ كاملة يشاهد فيها اللاعبون سقوط النيازك والانفجارات
+        ThirdPersonCamera.Shake(2.5f, 0.85f);
         SpawnGroundImpactShockwave(pivot.position, 90f);
         SpawnCollapseDebris(pivot.position + fallAxis * 20f, 25);
-        FreeFireCombatAudio.PlayHitImpact(pivot.position, FreeFireCombatAudio.HitMaterial.Wood);
 
         yield return StartCoroutine(ApocalypticDestructionCelebrationRoutine(pivot.position, fallAxis));
 
         isCollapsingBannerActive = false;
+        PlayerMovement.FreezeAllPlayers(false);
 
-        // المرحلة الرابعة: إنهاء المعركة فوراً بعد ثانيتين من بدء الانهيار!
+        // المرحلة الرابعة: إنهاء المعركة وعرض شاشة النتيجة بعد انقضاء الـ 5 ثوانٍ بالكامل
         if (GameStateManager.Instance != null)
         {
             GameStateManager.Instance.EndGame("Destroyers");
@@ -644,10 +647,10 @@ public class TreeGrowth : MonoBehaviour
             flameEmberList.Add(fObj.transform);
         }
 
-        // Fast dramatic explosion duration (0.3s) so the entire sequence completes in 2.0s
-        float celebrationDuration = 0.3f;
+        // مشاهدة الدمار والنيازك لمدة 5 ثوانٍ كاملة وفق طلب اللاعب
+        float celebrationDuration = 5.0f;
         float elapsed = 0f;
-        float nextMeteorTime = 0.02f;
+        float nextMeteorTime = 0.05f;
 
         while (elapsed < celebrationDuration)
         {
@@ -670,9 +673,10 @@ public class TreeGrowth : MonoBehaviour
 
             if (elapsed >= nextMeteorTime)
             {
-                nextMeteorTime = elapsed + 0.08f;
-                Vector3 targetLand = treePos + fallAxis * Random.Range(0f, 30f) + new Vector3(Random.Range(-12f, 12f), 0f, Random.Range(-12f, 12f));
-                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-18f, -6f), Random.Range(40f, 60f), Random.Range(-18f, -6f));
+                nextMeteorTime = elapsed + Random.Range(0.18f, 0.32f);
+                ThirdPersonCamera.Shake(0.35f, 0.25f);
+                Vector3 targetLand = treePos + fallAxis * Random.Range(0f, 35f) + new Vector3(Random.Range(-18f, 18f), 0f, Random.Range(-18f, 18f));
+                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-20f, -8f), Random.Range(45f, 65f), Random.Range(-20f, -8f));
                 StartCoroutine(SingleMeteorRoutine(meteorSpawn, targetLand));
             }
 
@@ -945,6 +949,20 @@ public class TreeGrowth : MonoBehaviour
     // =========================
     // Health
     // =========================
+
+    public void SetSyncedHealth(float syncedCurrentHealth, float maxHp)
+    {
+        maxHealth = maxHp;
+        currentHealth = syncedCurrentHealth;
+        if (healthBarFill != null && maxHealth > 0f)
+        {
+            healthBarFill.fillAmount = Mathf.Clamp01(currentHealth / maxHealth);
+        }
+        if (currentHealth <= 0f && !isDead)
+        {
+            EnterCriticalState();
+        }
+    }
 
     public void TakeDamage(float amount)
     {

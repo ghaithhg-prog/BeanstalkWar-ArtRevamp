@@ -144,7 +144,7 @@ public class Health : MonoBehaviour
         TakeDamage(amount);
     }
 
-    void Die()
+    public void Die()
     {
         if (isDead) return;
         isDead = true;

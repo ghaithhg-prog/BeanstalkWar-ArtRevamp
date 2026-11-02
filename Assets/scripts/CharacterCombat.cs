@@ -312,7 +312,6 @@ public class CharacterCombat : NetworkBehaviour
                 {
                     targetTree.Heal(amount, gameObject);
                 }
-                FreeFireCombatAudio.PlayHitImpact(targetTree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
             }
         }
         else if (target != null)
@@ -325,9 +324,6 @@ public class CharacterCombat : NetworkBehaviour
                 CharacterCombat targetCombat = target.GetComponent<CharacterCombat>() ?? target.GetComponentInParent<CharacterCombat>() ?? (targetHp != null ? targetHp.GetComponent<CharacterCombat>() : null);
                 if (targetHp != null && targetCombat != null && targetCombat.team != team && !targetHp.isDead)
                 {
-                    bool isBoss = (target.GetComponent<LevelBoss>() != null || target.GetComponentInParent<LevelBoss>() != null || target.name.ToLower().Contains("boss"));
-                    FreeFireCombatAudio.PlayHitImpact(target.position, isBoss ? FreeFireCombatAudio.HitMaterial.Armor : FreeFireCombatAudio.HitMaterial.Flesh);
-
                     PlayerXP xp = GetComponent<PlayerXP>();
                     float xpMult = (xp != null) ? xp.GetDamageMultiplier() : 1f;
                     targetHp.TakeDamage(attackDamage * xpMult, gameObject);
@@ -459,7 +455,12 @@ public class CharacterCombat : NetworkBehaviour
 
     void PerformAttack()
     {
-        FreeFireCombatAudio.PlayAttackSwing(transform.position, attackType == AttackType.Melee);
+        if (PlayerMovement.AreControlsLocked) return;
+
+        if (IsOwner)
+        {
+            FreeFireCombatAudio.PlayAttackSwing(transform.position, attackType == AttackType.Melee);
+        }
 
         CharacterVisualAnimator anim = GetComponentInChildren<CharacterVisualAnimator>();
         if (anim != null)
@@ -538,7 +539,18 @@ public class CharacterCombat : NetworkBehaviour
                     );
                 }
 
-                FreeFireCombatAudio.PlayHitImpact(tree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
+                if (IsOwner)
+                {
+                    FreeFireCombatAudio.PlayHitImpact(tree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
+
+                    if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                    {
+                        if (team == PlayerMovement.TeamType.Destroyer)
+                            PlayerMovement.LocalPlayer?.RequestDamageTreeServerRpc(finalAmount);
+                        else
+                            PlayerMovement.LocalPlayer?.RequestHealTreeServerRpc(finalAmount);
+                    }
+                }
 
                 // منح XP عند ضرب الشجرة
                 if (xp != null) xp.AddTreeHitXP();
@@ -547,7 +559,7 @@ public class CharacterCombat : NetworkBehaviour
             }
 
             // =========================
-            // Players / Bots
+            // Players / Bots / Bosses
             // =========================
 
             Health health = hit.GetComponent<Health>() ?? hit.GetComponentInParent<Health>();
@@ -565,14 +577,36 @@ public class CharacterCombat : NetworkBehaviour
                 other.team != team &&
                 !health.isDead)
             {
-                bool isBoss = (hit.GetComponent<LevelBoss>() != null || hit.GetComponentInParent<LevelBoss>() != null || hit.name.ToLower().Contains("boss"));
-                FreeFireCombatAudio.PlayHitImpact(hit.transform.position, isBoss ? FreeFireCombatAudio.HitMaterial.Armor : FreeFireCombatAudio.HitMaterial.Flesh);
+                LevelBoss bossComp = hit.GetComponent<LevelBoss>() ?? hit.GetComponentInParent<LevelBoss>();
+                bool isBoss = (bossComp != null || hit.name.ToLower().Contains("boss"));
 
-                // تمرير المهاجم لتتبع القاتل ومنح XP
-                health.TakeDamage(
-                    attackDamage * xpMultiplier,
-                    gameObject
-                );
+                if (IsOwner)
+                {
+                    FreeFireCombatAudio.PlayHitImpact(hit.transform.position, isBoss ? FreeFireCombatAudio.HitMaterial.Armor : FreeFireCombatAudio.HitMaterial.Flesh);
+
+                    if (bossComp != null && Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                    {
+                        PlayerMovement.LocalPlayer?.RequestDamageBossServerRpc(bossComp.levelNumber, attackDamage * xpMultiplier, Unity.Netcode.NetworkManager.Singleton.LocalClientId);
+                    }
+                    else if (bossComp == null && Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                    {
+                        Unity.Netcode.NetworkObject netObj = health.GetComponent<Unity.Netcode.NetworkObject>() ?? health.GetComponentInParent<Unity.Netcode.NetworkObject>();
+                        if (netObj != null)
+                        {
+                            PlayerMovement.LocalPlayer?.RequestDamagePlayerServerRpc(netObj.NetworkObjectId, attackDamage * xpMultiplier);
+                        }
+                    }
+                }
+
+                // تطبيق الضرر فوراً على السيرفر أو في اللعب الفردي
+                bool isServerOrSolo = Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening || Unity.Netcode.NetworkManager.Singleton.IsServer;
+                if (isServerOrSolo)
+                {
+                    health.TakeDamage(
+                        attackDamage * xpMultiplier,
+                        gameObject
+                    );
+                }
             }
         }
 
@@ -603,6 +637,19 @@ public class CharacterCombat : NetworkBehaviour
                             else
                             {
                                 tree.Heal(finalAmount, gameObject);
+                            }
+
+                            if (IsOwner)
+                            {
+                                FreeFireCombatAudio.PlayHitImpact(tree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
+
+                                if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                                {
+                                    if (team == PlayerMovement.TeamType.Destroyer)
+                                        PlayerMovement.LocalPlayer?.RequestDamageTreeServerRpc(finalAmount);
+                                    else
+                                        PlayerMovement.LocalPlayer?.RequestHealTreeServerRpc(finalAmount);
+                                }
                             }
                         }
                     }

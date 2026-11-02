@@ -76,6 +76,36 @@ public class PlayerMovement : NetworkBehaviour
     private Rigidbody rb;
     private float nextFootstepAudioTime = 0f;
 
+    public static bool AreControlsLocked = false;
+
+    public static void FreezeAllPlayers(bool freeze)
+    {
+        AreControlsLocked = freeze;
+
+        PlayerMovement[] players = FindObjectsByType<PlayerMovement>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] != null && players[i].rb != null && !players[i].rb.isKinematic)
+            {
+                players[i].rb.linearVelocity = new Vector3(0f, players[i].rb.linearVelocity.y, 0f);
+                players[i].rb.angularVelocity = Vector3.zero;
+            }
+        }
+
+        BotController[] bots = FindObjectsByType<BotController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < bots.Length; i++)
+        {
+            if (bots[i] != null)
+            {
+                var agent = bots[i].GetComponent<UnityEngine.AI.NavMeshAgent>();
+                if (agent != null && agent.isOnNavMesh)
+                {
+                    agent.isStopped = freeze;
+                }
+            }
+        }
+    }
+
     // =========================
     // Network
     // =========================
@@ -337,6 +367,105 @@ public class PlayerMovement : NetworkBehaviour
         if (TeamVoiceChatManager.Instance != null)
         {
             TeamVoiceChatManager.Instance.OnReceiveVoiceData(senderName, (TeamType)team, audioBytes, sampleRate);
+        }
+    }
+
+    // =========================
+    // Network Combat & Damage Synchronization RPCs
+    // =========================
+
+    [Rpc(SendTo.Server)]
+    public void RequestDamageBossServerRpc(int bossLevel, float damage, ulong attackerClientId)
+    {
+        LevelBoss[] bosses = FindObjectsByType<LevelBoss>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            if (bosses[i] != null && bosses[i].levelNumber == bossLevel)
+            {
+                bosses[i].ApplyNetworkDamage(damage, this.gameObject);
+                SyncBossHealthClientRpc(bossLevel, bosses[i].CurrentHealth, bosses[i].MaxHealth);
+                break;
+            }
+        }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    public void SyncBossHealthClientRpc(int bossLevel, float newHealth, float maxHealth)
+    {
+        LevelBoss[] bosses = FindObjectsByType<LevelBoss>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            if (bosses[i] != null && bosses[i].levelNumber == bossLevel)
+            {
+                bosses[i].SetSyncedHealth(newHealth, maxHealth);
+                break;
+            }
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestDamageTreeServerRpc(float damage)
+    {
+        if (TreeGrowth.Instance != null)
+        {
+            TreeGrowth.Instance.TakeDamage(damage, this.gameObject);
+            SyncTreeHealthClientRpc(TreeGrowth.Instance.currentHealth, TreeGrowth.Instance.maxHealth);
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestHealTreeServerRpc(float healAmount)
+    {
+        if (TreeGrowth.Instance != null)
+        {
+            TreeGrowth.Instance.Heal(healAmount, this.gameObject);
+            SyncTreeHealthClientRpc(TreeGrowth.Instance.currentHealth, TreeGrowth.Instance.maxHealth);
+        }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    public void SyncTreeHealthClientRpc(float newHealth, float maxHealth)
+    {
+        if (TreeGrowth.Instance != null)
+        {
+            TreeGrowth.Instance.SetSyncedHealth(newHealth, maxHealth);
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestDamagePlayerServerRpc(ulong targetNetworkObjectId, float damage)
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SpawnManager != null)
+        {
+            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var netObj))
+            {
+                Health targetHp = netObj.GetComponent<Health>() ?? netObj.GetComponentInParent<Health>();
+                if (targetHp != null)
+                {
+                    targetHp.TakeDamage(damage, this.gameObject);
+                    SyncPlayerHealthClientRpc(targetNetworkObjectId, targetHp.currentHealth);
+                }
+            }
+        }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    public void SyncPlayerHealthClientRpc(ulong targetNetworkObjectId, float newHealth)
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SpawnManager != null)
+        {
+            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var netObj))
+            {
+                Health targetHp = netObj.GetComponent<Health>() ?? netObj.GetComponentInParent<Health>();
+                if (targetHp != null)
+                {
+                    targetHp.currentHealth = newHealth;
+                    if (newHealth <= 0f && !targetHp.isDead)
+                    {
+                        targetHp.Die();
+                    }
+                }
+            }
         }
     }
 
@@ -1112,6 +1241,15 @@ public class PlayerMovement : NetworkBehaviour
 
     void Move()
     {
+        if (AreControlsLocked)
+        {
+            if (rb != null && !rb.isKinematic)
+            {
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            }
+            return;
+        }
+
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
@@ -1223,9 +1361,9 @@ public class PlayerMovement : NetworkBehaviour
 
         if (moveDirection != Vector3.zero)
         {
-            if ((isCurrentlyGrounded || isGroundedSlope) && Time.time >= nextFootstepAudioTime)
+            if (IsOwner && (isCurrentlyGrounded || isGroundedSlope) && Time.time >= nextFootstepAudioTime)
             {
-                nextFootstepAudioTime = Time.time + (isSprinting ? 0.28f : 0.42f);
+                nextFootstepAudioTime = Time.time + (isSprinting ? 0.32f : 0.48f);
                 FreeFireCombatAudio.PlayFootstep(transform.position, isSprinting);
             }
 
@@ -1244,6 +1382,8 @@ public class PlayerMovement : NetworkBehaviour
 
     void Jump()
     {
+        if (AreControlsLocked) return;
+
         bool doJump = Input.GetKeyDown(KeyCode.Space) || jumpButtonPressed;
         jumpButtonPressed = false;
 
