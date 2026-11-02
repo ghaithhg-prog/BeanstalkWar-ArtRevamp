@@ -58,24 +58,16 @@ public class TreeGrowth : MonoBehaviour
         }
     }
 
-    [Header("Critical State")]
-    public float criticalDuration = 4f;
-    public float rescueHealThreshold = 1000f;
-
     [Header("Fall Settings")]
     public float fallSpeed = 120f;
 
     private bool isMature = false;
     private bool isShaking = false;
-    private bool isCritical = false;
-    private bool criticalUsed = false;
     private bool isDead = false;
     public bool IsTreeDead => isDead;
     private bool isFalling = false;
 
     private float shakeTimer = 0f;
-    private float criticalTimer = 0f;
-    private float healDuringCritical = 0f;
 
     private Vector3 originalPivotPosition;
 
@@ -84,7 +76,6 @@ public class TreeGrowth : MonoBehaviour
         Instance = this;
         // إجبار القيم دائماً لتجاوز أي قيمة قديمة محفوظة في المشهد
         maxHealth = 9500f;
-        rescueHealThreshold = 1200f;
         currentHealth = maxHealth;
         ShieldCollapseCountdown = 10f;
         IsShieldCollapsing = false;
@@ -111,7 +102,6 @@ public class TreeGrowth : MonoBehaviour
     void Start()
     {
         maxHealth = 9500f;
-        rescueHealThreshold = 1200f;
         currentHealth = maxHealth;
         ShieldCollapseCountdown = 10f;
         IsShieldCollapsing = false;
@@ -256,10 +246,6 @@ public class TreeGrowth : MonoBehaviour
             CheckDeath();
         }
 
-        if (isCritical)
-        {
-            HandleCriticalState();
-        }
 
         if (isShaking)
         {
@@ -360,61 +346,14 @@ public class TreeGrowth : MonoBehaviour
         // درع الزعماء الثلاثة والعد التنازلي لـ 10 ثوانٍ: لا يمكن إماتة الشجرة طالما الدرع فعال
         if (IsShieldActive) return;
 
-        if (currentHealth <= 0 && !isDead)
+        if (currentHealth <= 0f && !isDead)
         {
-            // إذا كنا داخل الحالة الحرجة لا نفعل شيئًا
-            if (isCritical)
-                return;
-
-            if (!criticalUsed)
-            {
-                EnterCriticalState();
-            }
-            else
-            {
-                FinalDeath();
-            }
-        }
-    }
-
-    void EnterCriticalState()
-    {
-        if (IsShieldActive) return;
-
-        isCritical = true;
-        criticalUsed = true;
-        criticalTimer = criticalDuration;
-        healDuringCritical = 0f;
-        currentHealth = 0f;
-
-        StartShake(); // اهتزاز أثناء الحالة الحرجة
-
-        Debug.Log("Tree entered Critical State!");
-    }
-
-    void HandleCriticalState()
-    {
-        if (criticalTimer > 0f)
-        {
-            criticalTimer -= Time.deltaTime;
-        }
-        else
-        {
-            isCritical = false;
             FinalDeath();
         }
     }
 
     public static event System.Action OnTreeReachedTopLevel;
     public bool IsMature => isMature;
-
-    void ExitCriticalState()
-    {
-        isCritical = false;
-        currentHealth = maxHealth * 0.35f; // ✅ تعود بـ 35%
-
-        Debug.Log("Tree rescued from Critical State!");
-    }
 
     // =========================
     // Shake
@@ -444,7 +383,7 @@ public class TreeGrowth : MonoBehaviour
             isShaking = false;
             transform.parent.position = originalPivotPosition;
 
-            if (isMature && !isCritical)
+            if (isMature)
             {
                 bool allBossesSlain = LevelBossManager.Instance == null || LevelBossManager.Instance.AreAllBossesDefeated;
                 if (allBossesSlain)
@@ -506,19 +445,23 @@ public class TreeGrowth : MonoBehaviour
 
     void FinalDeath()
     {
-        // حماية قاطعة: لا تسقط الشجرة أبداً إلا بعد موت الزعماء الثلاثة
-        if (LevelBossManager.Instance != null && !LevelBossManager.Instance.AreAllBossesDefeated)
-        {
-            currentHealth = maxHealth * 0.35f;
-            isCritical = false;
-            return;
-        }
-
         if (isDead) return;
         isDead = true;
         isFalling = true;
+        currentHealth = 0f;
 
+        // إلغاء أي حمل أو تعميد للكريستالة فوراً عند موت الشجرة
+        if (CrystalItem.Instance != null)
+        {
+            CrystalItem.Instance.CancelAndDropForTreeDeath();
+        }
+        CrystalAltar.CancelAllChannelling();
+
+        // إشعار فوري لمدير اللعبة بتدمير الشجرة وقفل النصر للمدمرين
         GameStateManager.Instance?.NotifyTreeDestroyed();
+
+        // تجميد كافة اللاعبين والبوتات فوراً لمشاهدة مشهد الدمار والسقوط
+        PlayerMovement.FreezeAllPlayers(true);
 
         Debug.Log("🌲💥 Tree permanently destroyed! Initiating cinematic collapse sequence...");
         StartCoroutine(CinematicTreeCollapseRoutine());
@@ -536,13 +479,7 @@ public class TreeGrowth : MonoBehaviour
         // 1. ضمان التحام وتوحيد كافة أجزاء الشجرة تحت TreePivot
         ReparentTreeComponentsToPivot();
 
-        Transform pivot = transform.parent;
-        if (pivot == null)
-        {
-            isCollapsingBannerActive = false;
-            GameStateManager.Instance?.EndGame("Destroyers");
-            yield break;
-        }
+        Transform pivot = transform.parent != null ? transform.parent : transform;
 
         // تجميد كافة اللاعبين والبوتات فوراً لمشاهدة مشهد الدمار والسقوط
         PlayerMovement.FreezeAllPlayers(true);
@@ -958,9 +895,9 @@ public class TreeGrowth : MonoBehaviour
         {
             healthBarFill.fillAmount = Mathf.Clamp01(currentHealth / maxHealth);
         }
-        if (currentHealth <= 0f && !isDead)
+        if (currentHealth <= 0f && !isDead && !IsShieldActive)
         {
-            EnterCriticalState();
+            FinalDeath();
         }
     }
 
@@ -992,6 +929,12 @@ public class TreeGrowth : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, minAllowedHealth, maxHealth);
         InGameChatManager.Instance?.NotifyTreeHealthChanged(currentHealth, maxHealth);
+
+        // موت فوري وسقوط مباشر للشجرة بمجرد بلوغ الصحة صفر بعد سقوط الدرع
+        if (currentHealth <= 0f && !shieldActive)
+        {
+            CheckDeath();
+        }
     }
 
     public void Heal(float amount, GameObject healer = null)
@@ -999,23 +942,6 @@ public class TreeGrowth : MonoBehaviour
         if (isDead) return;
 
         bool wasNotFull = currentHealth < maxHealth;
-
-        if (isCritical)
-        {
-            healDuringCritical += amount;
-
-            if (healDuringCritical >= rescueHealThreshold)
-            {
-                ExitCriticalState();
-            }
-
-            if (healer != null)
-            {
-                PlayerXP pxp = healer.GetComponent<PlayerXP>();
-                if (pxp != null) pxp.AddTreeHealXP();
-            }
-            return;
-        }
 
         // منح خبرة معالجة الشجرة للحامي فقط إذا كانت صحة الشجرة ناقصة فعلياً
         if (wasNotFull && healer != null)

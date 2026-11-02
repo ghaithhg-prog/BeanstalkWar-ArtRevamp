@@ -280,41 +280,43 @@ public class GameStateManager : MonoBehaviour
         }
     }
 
-    public void NotifyCrystalConsecrated()
+    public bool NotifyCrystalConsecrated()
     {
-        if (CrystalConsecratedTime > 0f) return;
-        CrystalConsecratedTime = Time.time;
-        Debug.Log($"[GameStateManager] 🌟 Crystal Consecrated timestamp recorded at {CrystalConsecratedTime:F2}s");
-
-        // If Tree was already destroyed within strict 1.0 - 1.5s window
+        // إذا سقطت الشجرة مسبقاً، نتحقق بدقة من الفارق الزمني (إذا تجاوز 1.5 ثانية، يُرفض فوز الحماة تماماً)
         if (TreeDestroyedTime > 0f)
         {
-            float diff = CrystalConsecratedTime - TreeDestroyedTime;
-            if (diff >= 0f && diff <= MAX_TIE_WINDOW)
+            float diff = Time.time - TreeDestroyedTime;
+            if (diff > MAX_TIE_WINDOW)
             {
-                DeclareDraw();
-                return;
+                Debug.Log($"[GameStateManager] Crystal consecrated too late ({diff:F2}s after Tree destruction). Tree collapse prevails! Consecration rejected.");
+                return false;
             }
             else
             {
-                Debug.Log($"[GameStateManager] Crystal consecrated too late ({diff:F2}s after Tree destruction). Tree collapse prevails!");
-                return;
+                CrystalConsecratedTime = Time.time;
+                DeclareDraw();
+                return true;
             }
         }
 
         bool isTreeDead = (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead);
         if (isTreeDead)
         {
-            // If tree is dead but TreeDestroyedTime wasn't registered, check if collapse just started
-            DeclareDraw();
-            return;
+            Debug.Log("[GameStateManager] Consecration rejected because Sacred Tree is already dead!");
+            return false;
         }
+
+        if (CrystalConsecratedTime > 0f) return true;
+        CrystalConsecratedTime = Time.time;
+        Debug.Log($"[GameStateManager] 🌟 Crystal Consecrated timestamp recorded at {CrystalConsecratedTime:F2}s");
 
         // If game was already marked ended for Destroyers within 1.5s, convert to Draw!
         if (currentState == GameState.Ended && (Time.time - matchEndedTimestamp <= MAX_TIE_WINDOW) && finalWinner.ToLower().Contains("destroyer"))
         {
             DeclareDraw();
         }
+
+        return true;
     }
 
     public void DeclareDraw()

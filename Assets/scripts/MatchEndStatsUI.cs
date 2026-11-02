@@ -38,8 +38,9 @@ public class MatchEndStatsUI : MonoBehaviour
     }
 
     private Dictionary<int, PlayerMatchStat> stats = new Dictionary<int, PlayerMatchStat>();
+    private static bool _isGameOverStatic = false;
     private bool isGameOver = false;
-    public static bool IsGameOverActive => Instance != null && Instance.isGameOver;
+    public static bool IsGameOverActive => _isGameOverStatic || (Instance != null && Instance.isGameOver);
     private string winningTeamName = "Protectors";
     private float gameOverTime = 0f;
     private Vector2 scrollPos = Vector2.zero;
@@ -153,6 +154,7 @@ public class MatchEndStatsUI : MonoBehaviour
 
     public void ShowVictoryScreen(string winner)
     {
+        _isGameOverStatic = true;
         if (isGameOver) return;
         isGameOver = true;
         winningTeamName = winner;
@@ -743,6 +745,7 @@ public class MatchEndStatsUI : MonoBehaviour
         savedCharacterID = 0;
         savedTeam = PlayerMovement.TeamType.Protector;
 
+        _isGameOverStatic = false;
         if (Instance != null)
         {
             Instance.isGameOver = false;

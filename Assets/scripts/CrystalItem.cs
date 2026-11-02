@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
@@ -315,6 +315,13 @@ public class CrystalItem : NetworkBehaviour
 
         if (isCarried.Value)
         {
+            // إذا ماتت الشجرة أثناء حمل الكريستالة، تسقط الكريستالة فوراً ويُلغى حملها
+            if (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead)
+            {
+                DropCrystalServer();
+                return;
+            }
+
             if (currentCarrierObj == null) ResolveCarrierObject();
             if (currentCarrierObj == null)
             {
@@ -387,6 +394,10 @@ public class CrystalItem : NetworkBehaviour
     {
         if (!IsServerOrAuthority || isCarried.Value || protectorObj == null || !IsAvailableForPickup) return;
 
+        // منع التقاط الكريستالة نهائياً إذا سقطت الشجرة أو انتهت المعركة
+        if (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead) return;
+        if (GameStateManager.Instance != null && GameStateManager.Instance.currentState == GameStateManager.GameState.Ended) return;
+
         NetworkObject netObj = protectorObj.GetComponentInParent<NetworkObject>();
         GameObject rootObj = netObj != null ? netObj.gameObject : protectorObj;
 
@@ -408,9 +419,23 @@ public class CrystalItem : NetworkBehaviour
 
         currentCarrierObj = rootObj;
 
+        // منح بركة أجنحة الريشة (Feather Wings) مع حصانة السقوط والطيران الانسيابي
+        if (rootObj.GetComponent<FeatherWingsEffect>() == null)
+        {
+            rootObj.AddComponent<FeatherWingsEffect>();
+        }
+
         if (pm != null)
         {
             pm.isCarryingCrystal.Value = true;
+
+            PlayerProgressionAndShopUI.Instance?.ShowNotification(LanguageSelectionUI.Localize(
+                "🪶 BLESSING OF THE FEATHER: Fall damage immune! Leap safely from any height!",
+                ar: "🪶 بركة الريشة: حصانة من ضرر السقوط! اقفز بأمان من أي ارتفاع نحو المذبح!",
+                ru: "🪶 БЛАГОСЛОВЕНИЕ ПЕРА: Нет урона от падения! Прыгайте с любой высоты к алтарю!",
+                fr: "🪶 BÉNÉDICTION DE LA PLUME : Aucun dégât de chute ! Sautez directement vers l'autel !",
+                es: "🪶 ¡BENDICIÓN DE LA PLUMA: Inmune a caídas! ¡Salta de cualquier altura hacia el altar!"
+            ));
         }
 
         if (bot != null)
@@ -429,6 +454,9 @@ public class CrystalItem : NetworkBehaviour
 
         if (currentCarrierObj != null)
         {
+            FeatherWingsEffect wings = currentCarrierObj.GetComponent<FeatherWingsEffect>();
+            if (wings != null) Destroy(wings);
+
             PlayerMovement pm = currentCarrierObj.GetComponent<PlayerMovement>();
             if (pm != null)
                 pm.isCarryingCrystal.Value = false;
@@ -453,6 +481,25 @@ public class CrystalItem : NetworkBehaviour
             PlaySoundRpc(1);
         }
         Debug.Log("💎 Crystal dropped on the ground at: " + dropPos);
+    }
+
+    public void CancelAndDropForTreeDeath()
+    {
+        if (currentCarrierObj != null)
+        {
+            FeatherWingsEffect wings = currentCarrierObj.GetComponent<FeatherWingsEffect>();
+            if (wings != null) Destroy(wings);
+
+            PlayerMovement pm = currentCarrierObj.GetComponent<PlayerMovement>();
+            if (pm != null) pm.isCarryingCrystal.Value = false;
+        }
+
+        isCarried.Value = false;
+        carrierNetworkObjectId.Value = 0;
+        currentCarrierObj = null;
+        isDropped.Value = false;
+        transform.SetParent(null);
+        ApplyVisualActiveLocal(false);
     }
 
     // =========================
@@ -757,5 +804,197 @@ public class CrystalItem : NetworkBehaviour
             Collider col = visualModel.GetComponent<Collider>();
             if (col != null) Destroy(col);
         }
+    }
+}
+
+/// <summary>
+/// Procedural Celestial Feather Wings effect attached to the carrier of the Sacred Crystal.
+/// Grants visual wings that flap smoothly, spread wide during aerial gliding,
+/// and emit shimmering celestial feather motes.
+/// </summary>
+public class FeatherWingsEffect : MonoBehaviour
+{
+    private GameObject wingsContainer;
+    private Transform leftWing;
+    private Transform rightWing;
+    private List<Transform> featherMotes = new List<Transform>();
+    private List<Vector3> moteVelocities = new List<Vector3>();
+
+    private Material wingMaterial;
+    private Material moteMaterial;
+
+    private float flapSpeed = 4.5f;
+    private float flapAngle = 24f;
+    private float spreadAngle = 0f;
+
+    void Awake()
+    {
+        BuildFeatherWings();
+    }
+
+    void BuildFeatherWings()
+    {
+        if (wingsContainer != null) Destroy(wingsContainer);
+
+        wingsContainer = new GameObject("CelestialFeatherWings");
+        wingsContainer.transform.SetParent(transform, false);
+        // Position at upper back between shoulder blades
+        wingsContainer.transform.localPosition = new Vector3(0f, 1.25f, -0.22f);
+        wingsContainer.transform.localRotation = Quaternion.identity;
+
+        Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit") 
+                          ?? Shader.Find("Unlit/Transparent") 
+                          ?? Shader.Find("Standard");
+
+        wingMaterial = new Material(unlitShader);
+        wingMaterial.color = new Color(0.95f, 0.90f, 0.45f, 0.88f);
+
+        moteMaterial = new Material(unlitShader);
+        moteMaterial.color = new Color(1.0f, 0.95f, 0.60f, 0.75f);
+
+        // Build Left Wing
+        leftWing = BuildSingleWing("LeftWing", true);
+        leftWing.SetParent(wingsContainer.transform, false);
+        leftWing.localPosition = new Vector3(-0.16f, 0f, 0f);
+
+        // Build Right Wing
+        rightWing = BuildSingleWing("RightWing", false);
+        rightWing.SetParent(wingsContainer.transform, false);
+        rightWing.localPosition = new Vector3(0.16f, 0f, 0f);
+
+        // Subtle glowing halo between wings
+        GameObject halo = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        DestroyCollider(halo);
+        halo.transform.SetParent(wingsContainer.transform, false);
+        halo.transform.localPosition = new Vector3(0f, 0.05f, 0.04f);
+        halo.transform.localScale = new Vector3(0.35f, 0.35f, 0.12f);
+        halo.GetComponent<Renderer>().material = wingMaterial;
+    }
+
+    Transform BuildSingleWing(string name, bool isLeft)
+    {
+        GameObject wingRoot = new GameObject(name);
+        float sign = isLeft ? -1f : 1f;
+
+        // 4 layered curved primary & secondary feathers
+        int featherCount = 4;
+        for (int i = 0; i < featherCount; i++)
+        {
+            GameObject feather = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            DestroyCollider(feather);
+            feather.transform.SetParent(wingRoot.transform, false);
+
+            float fIndex = (float)i / (float)featherCount;
+            float length = Mathf.Lerp(0.85f, 0.45f, fIndex);
+            float width = Mathf.Lerp(0.16f, 0.10f, fIndex);
+            float outAngle = sign * Mathf.Lerp(55f, 95f, fIndex);
+            float backAngle = Mathf.Lerp(-15f, -35f, fIndex);
+
+            feather.transform.localPosition = new Vector3(sign * (0.12f + i * 0.14f), 0.15f - (i * 0.08f), -i * 0.04f);
+            feather.transform.localRotation = Quaternion.Euler(backAngle, outAngle, sign * 20f);
+            feather.transform.localScale = new Vector3(width, length * 0.5f, 0.04f);
+
+            Renderer r = feather.GetComponent<Renderer>();
+            if (r != null) r.material = wingMaterial;
+        }
+
+        return wingRoot.transform;
+    }
+
+    void Update()
+    {
+        if (wingsContainer == null) return;
+
+        // Check if character is airborne (falling / gliding)
+        bool isAirborne = false;
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            isAirborne = rb.linearVelocity.y < -0.4f;
+        }
+        else
+        {
+            var agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+            isAirborne = (agent == null || !agent.enabled || !agent.isOnNavMesh);
+        }
+
+        // Gliding spread
+        float targetSpread = isAirborne ? 38f : 0f;
+        spreadAngle = Mathf.Lerp(spreadAngle, targetSpread, 6f * Time.deltaTime);
+
+        float currentFlapSpeed = isAirborne ? 8.5f : 3.5f;
+        float flap = Mathf.Sin(Time.time * currentFlapSpeed) * flapAngle;
+
+        if (leftWing != null)
+        {
+            leftWing.localRotation = Quaternion.Euler(0f, -spreadAngle + flap, -flap * 0.5f);
+        }
+
+        if (rightWing != null)
+        {
+            rightWing.localRotation = Quaternion.Euler(0f, spreadAngle - flap, flap * 0.5f);
+        }
+
+        // Spawn gentle feather motes while gliding
+        if (isAirborne && Random.value < 0.18f && featherMotes.Count < 10)
+        {
+            SpawnFeatherMote();
+        }
+
+        UpdateMotes();
+    }
+
+    void SpawnFeatherMote()
+    {
+        GameObject mote = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        DestroyCollider(mote);
+        mote.transform.position = transform.position + Vector3.up * 1.2f + Random.insideUnitSphere * 0.45f;
+        mote.transform.localScale = Vector3.one * Random.Range(0.12f, 0.22f);
+        mote.transform.rotation = Random.rotation;
+
+        Renderer r = mote.GetComponent<Renderer>();
+        if (r != null) r.material = moteMaterial;
+
+        featherMotes.Add(mote.transform);
+        moteVelocities.Add(new Vector3(Random.Range(-0.4f, 0.4f), -Random.Range(0.3f, 0.8f), Random.Range(-0.4f, 0.4f)));
+    }
+
+    void UpdateMotes()
+    {
+        for (int i = featherMotes.Count - 1; i >= 0; i--)
+        {
+            if (featherMotes[i] == null)
+            {
+                featherMotes.RemoveAt(i);
+                moteVelocities.RemoveAt(i);
+                continue;
+            }
+
+            featherMotes[i].position += moteVelocities[i] * Time.deltaTime;
+            featherMotes[i].localScale = Vector3.Lerp(featherMotes[i].localScale, Vector3.zero, 1.8f * Time.deltaTime);
+
+            if (featherMotes[i].localScale.x < 0.02f)
+            {
+                Destroy(featherMotes[i].gameObject);
+                featherMotes.RemoveAt(i);
+                moteVelocities.RemoveAt(i);
+            }
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (wingsContainer != null) Destroy(wingsContainer);
+        for (int i = 0; i < featherMotes.Count; i++)
+        {
+            if (featherMotes[i] != null) Destroy(featherMotes[i].gameObject);
+        }
+        featherMotes.Clear();
+    }
+
+    static void DestroyCollider(GameObject obj)
+    {
+        Collider c = obj.GetComponent<Collider>();
+        if (c != null) Destroy(c);
     }
 }

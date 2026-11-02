@@ -720,11 +720,24 @@ public class CrystalAltar : NetworkBehaviour
         }
     }
 
+    public static void CancelAllChannelling()
+    {
+        ChannellingAltar = null;
+        for (int i = 0; i < AllAltars.Count; i++)
+        {
+            if (AllAltars[i] != null)
+            {
+                AllAltars[i].channelTimer = 0f;
+                AllAltars[i].activeCarrier = null;
+            }
+        }
+    }
+
     public void OnCrystalDeliveredServer(GameObject carrier)
     {
         if (gameWon || carrier == null) return;
 
-        // Strict Climax Tie Window: reject if Tree collapsed > 1.5s ago
+        // رفض قاطع: إذا سقطت الشجرة وانتهت المهلة، تُلغى العملية فوراً
         if (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead)
         {
             float treeDeathTime = GameStateManager.Instance != null ? GameStateManager.Instance.TreeDestroyedTime : 0f;
@@ -735,13 +748,24 @@ public class CrystalAltar : NetworkBehaviour
             }
         }
 
+        // إشعار GameStateManager والتحقق هل تم قبول النصر أم تم رفضه لسقوط الشجرة مسبقاً
+        bool accepted = GameStateManager.Instance == null || GameStateManager.Instance.NotifyCrystalConsecrated();
+        if (!accepted)
+        {
+            Debug.Log("[CrystalAltar] Consecration rejected by GameStateManager (Tree destruction prevailed)!");
+            return;
+        }
+
+        // إزالة أجنحة الريشة من الحامل بعد إيصال الكريستالة بنجاح للمذبح
+        FeatherWingsEffect wings = carrier.GetComponent<FeatherWingsEffect>();
+        if (wings != null) Destroy(wings);
+
         // Mark gameWon across ALL altars to prevent duplicate triggers
         for (int i = 0; i < AllAltars.Count; i++)
         {
             if (AllAltars[i] != null) AllAltars[i].gameWon = true;
         }
         gameWon = true;
-        GameStateManager.Instance?.NotifyCrystalConsecrated();
         InGameChatManager.Instance?.NotifyCrystalDelivered();
         ChannellingAltar = null;
 

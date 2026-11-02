@@ -1129,6 +1129,14 @@ public class PlayerMovement : NetworkBehaviour
 
     void TrackFallDamage(bool grounded)
     {
+        // حصانة مطلقة من ضرر السقوط لحامل الكريستالة بفضل بركة أجنحة الريشة (Feather Wings)
+        if (isCarryingCrystal != null && isCarryingCrystal.Value)
+        {
+            wasAirborne = false;
+            highestFallY = float.MinValue;
+            return;
+        }
+
         if (!grounded)
         {
             if (!wasAirborne)
@@ -1299,6 +1307,10 @@ public class PlayerMovement : NetworkBehaviour
                 {
                     // في الهواء: نوقف الحركة الأفقية فقط ونمنع القفز اللاإرادي الصاعد إذا لم تكن قفزة متعمدة
                     float yVel = (Time.time - lastJumpTime < 0.30f) ? rb.linearVelocity.y : Mathf.Min(0f, rb.linearVelocity.y);
+                    if (isCarryingCrystal != null && isCarryingCrystal.Value && yVel < -3.5f)
+                    {
+                        yVel = -3.5f; // بركة أجنحة الريشة: هبوط انسيابي هادئ كالريشة
+                    }
                     rb.linearVelocity = new Vector3(0f, yVel, 0f);
                 }
             }
@@ -1351,7 +1363,12 @@ public class PlayerMovement : NetworkBehaviour
             }
             else
             {
-                rb.linearVelocity = new Vector3(vel.x, rb.linearVelocity.y, vel.z);
+                float yVel = rb.linearVelocity.y;
+                if (isCarryingCrystal != null && isCarryingCrystal.Value && yVel < -3.5f)
+                {
+                    yVel = -3.5f; // بركة أجنحة الريشة: انزلاق وطيران انسيابي آمن في الهواء نحو المذبح
+                }
+                rb.linearVelocity = new Vector3(vel.x, yVel, vel.z);
             }
         }
         else

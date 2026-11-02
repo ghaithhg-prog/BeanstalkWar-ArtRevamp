@@ -99,7 +99,7 @@ public class InGamePauseMenuUI : MonoBehaviour
 
     void OnGUI()
     {
-        if (MatchEndStatsUI.IsGameOverActive) return;
+        if (MatchEndStatsUI.IsGameOverActive || (GameStateManager.Instance != null && GameStateManager.Instance.currentState == GameStateManager.GameState.Ended)) return;
 
         // 1. In-Game Pause & Settings Corner HUD Button (always visible during active gameplay when pause menu is closed)
         if (!isMenuOpen && 
