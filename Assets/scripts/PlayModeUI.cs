@@ -62,14 +62,6 @@ public class PlayModeUI : MonoBehaviour
     {
         if (splashArtTex != null) return splashArtTex;
 
-        splashArtTex = Resources.Load<Texture2D>("UI/BeanstalkWar_TitleSplash");
-        if (splashArtTex != null)
-        {
-            splashArtTex.filterMode = FilterMode.Bilinear;
-            splashArtTex.wrapMode = TextureWrapMode.Clamp;
-            return splashArtTex;
-        }
-
         string directPath = System.IO.Path.Combine(Application.dataPath, "Resources/UI/BeanstalkWar_TitleSplash.png");
         if (!System.IO.File.Exists(directPath))
         {
@@ -81,6 +73,14 @@ public class PlayModeUI : MonoBehaviour
             byte[] fileData = System.IO.File.ReadAllBytes(directPath);
             splashArtTex = new Texture2D(2, 2);
             splashArtTex.LoadImage(fileData);
+            splashArtTex.filterMode = FilterMode.Bilinear;
+            splashArtTex.wrapMode = TextureWrapMode.Clamp;
+            return splashArtTex;
+        }
+
+        splashArtTex = Resources.Load<Texture2D>("UI/BeanstalkWar_TitleSplash");
+        if (splashArtTex != null)
+        {
             splashArtTex.filterMode = FilterMode.Bilinear;
             splashArtTex.wrapMode = TextureWrapMode.Clamp;
         }
@@ -311,11 +311,11 @@ public class PlayModeUI : MonoBehaviour
 
         Rect titleRect = new Rect(titleBoxX, titleBoxY, titleBoxW, titleBoxH);
 
-        // A. Royal Obsidian-Emerald Glass Shield
+        // A. Royal Translucent Obsidian-Emerald Glass Shield (Letting celestial light shine through)
         EnchantedNatureGUI.DrawLeafPlaque(
             titleRect, 
-            new Color(0.04f, 0.08f, 0.05f, 0.96f), 
-            new Color(0.92f, 0.78f, 0.28f, 0.95f)
+            new Color(0.02f, 0.05f, 0.03f, 0.42f), 
+            new Color(0.92f, 0.78f, 0.28f, 0.75f)
         );
 
         // B. Glowing Crown & Rune Emblem atop the Shield
