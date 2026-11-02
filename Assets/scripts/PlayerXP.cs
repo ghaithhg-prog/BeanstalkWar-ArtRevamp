@@ -58,6 +58,20 @@ public class PlayerXP : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    /// <summary>
+    /// هل هذا الكائن يمثل اللاعب البشري المحلي تحديداً؟ (وليس بوتاً أو لاعباً آخر)
+    /// </summary>
+    public bool IsLocalHumanPlayer
+    {
+        get
+        {
+            if (GetComponent<BotController>() != null) return false;
+            if (PlayerMovement.LocalPlayer != null)
+                return GetComponent<PlayerMovement>() == PlayerMovement.LocalPlayer;
+            return IsOwner;
+        }
+    }
+
     public NetworkVariable<bool> ultimateReady = new NetworkVariable<bool>(
         false,
         NetworkVariableReadPermission.Everyone,
@@ -103,7 +117,7 @@ public class PlayerXP : NetworkBehaviour
     {
         ApplyLevelBonuses();
 
-        if (current > previous && IsOwner && GetComponent<BotController>() == null)
+        if (current > previous && IsLocalHumanPlayer && IsOwner)
         {
             string lvlMsg = LanguageSelectionUI.Localize(
                 $"⭐ HERO LEVEL UP! Now Level {current}!",
@@ -281,7 +295,7 @@ public class PlayerXP : NetworkBehaviour
 
     void Update()
     {
-        if (!IsOwner) return;
+        if (!IsLocalHumanPlayer || !IsOwner) return;
 
         // القدرة الخاصة - زر R
         if (currentLevel.Value >= 5 && Input.GetKeyDown(KeyCode.R))
@@ -413,7 +427,7 @@ public class PlayerXP : NetworkBehaviour
 
     void OnGUI()
     {
-        if (!IsOwner) return;
+        if (!IsLocalHumanPlayer || !IsOwner) return;
         if (MatchEndStatsUI.IsGameOverActive) return;
         if (GameStateManager.Instance == null || !GameStateManager.Instance.IsPlaying()) return;
         if (Camera.main == null) return;

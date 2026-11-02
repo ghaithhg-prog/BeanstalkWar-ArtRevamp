@@ -524,26 +524,22 @@ public class CharacterCombat : NetworkBehaviour
                 float treeImpactMult = (team == PlayerMovement.TeamType.Destroyer) ? 2.55f : 2.2f;
                 float finalAmount = attackDamage * levelMultiplier * xpMultiplier * treeImpactMult;
 
-                if (team ==
-                    PlayerMovement.TeamType.Destroyer)
+                if (team == PlayerMovement.TeamType.Destroyer)
                 {
-                    tree.TakeDamage(
-                        finalAmount,
-                        gameObject
-                    );
+                    tree.TakeDamage(finalAmount, gameObject);
                 }
                 else
                 {
-                    tree.Heal(
-                        finalAmount
-                    );
+                    tree.Heal(finalAmount, gameObject);
                 }
 
-                if (IsOwner)
+                bool isLocalHuman = (GetComponent<BotController>() == null) && (PlayerMovement.LocalPlayer != null && gameObject == PlayerMovement.LocalPlayer.gameObject);
+
+                if (isLocalHuman)
                 {
                     FreeFireCombatAudio.PlayHitImpact(tree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
 
-                    if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                    if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening && !Unity.Netcode.NetworkManager.Singleton.IsServer)
                     {
                         if (team == PlayerMovement.TeamType.Destroyer)
                             PlayerMovement.LocalPlayer?.RequestDamageTreeServerRpc(finalAmount);
@@ -552,9 +548,7 @@ public class CharacterCombat : NetworkBehaviour
                     }
                 }
 
-                // منح XP عند ضرب الشجرة
-                if (xp != null) xp.AddTreeHitXP();
-
+                // ملاحظة: TreeGrowth.TakeDamage و TreeGrowth.Heal يمنحان الـ XP للشجرة فقط إذا كانت قابلة للضرر أو العلاج الفعلي
                 continue;
             }
 
@@ -580,15 +574,17 @@ public class CharacterCombat : NetworkBehaviour
                 LevelBoss bossComp = hit.GetComponent<LevelBoss>() ?? hit.GetComponentInParent<LevelBoss>();
                 bool isBoss = (bossComp != null || hit.name.ToLower().Contains("boss"));
 
-                if (IsOwner)
+                bool isAttackerLocalHuman = (GetComponent<BotController>() == null) && (PlayerMovement.LocalPlayer != null && gameObject == PlayerMovement.LocalPlayer.gameObject);
+
+                if (isAttackerLocalHuman)
                 {
                     FreeFireCombatAudio.PlayHitImpact(hit.transform.position, isBoss ? FreeFireCombatAudio.HitMaterial.Armor : FreeFireCombatAudio.HitMaterial.Flesh);
 
-                    if (bossComp != null && Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                    if (bossComp != null && Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening && !Unity.Netcode.NetworkManager.Singleton.IsServer)
                     {
                         PlayerMovement.LocalPlayer?.RequestDamageBossServerRpc(bossComp.levelNumber, attackDamage * xpMultiplier, Unity.Netcode.NetworkManager.Singleton.LocalClientId);
                     }
-                    else if (bossComp == null && Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                    else if (bossComp == null && Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening && !Unity.Netcode.NetworkManager.Singleton.IsServer)
                     {
                         Unity.Netcode.NetworkObject netObj = health.GetComponent<Unity.Netcode.NetworkObject>() ?? health.GetComponentInParent<Unity.Netcode.NetworkObject>();
                         if (netObj != null)
@@ -639,11 +635,13 @@ public class CharacterCombat : NetworkBehaviour
                                 tree.Heal(finalAmount, gameObject);
                             }
 
-                            if (IsOwner)
+                            bool isProximityLocalHuman = (GetComponent<BotController>() == null) && (PlayerMovement.LocalPlayer != null && gameObject == PlayerMovement.LocalPlayer.gameObject);
+
+                            if (isProximityLocalHuman)
                             {
                                 FreeFireCombatAudio.PlayHitImpact(tree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
 
-                                if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+                                if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening && !Unity.Netcode.NetworkManager.Singleton.IsServer)
                                 {
                                     if (team == PlayerMovement.TeamType.Destroyer)
                                         PlayerMovement.LocalPlayer?.RequestDamageTreeServerRpc(finalAmount);

@@ -930,6 +930,12 @@ public class TreeGrowth : MonoBehaviour
         currentHealth = Mathf.Clamp(currentHealth, minAllowedHealth, maxHealth);
         InGameChatManager.Instance?.NotifyTreeHealthChanged(currentHealth, maxHealth);
 
+        // مزامنة صحة الشجرة فوراً مع جميع العملاء واللاعبين المتصلين
+        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening && Unity.Netcode.NetworkManager.Singleton.IsServer)
+        {
+            PlayerMovement.LocalPlayer?.SyncTreeHealthClientRpc(currentHealth, maxHealth);
+        }
+
         // موت فوري وسقوط مباشر للشجرة بمجرد بلوغ الصحة صفر بعد سقوط الدرع
         if (currentHealth <= 0f && !shieldActive)
         {
@@ -952,6 +958,12 @@ public class TreeGrowth : MonoBehaviour
 
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+
+        // مزامنة صحة الشجرة فوراً مع جميع العملاء واللاعبين المتصلين
+        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening && Unity.Netcode.NetworkManager.Singleton.IsServer)
+        {
+            PlayerMovement.LocalPlayer?.SyncTreeHealthClientRpc(currentHealth, maxHealth);
+        }
     }
 
     void UpdateHealthBar()

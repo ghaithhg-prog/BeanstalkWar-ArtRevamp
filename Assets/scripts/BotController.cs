@@ -1428,8 +1428,8 @@ public class BotController : NetworkBehaviour
                     if (agent != null && agent.enabled) agent.enabled = false;
 
                     // طيران انسيابي آمن كالريشة نحو المذبح (Glide)
-                    float glideHorizSpeed = 9.8f;
-                    float glideFallSpeed = 3.4f; // هبوط هادئ جداً كالريشة
+                    float glideHorizSpeed = 10.8f;
+                    float glideFallSpeed = 4.25f; // هبوط انسيابي أسرع بنسبة 25% لسرعة إيصال الكريستالة
                     transform.position += (flatDir * glideHorizSpeed + Vector3.down * glideFallSpeed) * Time.deltaTime;
                     transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flatDir), 10f * Time.deltaTime);
 
