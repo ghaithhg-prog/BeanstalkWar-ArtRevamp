@@ -122,23 +122,56 @@ public class ForestBGMManager : MonoBehaviour
         audioSource.spatialBlend = 0f;
         audioSource.volume = musicVolume;
 
-        // الموسيقى الأصلية القديمة تبدأ أوتوماتيكياً دائماً مع كل تشغيل
+        // الموسيقى الأصلية القديمة هي المسار الافتراضي دائماً
         CurrentTrack = MusicTrack.EpicFantasyTheme;
     }
 
     void Start()
     {
-        PlayTrack(CurrentTrack);
+        if (PlayModeUI.isTitleScreenActive)
+        {
+            FreeFireCombatAudio.StartTitleAmbient();
+        }
+        else
+        {
+            PlayTrack(CurrentTrack);
+        }
+    }
+
+    public void OnTitleStartClicked()
+    {
+        FreeFireCombatAudio.StopTitleAmbient();
+        FreeFireCombatAudio.PlayGameStartSting();
+        if (CurrentTrack != MusicTrack.Mute)
+        {
+            PlayTrack(CurrentTrack);
+        }
     }
 
     void Update()
     {
         if (audioSource != null)
         {
-            float targetVol = (CurrentTrack == MusicTrack.Mute) ? 0f : musicVolume;
-            if (GameStateManager.Instance != null && GameStateManager.Instance.currentState == GameStateManager.GameState.Ended)
+            float targetVol = 0f;
+            if (CurrentTrack != MusicTrack.Mute)
             {
-                targetVol *= 0.5f;
+                if (PlayModeUI.isTitleScreenActive)
+                {
+                    targetVol = 0f; // Main loud BGM paused on title screen
+                }
+                else if (GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying())
+                {
+                    // Duck in-game combat BGM to 20% so visceral hits, footsteps, and team pings stand out loud & clear!
+                    targetVol = musicVolume * 0.20f;
+                }
+                else if (GameStateManager.Instance != null && GameStateManager.Instance.currentState == GameStateManager.GameState.Ended)
+                {
+                    targetVol = musicVolume * 0.50f;
+                }
+                else
+                {
+                    targetVol = musicVolume;
+                }
             }
 
             audioSource.volume = Mathf.Lerp(audioSource.volume, targetVol, 4f * Time.deltaTime);

@@ -544,11 +544,12 @@ public class TreeGrowth : MonoBehaviour
             yield break;
         }
 
-        // المرحلة الأولى: هزة عنيفة وتشقق الجذع واهتزاز الشاشة وصوت التصدع (1.2 ثانية)
-        ThirdPersonCamera.Shake(1.4f, 0.45f);
+        // المرحلة الأولى: هزة عنيفة وتشقق الجذع واهتزاز الشاشة وصوت التصدع (0.5 ثانية)
+        ThirdPersonCamera.Shake(1.2f, 0.55f);
         SpawnCollapseDebris(transform.position + Vector3.up * 2.5f, 16);
+        FreeFireCombatAudio.PlayHitImpact(transform.position, FreeFireCombatAudio.HitMaterial.Wood);
 
-        float groanTime = 1.2f;
+        float groanTime = 0.5f;
         float elapsedGroan = 0f;
         Quaternion startRot = pivot.rotation;
         Vector3 fallAxis = new Vector3(0.35f, 0f, 1f).normalized;
@@ -561,10 +562,10 @@ public class TreeGrowth : MonoBehaviour
             yield return null;
         }
 
-        // المرحلة الثانية: سقوط جاذبي سينمائي متسارع مهيب (2.6 ثانية)
-        float fallDuration = 2.6f;
+        // المرحلة الثانية: سقوط جاذبي سينمائي متسارع مهيب (1.2 ثانية)
+        float fallDuration = 1.2f;
         float elapsedFall = 0f;
-        ThirdPersonCamera.Shake(fallDuration + 1f, 0.35f);
+        ThirdPersonCamera.Shake(fallDuration + 0.5f, 0.45f);
 
         while (elapsedFall < fallDuration)
         {
@@ -575,7 +576,7 @@ public class TreeGrowth : MonoBehaviour
 
             pivot.rotation = startRot * Quaternion.AngleAxis(angle, fallAxis);
 
-            if (Random.value < 0.35f)
+            if (Random.value < 0.4f)
             {
                 Vector3 midPoint = pivot.position + Vector3.up * 18f;
                 SpawnFallLeavesDust(midPoint, 3);
@@ -586,17 +587,17 @@ public class TreeGrowth : MonoBehaviour
 
         pivot.rotation = startRot * Quaternion.AngleAxis(90f, fallAxis);
 
-        // المرحلة الثالثة: الارتطام الكارثي بالأرض!
-        ThirdPersonCamera.Shake(1.8f, 0.85f);
+        // المرحلة الثالثة: الارتطام الكارثي بالأرض ومؤثرات الانفجار السريعة (0.3 ثانية لتكتمل الـ 2.0 ثانية بالضبط)
+        ThirdPersonCamera.Shake(1.6f, 0.85f);
         SpawnGroundImpactShockwave(pivot.position, 90f);
         SpawnCollapseDebris(pivot.position + fallAxis * 20f, 25);
+        FreeFireCombatAudio.PlayHitImpact(pivot.position, FreeFireCombatAudio.HitMaterial.Wood);
 
-        // وقفة سينمائية مهيبة: الاحتفال الكارثي بسقوط الشجرة، أمطار النيازك والنيران المشتعلة (5.2 ثوانٍ)
         yield return StartCoroutine(ApocalypticDestructionCelebrationRoutine(pivot.position, fallAxis));
 
         isCollapsingBannerActive = false;
 
-        // المرحلة الرابعة: إنهاء المعركة وإعلان فوز المدمرين باللغة المختارة وظهور شاشة النقاط
+        // المرحلة الرابعة: إنهاء المعركة فوراً بعد ثانيتين من بدء الانهيار!
         if (GameStateManager.Instance != null)
         {
             GameStateManager.Instance.EndGame("Destroyers");
@@ -630,7 +631,7 @@ public class TreeGrowth : MonoBehaviour
         Material flameMat = new Material(unlitShader);
         flameMat.color = new Color(1f, 0.35f, 0.05f, 0.9f);
 
-        for (int i = 0; i < 24; i++)
+        for (int i = 0; i < 18; i++)
         {
             GameObject fObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Collider c = fObj.GetComponent<Collider>();
@@ -643,9 +644,10 @@ public class TreeGrowth : MonoBehaviour
             flameEmberList.Add(fObj.transform);
         }
 
-        float celebrationDuration = 5.5f;
+        // Fast dramatic explosion duration (0.3s) so the entire sequence completes in 2.0s
+        float celebrationDuration = 0.3f;
         float elapsed = 0f;
-        float nextMeteorTime = 0.05f;
+        float nextMeteorTime = 0.02f;
 
         while (elapsed < celebrationDuration)
         {
@@ -666,26 +668,11 @@ public class TreeGrowth : MonoBehaviour
                 }
             }
 
-            // أمطار نيازك ضخمة وساطعة متلاحقة مباشرة في واجهة الكاميرا وأرجاء الساحة
             if (elapsed >= nextMeteorTime)
             {
-                nextMeteorTime = elapsed + Random.Range(0.14f, 0.26f);
-
-                Vector3 targetLand;
-                if (Camera.main != null && Random.value < 0.65f)
-                {
-                    Vector3 camFwd = Camera.main.transform.forward;
-                    camFwd.y = 0f;
-                    if (camFwd.sqrMagnitude < 0.01f) camFwd = Vector3.forward; else camFwd.Normalize();
-                    Vector3 camViewTarget = Camera.main.transform.position + camFwd * Random.Range(12f, 28f);
-                    targetLand = camViewTarget + new Vector3(Random.Range(-12f, 12f), 0f, Random.Range(-12f, 12f));
-                }
-                else
-                {
-                    targetLand = treePos + fallAxis * Random.Range(0f, 40f) + new Vector3(Random.Range(-18f, 18f), 0f, Random.Range(-18f, 18f));
-                }
-
-                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-24f, -8f), Random.Range(55f, 75f), Random.Range(-24f, -8f));
+                nextMeteorTime = elapsed + 0.08f;
+                Vector3 targetLand = treePos + fallAxis * Random.Range(0f, 30f) + new Vector3(Random.Range(-12f, 12f), 0f, Random.Range(-12f, 12f));
+                Vector3 meteorSpawn = targetLand + new Vector3(Random.Range(-18f, -6f), Random.Range(40f, 60f), Random.Range(-18f, -6f));
                 StartCoroutine(SingleMeteorRoutine(meteorSpawn, targetLand));
             }
 

@@ -562,6 +562,17 @@ public class CrystalAltar : NetworkBehaviour
 
             if (stillValid)
             {
+                // Strict Climax Tie Window: If Tree was destroyed > 1.5s ago, match is already lost!
+                if (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead)
+                {
+                    float treeDeathTime = GameStateManager.Instance != null ? GameStateManager.Instance.TreeDestroyedTime : 0f;
+                    if (treeDeathTime > 0f && (Time.time - treeDeathTime > GameStateManager.MAX_TIE_WINDOW))
+                    {
+                        CancelChannelling();
+                        return;
+                    }
+                }
+
                 channelTimer += Time.deltaTime;
                 ApplyChannellingDynamicVisuals(ChannelProgress);
 
@@ -712,6 +723,17 @@ public class CrystalAltar : NetworkBehaviour
     public void OnCrystalDeliveredServer(GameObject carrier)
     {
         if (gameWon || carrier == null) return;
+
+        // Strict Climax Tie Window: reject if Tree collapsed > 1.5s ago
+        if (TreeGrowth.Instance != null && TreeGrowth.Instance.IsTreeDead)
+        {
+            float treeDeathTime = GameStateManager.Instance != null ? GameStateManager.Instance.TreeDestroyedTime : 0f;
+            if (treeDeathTime > 0f && (Time.time - treeDeathTime > GameStateManager.MAX_TIE_WINDOW))
+            {
+                Debug.Log("[CrystalAltar] Consecration rejected! Sacred Tree fell > 1.5s ago.");
+                return;
+            }
+        }
 
         // Mark gameWon across ALL altars to prevent duplicate triggers
         for (int i = 0; i < AllAltars.Count; i++)

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using Unity.Netcode;
 
@@ -312,6 +312,7 @@ public class CharacterCombat : NetworkBehaviour
                 {
                     targetTree.Heal(amount, gameObject);
                 }
+                FreeFireCombatAudio.PlayHitImpact(targetTree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
             }
         }
         else if (target != null)
@@ -324,6 +325,9 @@ public class CharacterCombat : NetworkBehaviour
                 CharacterCombat targetCombat = target.GetComponent<CharacterCombat>() ?? target.GetComponentInParent<CharacterCombat>() ?? (targetHp != null ? targetHp.GetComponent<CharacterCombat>() : null);
                 if (targetHp != null && targetCombat != null && targetCombat.team != team && !targetHp.isDead)
                 {
+                    bool isBoss = (target.GetComponent<LevelBoss>() != null || target.GetComponentInParent<LevelBoss>() != null || target.name.ToLower().Contains("boss"));
+                    FreeFireCombatAudio.PlayHitImpact(target.position, isBoss ? FreeFireCombatAudio.HitMaterial.Armor : FreeFireCombatAudio.HitMaterial.Flesh);
+
                     PlayerXP xp = GetComponent<PlayerXP>();
                     float xpMult = (xp != null) ? xp.GetDamageMultiplier() : 1f;
                     targetHp.TakeDamage(attackDamage * xpMult, gameObject);
@@ -455,6 +459,8 @@ public class CharacterCombat : NetworkBehaviour
 
     void PerformAttack()
     {
+        FreeFireCombatAudio.PlayAttackSwing(transform.position, attackType == AttackType.Melee);
+
         CharacterVisualAnimator anim = GetComponentInChildren<CharacterVisualAnimator>();
         if (anim != null)
         {
@@ -532,6 +538,8 @@ public class CharacterCombat : NetworkBehaviour
                     );
                 }
 
+                FreeFireCombatAudio.PlayHitImpact(tree.transform.position, FreeFireCombatAudio.HitMaterial.Wood);
+
                 // منح XP عند ضرب الشجرة
                 if (xp != null) xp.AddTreeHitXP();
 
@@ -557,6 +565,9 @@ public class CharacterCombat : NetworkBehaviour
                 other.team != team &&
                 !health.isDead)
             {
+                bool isBoss = (hit.GetComponent<LevelBoss>() != null || hit.GetComponentInParent<LevelBoss>() != null || hit.name.ToLower().Contains("boss"));
+                FreeFireCombatAudio.PlayHitImpact(hit.transform.position, isBoss ? FreeFireCombatAudio.HitMaterial.Armor : FreeFireCombatAudio.HitMaterial.Flesh);
+
                 // تمرير المهاجم لتتبع القاتل ومنح XP
                 health.TakeDamage(
                     attackDamage * xpMultiplier,

@@ -303,23 +303,40 @@ public class PlayModeUI : MonoBehaviour
             }
         }
 
-        // 3. Grand Game Title Plaque (Center-Top)
-        float titleBoxW = Mathf.Min(sw * 0.88f, 880f);
-        float titleBoxH = 152f;
+        // 3. Grand AAA Game Title Logo & Heraldic Crest (Center-Top)
+        float titleBoxW = Mathf.Min(sw * 0.90f, 920f);
+        float titleBoxH = 168f;
         float titleBoxX = (sw - titleBoxW) * 0.5f;
-        float titleBoxY = Mathf.Max(26f, sh * 0.08f);
+        float titleBoxY = Mathf.Max(24f, sh * 0.07f);
 
         Rect titleRect = new Rect(titleBoxX, titleBoxY, titleBoxW, titleBoxH);
-        EnchantedNatureGUI.DrawWoodPlate(titleRect, new Color(0.08f, 0.14f, 0.09f, 0.94f), new Color(0.92f, 0.78f, 0.30f, 0.95f));
 
-        // Floating Title Shimmer
-        float titleGlow = (Mathf.Sin(Time.time * 2.5f) + 1f) * 0.5f;
-        Color glowingGold = Color.Lerp(new Color(0.95f, 0.82f, 0.28f), new Color(1f, 0.98f, 0.65f), titleGlow);
+        // A. Royal Obsidian-Emerald Glass Shield
+        EnchantedNatureGUI.DrawLeafPlaque(
+            titleRect, 
+            new Color(0.04f, 0.08f, 0.05f, 0.96f), 
+            new Color(0.92f, 0.78f, 0.28f, 0.95f)
+        );
+
+        // B. Glowing Crown & Rune Emblem atop the Shield
+        float pulse = (Mathf.Sin(Time.time * 2.8f) + 1f) * 0.5f;
+        Color glowingEmblemCol = Color.Lerp(new Color(0.40f, 0.95f, 0.65f), new Color(1f, 0.88f, 0.35f), pulse);
+        GUIStyle emblemStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = glowingEmblemCol }
+        };
+        GUI.Label(new Rect(titleBoxX, titleBoxY + 8f, titleBoxW, 20f), "⚔️  👑  T H E   S A C R E D   G R O V E  👑  ⚔️", emblemStyle);
+
+        // C. Floating 3D Extruded Title Shimmer
+        Color glowingGold = Color.Lerp(new Color(0.96f, 0.84f, 0.32f), new Color(1f, 0.98f, 0.75f), pulse);
 
         string grandTitle = LanguageSelectionUI.Localize(
             "BEANSTALK WAR",
             ar: "حَرْبُ شَجَرَةِ الفَاصُولِيَاء",
-            fa: "جنگ ساقه لوبیا",
+            fa: "نبرد ساقه لوبیا",
             ru: "БИТВА ЗА БОБОВЫЙ СТЕБЕЛЬ",
             de: "KRIEG DER BOHNENRANKE",
             it: "GUERRA DEL FAGIOLO SACRO",
@@ -335,7 +352,7 @@ public class PlayModeUI : MonoBehaviour
         Font customTitleFont = GetSelectedFont();
         GUIStyle mainTitleStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.038f), 26, 44),
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.040f), 28, 48),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
@@ -344,15 +361,17 @@ public class PlayModeUI : MonoBehaviour
             mainTitleStyle.font = customTitleFont;
         }
 
+        // Multi-pass 3D text extrusion with heavy shadow
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(titleBoxX + 10f, titleBoxY + 12f, titleBoxW - 20f, 56f),
+            new Rect(titleBoxX + 10f, titleBoxY + 28f, titleBoxW - 20f, 58f),
             grandTitle,
             mainTitleStyle,
             glowingGold,
-            new Color(0.02f, 0.05f, 0.02f, 0.98f),
-            2.5f, 2.5f
+            new Color(0.01f, 0.03f, 0.01f, 0.98f),
+            3.0f, 3.0f
         );
 
+        // D. Luxurious Subtitle Ribbon Banner
         string grandSubtitle = LanguageSelectionUI.Localize(
             "⚔️ Battle for the Sacred Tree & Celestial Sanctuary ⚔️",
             ar: "⚔️ مَعْرَكَةُ الشَّجَرَةِ المُقَدَّسَةِ وَالمِحْرَابِ السَّمَاوِيّ ⚔️",
@@ -371,20 +390,20 @@ public class PlayModeUI : MonoBehaviour
 
         GUIStyle subtitleStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.016f), 13, 17),
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.016f), 13, 18),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
         EnchantedNatureGUI.DrawTextWithShadow(
-            new Rect(titleBoxX + 10f, titleBoxY + 74f, titleBoxW - 20f, 28f),
+            new Rect(titleBoxX + 10f, titleBoxY + 88f, titleBoxW - 20f, 26f),
             grandSubtitle,
             subtitleStyle,
-            new Color(0.35f, 0.95f, 0.88f),
+            new Color(0.40f, 0.95f, 0.88f),
             new Color(0.01f, 0.04f, 0.02f, 0.95f),
             1.5f, 1.5f
         );
 
-        // Feature badge ribbons below title
+        // E. Dual Faction Matchup Pill
         string factionInfo = LanguageSelectionUI.Localize(
             "🛡️ Protectors of the Forest   ⚔️ VS ⚔️   🔥 Destroyers of the Canopy",
             ar: "🛡️ حُمَاةُ الغَابَةِ المُقَدَّسَةِ   ⚔️ ضِدَّ ⚔️   🔥 مُدَمِّرُو الشَّجَرَةِ",
@@ -405,9 +424,9 @@ public class PlayModeUI : MonoBehaviour
             fontSize = Mathf.Clamp(Mathf.RoundToInt(sw * 0.013f), 11, 14),
             fontStyle = FontStyle.Italic,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.85f, 0.92f, 0.85f, 0.85f) }
+            normal = { textColor = new Color(0.88f, 0.94f, 0.88f, 0.90f) }
         };
-        GUI.Label(new Rect(titleBoxX + 10f, titleBoxY + 110f, titleBoxW - 20f, 24f), factionInfo, factionStyle);
+        GUI.Label(new Rect(titleBoxX + 10f, titleBoxY + 124f, titleBoxW - 20f, 24f), factionInfo, factionStyle);
 
         // 5. Grand Interactive Call-to-Action (Center-Bottom)
         float startBtnW = Mathf.Clamp(sw * 0.50f, 360f, 560f);
@@ -437,7 +456,7 @@ public class PlayModeUI : MonoBehaviour
         Rect startBtnRect = new Rect(startBtnX, startBtnY, startBtnW, startBtnH);
         if (EnchantedNatureGUI.DrawOrganicLeafButton(startBtnRect, startText, btnBorderCol, 15))
         {
-            isTitleScreenActive = false;
+            StartGameFromTitle();
         }
 
         // Subtitle Hint
@@ -469,14 +488,21 @@ public class PlayModeUI : MonoBehaviour
         Event evt = Event.current;
         if (evt.type == EventType.MouseDown && evt.mousePosition.y > 60f)
         {
-            isTitleScreenActive = false;
+            StartGameFromTitle();
             evt.Use();
         }
         else if (evt.type == EventType.KeyDown && (evt.keyCode == KeyCode.Space || evt.keyCode == KeyCode.Return))
         {
-            isTitleScreenActive = false;
+            StartGameFromTitle();
             evt.Use();
         }
+    }
+
+    private void StartGameFromTitle()
+    {
+        if (!isTitleScreenActive) return;
+        isTitleScreenActive = false;
+        ForestBGMManager.Instance?.OnTitleStartClicked();
     }
 
     // =========================================================================

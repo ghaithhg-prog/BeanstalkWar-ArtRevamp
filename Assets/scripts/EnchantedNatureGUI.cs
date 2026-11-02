@@ -52,12 +52,17 @@ public static class EnchantedNatureGUI
         {
             if (cachedArabicFont == null)
             {
-                cachedArabicFont = Resources.Load<Font>("Fonts/DecoTypeThuluth");
+                // High-clarity, prestigious Naskh font for crystal-clear readability on digital screens
+                cachedArabicFont = Resources.Load<Font>("Fonts/Amiri-Bold");
+                if (cachedArabicFont == null)
+                {
+                    cachedArabicFont = Resources.Load<Font>("Fonts/TraditionalArabicBold");
+                }
                 if (cachedArabicFont == null)
                 {
                     try
                     {
-                        cachedArabicFont = Font.CreateDynamicFontFromOSFont(new string[] { "DecoType Thuluth", "Amiri", "Traditional Arabic", "Arial" }, 16);
+                        cachedArabicFont = Font.CreateDynamicFontFromOSFont(new string[] { "Amiri", "Segoe UI", "Tahoma", "Traditional Arabic", "Arial" }, 16);
                     }
                     catch {}
                 }

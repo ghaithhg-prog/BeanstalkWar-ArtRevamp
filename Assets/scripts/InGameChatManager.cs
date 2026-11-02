@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
@@ -217,6 +217,18 @@ public class InGameChatManager : MonoBehaviour
         if (allMessages.Count > MaxStoredMessages)
         {
             allMessages.RemoveAt(0);
+        }
+
+        if (!InGameChatUI.IsChatMuted)
+        {
+            if (isQuickPing)
+            {
+                FreeFireCombatAudio.PlayTacticalPing();
+            }
+            else
+            {
+                FreeFireCombatAudio.PlayChatNotification();
+            }
         }
 
         OnMessageReceived?.Invoke(msg);

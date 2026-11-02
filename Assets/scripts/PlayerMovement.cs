@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 
 public class PlayerMovement : NetworkBehaviour
@@ -74,6 +74,7 @@ public class PlayerMovement : NetworkBehaviour
     public float jumpForce = 7f;
 
     private Rigidbody rb;
+    private float nextFootstepAudioTime = 0f;
 
     // =========================
     // Network
@@ -1222,6 +1223,12 @@ public class PlayerMovement : NetworkBehaviour
 
         if (moveDirection != Vector3.zero)
         {
+            if ((isCurrentlyGrounded || isGroundedSlope) && Time.time >= nextFootstepAudioTime)
+            {
+                nextFootstepAudioTime = Time.time + (isSprinting ? 0.28f : 0.42f);
+                FreeFireCombatAudio.PlayFootstep(transform.position, isSprinting);
+            }
+
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
