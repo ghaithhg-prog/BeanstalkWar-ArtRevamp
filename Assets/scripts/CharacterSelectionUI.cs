@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Unity.Netcode;
@@ -464,7 +464,7 @@ public class CharacterSelectionUI : MonoBehaviour
         if (GameIntroBriefingUI.IsBriefingOpen) return;
         if (PlayerProgressionAndShopUI.IsShopOpen) return;
 
-        // دعم اختصار الكيبورد للتأكيد الفوري والدخول للمعركة (Enter أو مسافة)
+        // Keyboard navigation (Enter / Space to confirm)
         if (Event.current.type == EventType.KeyDown)
         {
             if (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter || Event.current.keyCode == KeyCode.Space)
@@ -486,11 +486,11 @@ public class CharacterSelectionUI : MonoBehaviour
         // 2. Top Header (Back Button "< CHARACTER SELECT" on left, Currency & Player Name on right)
         DrawHeader(sw, sh);
 
-        // 3. Main Content Area (Spans from sh * 0.075f to sh * 0.96f)
+        // 3. Main Content Area
         float contentY = sh * 0.078f;
         float contentH = sh * 0.880f;
 
-        // A. Far-Left: Slim Vertical Role Sidebar (width: 52px)
+        // A. Far-Left: Slim Vertical Role Sidebar (width: 50px)
         float roleBarW = 50f;
         float roleBarX = 14f;
         DrawVerticalRoleSidebar(new Rect(roleBarX, contentY, roleBarW, contentH));
@@ -554,7 +554,7 @@ public class CharacterSelectionUI : MonoBehaviour
         GUI.color = Color.white;
     }
 
-        // ==================== HEADER (IMAGE 2 STYLE) ====================
+    // ==================== HEADER (IMAGE 2 STYLE) ====================
     void DrawHeader(float sw, float sh)
     {
         // Top-left Luxury Back button: "< CHARACTER SELECT"
@@ -565,16 +565,16 @@ public class CharacterSelectionUI : MonoBehaviour
 
         string backText = "< " + LanguageSelectionUI.Localize(
             "CHARACTER SELECT",
-            ar: "Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø¨Ø·Ù„",
-            ru: "Ð’Ð«Ð‘ÐžÐ  Ð“Ð•Ð ÐžÐ¯",
-            fr: "SÃ‰LECTION DU HÃ‰ROS",
-            es: "SELECCIÃ“N DE HÃ‰ROE",
+            ar: "اختيار البطل",
+            ru: "ВЫБОР ГЕРОЯ",
+            fr: "SÉLECTION DU HÉROS",
+            es: "SELECCIÓN DE HÉROE",
             de: "HELDENAUSWAHL",
-            hi: "à¤¨à¤¾à¤¯à¤• à¤šà¤¯à¤¨",
-            zh: "è‹±é›„é€‰æ‹©",
-            ja: "è‹±é›„é¸æŠž",
-            pt: "SELEÃ‡ÃƒO DE HERÃ“IS",
-            fa: "Ø§Ù†ØªØ®Ø§Ø¨ Ù‚Ù‡Ø±Ù…Ø§Ù†"
+            hi: "नायक चयन",
+            zh: "英雄选择",
+            ja: "英雄選択",
+            pt: "SELEÇÃO DE HERÓIS",
+            fa: "انتخاب قهرمان"
         );
 
         if (EnchantedNatureGUI.DrawOrganicLeafButton(new Rect(backX, backY, backW, backH), backText, new Color(0.92f, 0.78f, 0.32f), 12))
@@ -597,12 +597,12 @@ public class CharacterSelectionUI : MonoBehaviour
             return;
         }
 
-        // Top-Right: Luxury Currency Capsule (Image 2 style: 106 ðŸ’Ž  |  230 ðŸŸ¢  |  2145 ðŸª™)
+        // Top-Right: Luxury Currency Capsule (Image 2 style: Gems | Rating | Acorns)
         int curCoins = PlayerProfile.Instance != null ? PlayerProfile.Instance.Coins : 0;
         int curGems = PlayerProfile.Instance != null ? PlayerProfile.Instance.Gems : 0;
         int curRating = PlayerProfile.Instance != null ? PlayerProfile.Instance.RatingScore_AllTime : 420;
 
-        float ecoW = Mathf.Clamp(sw * 0.24f, 210f, 280f);
+        float ecoW = Mathf.Clamp(sw * 0.28f, 240f, 320f);
         float ecoH = 32f;
         float ecoX = sw * 0.985f - ecoW;
         float ecoY = sh * 0.015f;
@@ -612,16 +612,21 @@ public class CharacterSelectionUI : MonoBehaviour
 
         GUIStyle ecoStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.Clamp((int)(ecoW * 0.045f), 10, 12),
+            fontSize = Mathf.Clamp((int)(ecoW * 0.040f), 10, 12),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = new Color(1f, 0.92f, 0.45f) }
         };
-        string ecoStr = $"ðŸ’Ž {curGems}   ðŸŸ¢ {curRating}   ðŸª™ {curCoins}";
+
+        string gemsLabel = LanguageSelectionUI.Localize("Gems", "جوهرة", "гемов", "gemmes", "gemas", "Edelsteine", "रत्न", "宝石", "宝石", "gemas", "الماس");
+        string ptsLabel = LanguageSelectionUI.Localize("Pts", "نقطة", "очков", "pts", "pts", "Punkte", "अंक", "积分", "pt", "pts", "امتیاز");
+        string acornsLabel = LanguageSelectionUI.Localize("Acorns", "بلوط", "желудей", "glands", "bellotas", "Eicheln", "बलूत", "橡果", "どんぐり", "bolotas", "بلوط");
+
+        string ecoStr = $"{curGems} {gemsLabel}   |   ★ {curRating} {ptsLabel}   |   {curCoins} {acornsLabel}";
         GUI.Label(ecoRect, ecoStr, ecoStyle);
 
-        // Name Tag to the left of the currency pill
-        float nameW = Mathf.Clamp(sw * 0.16f, 140f, 190f);
+        // Player Name Tag cleanly displayed to the left of currency
+        float nameW = Mathf.Clamp(sw * 0.18f, 150f, 210f);
         float nameX = ecoX - nameW - 10f;
         Rect nameRect = new Rect(nameX, ecoY, nameW, ecoH);
         EnchantedNatureGUI.DrawLeafPlaque(nameRect, new Color(0.04f, 0.08f, 0.05f, 0.90f), new Color(0.65f, 0.55f, 0.25f, 0.65f));
@@ -633,8 +638,9 @@ public class CharacterSelectionUI : MonoBehaviour
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = new Color(0.70f, 0.95f, 0.75f) }
         };
+        string playerWord = LanguageSelectionUI.Localize("PLAYER:", "اللاعب:", "ИГРОК:", "JOUEUR :", "JUGADOR:", "SPIELER:", "खिलाड़ी:", "玩家:", "プレイヤー:", "JOGADOR:", "بازیکن:");
         string curName = PlayerProfile.GetSavedPlayerName();
-        GUI.Label(nameRect, $"ðŸ‘¤ {curName}", nameLabelStyle);
+        GUI.Label(nameRect, $"{playerWord} {curName}", nameLabelStyle);
     }
 
     // ==================== VERTICAL ROLE SIDEBAR (IMAGE 2 STYLE) ====================
@@ -642,15 +648,15 @@ public class CharacterSelectionUI : MonoBehaviour
     {
         // 6 Vertical Role Diamond Buttons: ALL, DAMAGE, TANK, SUPPORT, CONTROL, SPECIALIST
         int[] roles = new int[] { -1, 1, 0, 2, 3, 4 };
-        string[] roleIcons = new string[] { "â–", "âš”ï¸", "ðŸ›¡ï¸", "ðŸ’š", "ðŸ¹", "âœ¨" };
+        string[] roleIcons = new string[] { "◆", "⚔", "🛡", "♥", "🏹", "✦" };
         string[] roleLabels = new string[]
         {
-            LanguageSelectionUI.Localize("ALL", "Ø§Ù„ÙƒÙ„", "Ð’Ð¡Ð•", "TOUS", "TODOS", "ALLE", "à¤¸à¤­à¥€", "å…¨éƒ¨", "ã™ã¹ã¦", "TODOS", "Ù‡Ù…Ù‡"),
-            LanguageSelectionUI.Localize("ATK", "Ù‡Ø¬ÙˆÙ…", "Ð£Ð ÐžÐ", "DÃ‰G", "DAÃ‘O", "ATK", "à¤¹à¤®à¤²à¤¾", "è¾“å‡º", "æ”»æ’ƒ", "ATQ", "Ø­Ù…Ù„Ù‡"),
-            LanguageSelectionUI.Localize("TANK", "Ù…Ø¯Ø±Ø¹", "Ð¢ÐÐÐš", "TANK", "TANQ", "TANK", "à¤Ÿà¥ˆà¤‚à¤•", "é‡è£…", "é˜²è¡›", "TNK", "ØªØ§Ù†Ú©"),
-            LanguageSelectionUI.Localize("SUPP", "Ø¯Ø¹Ù…", "Ð¡ÐÐŸÐŸ", "SOUT", "APOY", "SUPP", "à¤¸à¤¹à¤¾à¤¯", "è¾…åŠ©", "æ”¯æ´", "SUP", "Ù¾Ø´ØªÛŒØ¨Ø§Ù†"),
-            LanguageSelectionUI.Localize("RNG", "Ø±Ø§Ù…ÙŠ", "Ð›Ð£Ðš", "ARCH", "ARQ", "FERN", "à¤§à¤¨à¥à¤·", "å°„æ‰‹", "å°„æ‰‹", "RNG", "Ú©Ù…Ø§Ù†"),
-            LanguageSelectionUI.Localize("MAGE", "Ø³Ø­Ø±", "ÐœÐÐ“", "MAGE", "MAGO", "MAG", "à¤œà¤¾à¤¦à¥‚", "æ³•æœ¯", "é­”æ³•", "MAG", "Ø¬Ø§Ø¯Ùˆ")
+            LanguageSelectionUI.Localize("ALL", "الكل", "ВСЕ", "TOUS", "TODOS", "ALLE", "सभी", "全部", "すべて", "TODOS", "همه"),
+            LanguageSelectionUI.Localize("ATK", "هجوم", "УРОН", "DÉG", "DAÑO", "ATK", "हमला", "输出", "攻撃", "ATQ", "حمله"),
+            LanguageSelectionUI.Localize("TANK", "مدرع", "ТАНК", "TANK", "TANQ", "TANK", "टैंक", "重装", "防衛", "TNK", "تانک"),
+            LanguageSelectionUI.Localize("SUPP", "دعم", "САПП", "SOUT", "APOY", "SUPP", "सहाय", "辅助", "支援", "SUP", "پشتیبان"),
+            LanguageSelectionUI.Localize("RNG", "رامي", "ЛУК", "ARCH", "ARQ", "FERN", "धनुष", "射手", "射手", "RNG", "کمان"),
+            LanguageSelectionUI.Localize("MAGE", "سحر", "МАГ", "MAGE", "MAGO", "MAG", "जादू", "法术", "魔法", "MAG", "جادو")
         };
 
         float btnW = rect.width;
@@ -725,7 +731,7 @@ public class CharacterSelectionUI : MonoBehaviour
         gridTitle.alignment = TextAnchor.MiddleLeft;
         gridTitle.normal.textColor = new Color(0.85f, 0.78f, 0.35f, 0.95f);
 
-        string rosterTitle = LanguageSelectionUI.Localize("âœ¦ ROSTER", "âœ¦ Ø§Ù„Ø£Ø¨Ø·Ø§Ù„", "âœ¦ Ð“Ð•Ð ÐžÐ˜", "âœ¦ HÃ‰ROS", "âœ¦ HÃ‰ROES", "âœ¦ HELDEN", "âœ¦ à¤¨à¤¾à¤¯à¤•", "âœ¦ è‹±é›„åå†Œ", "âœ¦ è‹±é›„ä¸€è¦§", "âœ¦ HERÃ“IS", "âœ¦ Ù‚Ù‡Ø±Ù…Ø§Ù†Ø§Ù†");
+        string rosterTitle = "✦ " + LanguageSelectionUI.Localize("ROSTER", "الأبطال", "ГЕРОИ", "HÉROS", "HÉROES", "HELDEN", "नायक", "英雄名册", "英雄一覧", "HERÓIS", "قهرمانان");
         GUI.Label(new Rect(area.x + pad + 2f, area.y + 4f, area.width * 0.55f, 20f), rosterTitle, gridTitle);
 
         // Filter Matching Characters
@@ -744,7 +750,7 @@ public class CharacterSelectionUI : MonoBehaviour
         countStyle.fontSize = 9;
         countStyle.alignment = TextAnchor.MiddleRight;
         countStyle.normal.textColor = new Color(0.65f, 0.85f, 0.70f, 0.85f);
-        GUI.Label(new Rect(area.x, area.y + 5f, area.width - pad - 4f, 18f), $"{filteredList.Count} " + LanguageSelectionUI.Localize("Heroes", "Ø£Ø¨Ø·Ø§Ù„", "Ð³ÐµÑ€Ð¾ÐµÐ²", "HÃ©ros", "HÃ©roes", "Helden", "à¤¨à¤¾à¤¯à¤•", "åè‹±é›„", "è‹±é›„", "HerÃ³is", "Ù‚Ù‡Ø±Ù…Ø§Ù†"), countStyle);
+        GUI.Label(new Rect(area.x, area.y + 5f, area.width - pad - 4f, 18f), $"{filteredList.Count} " + LanguageSelectionUI.Localize("Heroes", "أبطال", "героев", "Héros", "Héroes", "Helden", "नायक", "名英雄", "英雄", "Heróis", "قهرمان"), countStyle);
 
         // Fine gold divider
         GUI.color = new Color(0.65f, 0.55f, 0.25f, 0.55f);
@@ -959,7 +965,7 @@ public class CharacterSelectionUI : MonoBehaviour
 
         // Top Floating Hero Title Watermark (Compact so it never hides champion's head)
         string locName = LanguageSelectionUI.Localize(ch.characterName).ToUpper();
-        string titleWatermark = $"âœ¦ {locName} âœ¦";
+        string titleWatermark = $"✦ {locName} ✦";
 
         GUIStyle wmStyle = new GUIStyle(GUI.skin.label);
         wmStyle.fontSize = Mathf.Max(14, (int)(area.width * 0.052f));
@@ -994,19 +1000,19 @@ public class CharacterSelectionUI : MonoBehaviour
         Rect centerConfirmRect = new Rect(centerBtnX, centerBtnY, centerBtnW, centerBtnH);
 
         string locChar = LanguageSelectionUI.Localize(ch.characterName).ToUpper();
-        string centerBtnText = "< âš”ï¸ " + LanguageSelectionUI.Localize(
+        string centerBtnText = "< ⚔ " + LanguageSelectionUI.Localize(
             "COMMENCE EXPEDITION",
-            ar: "Ø§Ù†Ø·Ù„Ù‚ ÙÙŠ Ø§Ù„Ø­Ù…Ù„Ø©",
-            ru: "ÐÐÐ§ÐÐ¢Ð¬ ÐŸÐžÐ¥ÐžÐ”",
-            fr: "COMMENCER L'EXPÃ‰DITION",
-            es: "INICIAR EXPEDICIÃ“N",
+            ar: "انطلق في الحملة",
+            ru: "НАЧАТЬ ПОХОД",
+            fr: "COMMENCER L'EXPÉDITION",
+            es: "INICIAR EXPEDICIÓN",
             de: "EXPEDITION STARTEN",
-            hi: "à¤…à¤­à¤¿à¤¯à¤¾à¤¨ à¤¶à¥à¤°à¥‚ à¤•à¤°à¥‡à¤‚",
-            zh: "å¼€å§‹è¿œå¾",
-            ja: "é å¾ã‚’é–‹å§‹",
-            pt: "INICIAR EXPEDIÃ‡ÃƒO",
-            fa: "Ø¢ØºØ§Ø² Ù†Ø¨Ø±Ø¯"
-        ) + $" ({locChar}) âš”ï¸ >";
+            hi: "अभियान शुरू करें",
+            zh: "开始远征",
+            ja: "遠征を開始",
+            pt: "INICIAR EXPEDIÇÃO",
+            fa: "آغاز نبرد"
+        ) + $" ({locChar}) ⚔ >";
 
         if (EnchantedNatureGUI.DrawOrganicLeafButton(centerConfirmRect, centerBtnText, new Color(0.25f, 0.95f, 0.45f), 13))
         {
@@ -1022,17 +1028,17 @@ public class CharacterSelectionUI : MonoBehaviour
         hintStyle.fontStyle = FontStyle.Italic;
 
         string hintStr = LanguageSelectionUI.Localize(
-            "âœ¦ Drag mouse to rotate | Press Enter/Space to select âœ¦",
-            ar: "âœ¦ Ø§Ø³Ø­Ø¨ Ø¨Ø§Ù„ÙØ£Ø±Ø© Ù„Ù„ØªØ¯ÙˆÙŠØ± | Ø§Ø¶ØºØ· Enter Ø£Ùˆ Ù…Ø³Ø§ÙØ© Ù„Ù„Ø§Ø®ØªÙŠØ§Ø± âœ¦",
-            ru: "âœ¦ Ð¢ÑÐ½Ð¸Ñ‚Ðµ Ð¼Ñ‹ÑˆÑŒ Ð´Ð»Ñ Ð²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ñ | Enter/ÐŸÑ€Ð¾Ð±ÐµÐ» Ð´Ð»Ñ Ð²Ñ‹Ð±Ð¾Ñ€Ð° âœ¦",
-            fr: "âœ¦ Glissez pour pivoter | EntrÃ©e/Espace pour choisir âœ¦",
-            es: "âœ¦ Arrastra para rotar | Pulsa Enter/Espacio para elegir âœ¦",
-            de: "âœ¦ Ziehen zum Drehen | Enter/Leertaste zum AuswÃ¤hlen âœ¦",
-            hi: "âœ¦ à¤˜à¥à¤®à¤¾à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤®à¤¾à¤‰à¤¸ à¤–à¥€à¤‚à¤šà¥‡à¤‚ | à¤šà¥à¤¨à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ Enter à¤¦à¤¬à¤¾à¤à¤‚ âœ¦",
-            zh: "âœ¦ æ‹–åŠ¨æ—‹è½¬è‹±é›„ | æŒ‰å›žè½¦æˆ–ç©ºæ ¼ç›´æŽ¥å‡ºæˆ˜ âœ¦",
-            ja: "âœ¦ ãƒ‰ãƒ©ãƒƒã‚°ã§å›žè»¢ | Enter/ã‚¹ãƒšãƒ¼ã‚¹ã§æ±ºå®š âœ¦",
-            pt: "âœ¦ Arraste para girar | Enter/EspaÃ§o para escolher âœ¦",
-            fa: "âœ¦ Ú©Ø´ÛŒØ¯Ù† Ø¨Ø±Ø§ÛŒ Ú†Ø±Ø®Ø´ | ÙØ´Ø±Ø¯Ù† Enter/ÙØ§ØµÙ„Ù‡ Ø¨Ø±Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨ âœ¦"
+            "✦ Drag mouse to rotate | Press Enter/Space to select ✦",
+            ar: "✦ اسحب بالفأرة للتدوير | اضغط Enter أو مسافة للاختيار ✦",
+            ru: "✦ Тяните мышь для вращения | Enter/Пробел для выбора ✦",
+            fr: "✦ Glissez pour pivoter | Entrée/Espace pour choisir ✦",
+            es: "✦ Arrastra para rotar | Pulsa Enter/Espacio para elegir ✦",
+            de: "✦ Ziehen zum Drehen | Enter/Leertaste zum Auswählen ✦",
+            hi: "✦ घुमाने के लिए माउस खींचें | चुनने के लिए Enter दबाएं ✦",
+            zh: "✦ 拖动旋转英雄 | 按回车或空格直接出战 ✦",
+            ja: "✦ ドラッグで回転 | Enter/スペースで決定 ✦",
+            pt: "✦ Arraste para girar | Enter/Espaço para escolher ✦",
+            fa: "✦ کشیدن برای چرخش | فشردن Enter/فاصله برای انتخاب ✦"
         );
         GUI.Label(new Rect(area.x, area.y + area.height - 22f, area.width, 18f), hintStr, hintStyle);
     }
@@ -1065,8 +1071,8 @@ public class CharacterSelectionUI : MonoBehaviour
         Rect tab0Rect = new Rect(area.x + pad, area.y + 6f, tabW, 26f);
         Rect tab1Rect = new Rect(area.x + pad + tabW + 4f, area.y + 6f, tabW, 26f);
 
-        string attrTabStr = "âš”ï¸ " + LanguageSelectionUI.Localize("ATTRIBUTES", "Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø§Ù„Ù‚ØªØ§Ù„", "Ð¥ÐÐ ÐÐšÐ¢Ð•Ð Ð˜Ð¡Ð¢Ð˜ÐšÐ˜", "ATRIBUTOS", "ATTRIBUTS", "ATTRIBUTE", "à¤µà¤¿à¤¶à¥‡à¤·à¤¤à¤¾à¤à¤", "æˆ˜æ–—å±žæ€§", "ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹", "ATRIBUTOS", "Ù…Ø´Ø®ØµØ§Øª Ø±Ø²Ù…ÛŒ");
-        string skinsTabStr = "ðŸ‘‘ " + LanguageSelectionUI.Localize("WARDROBE", "Ø§Ù„Ù…Ø¸Ø§Ù‡Ø± ÙˆØ§Ù„Ø£Ø³Ù„Ø­Ø©", "ÐžÐ‘Ð›Ð˜ÐšÐ˜", "ASPECTOS", "SKINS SACRÃ‰S", "SKINS", "à¤ªà¤µà¤¿à¤¤à¥à¤° à¤–à¤¾à¤²", "ç¥žåœ£çš®è‚¤", "è–ãªã‚‹ã‚¹ã‚­ãƒ³", "SKINS SAGRADAS", "Ù¾ÙˆØ³ØªÙ‡â€ŒÙ‡Ø§ Ùˆ Ø³Ù„Ø§Ø­â€ŒÙ‡Ø§");
+        string attrTabStr = "⚔ " + LanguageSelectionUI.Localize("ATTRIBUTES", "إحصائيات القتال", "ХАРАКТЕРИСТИКИ", "ATRIBUTOS", "ATTRIBUTS", "ATTRIBUTE", "विशेषताएँ", "战斗属性", "ステータス", "ATRIBUTOS", "مشخصات رزمی");
+        string skinsTabStr = "👑 " + LanguageSelectionUI.Localize("WARDROBE", "المظاهر والأسلحة", "ОБЛИКИ", "ASPECTOS", "SKINS SACRÉS", "SKINS", "पवित्र खाल", "神圣皮肤", "聖なるスキン", "SKINS SAGRADAS", "پوسته‌ها و سلاح‌ها");
 
         Color tab0Col = (selectedDetailsTab == 0) ? new Color(0.25f, 0.95f, 0.50f) : new Color(0.22f, 0.32f, 0.26f);
         Color tab1Col = (selectedDetailsTab == 1) ? new Color(1.0f, 0.85f, 0.35f) : new Color(0.32f, 0.28f, 0.22f);
@@ -1126,7 +1132,7 @@ public class CharacterSelectionUI : MonoBehaviour
         GUI.Label(new Rect(2f, curY, innerW - 4f, 24f), fullDossierTitle, dossierTitleStyle);
         curY += 24f;
 
-        // Subtitle: "Lv. 37   ðŸ›¡ï¸ Paladin"
+        // Subtitle: "Lv. 37   🛡 Paladin"
         int accLevel = PlayerProfile.Instance != null ? PlayerProfile.Instance.AccountLevel : 37;
         string subText = $"Lv. {accLevel}   {GetRoleEmoji(ch.role)} {GetRoleName(ch.role)}";
 
@@ -1170,7 +1176,7 @@ public class CharacterSelectionUI : MonoBehaviour
         int strScore = Mathf.RoundToInt((ch.attackDamage / 40f) * 600f + 300f);
         DrawLuxuryStatSlider(
             new Rect(0, curY, innerW, sliderH),
-            LanguageSelectionUI.Localize("Strength", "Ø§Ù„Ù‚ÙˆØ© Ø§Ù„Ù‡Ø¬ÙˆÙ…ÙŠØ©", "Ð¡Ð¸Ð»Ð°", "Force", "Fuerza", "StÃ¤rke", "à¤¶à¤•à¥à¤¤à¤¿", "åŠ›é‡", "æ”»æ’ƒåŠ›", "ForÃ§a", "Ù‚Ø¯Ø±Øª"),
+            LanguageSelectionUI.Localize("Strength", "القوة الهجومية", "Сила", "Force", "Fuerza", "Stärke", "शक्ति", "力量", "攻撃力", "Força", "قدرت"),
             ch.attackDamage / 40f,
             strScore,
             new Color(0.95f, 0.35f, 0.25f)
@@ -1181,7 +1187,7 @@ public class CharacterSelectionUI : MonoBehaviour
         int spdScore = Mathf.RoundToInt((ch.moveSpeed / 12f) * 500f + 350f);
         DrawLuxuryStatSlider(
             new Rect(0, curY, innerW, sliderH),
-            LanguageSelectionUI.Localize("Speed", "Ø³Ø±Ø¹Ø© Ø§Ù„ØªØ­Ø±Ùƒ", "Ð¡ÐºÐ¾Ñ€Ð¾ÑÑ‚ÑŒ", "Vitesse", "Velocidad", "Geschwindigkeit", "à¤—à¤¤à¤¿", "ç§»é€Ÿ", "ç§»å‹•é€Ÿåº¦", "Velocidade", "Ø³Ø±Ø¹Øª"),
+            LanguageSelectionUI.Localize("Speed", "سرعة التحرك", "Скорость", "Vitesse", "Velocidad", "Geschwindigkeit", "गति", "移速", "移動速度", "Velocidade", "سرعت"),
             ch.moveSpeed / 12f,
             spdScore,
             new Color(0.25f, 0.85f, 0.95f)
@@ -1192,7 +1198,7 @@ public class CharacterSelectionUI : MonoBehaviour
         int durScore = Mathf.RoundToInt((ch.maxHealth / 400f) * 600f + 300f);
         DrawLuxuryStatSlider(
             new Rect(0, curY, innerW, sliderH),
-            LanguageSelectionUI.Localize("Durability", "Ø§Ù„ØµÙ„Ø§Ø¨Ø© ÙˆØ§Ù„Ø¯ÙØ§Ø¹", "Ð¡Ñ‚Ð¾Ð¹ÐºÐ¾ÑÑ‚ÑŒ", "Robustesse", "Durabilidad", "Widerstandskraft", "à¤¸à¤¹à¤¨à¤¶à¥€à¤²à¤¤à¤¾", "ç”Ÿå­˜", "è€ä¹…åŠ›", "Durabilidade", "Ù¾Ø§ÛŒØ¯Ø§Ø±ÛŒ"),
+            LanguageSelectionUI.Localize("Durability", "الصلابة والدفاع", "Стойкость", "Robustesse", "Durabilidad", "Widerstandskraft", "सहनशीलता", "生存", "耐久力", "Durabilidade", "پایداری"),
             ch.maxHealth / 400f,
             durScore,
             new Color(0.30f, 0.92f, 0.45f)
@@ -1203,7 +1209,7 @@ public class CharacterSelectionUI : MonoBehaviour
         int rngScore = Mathf.RoundToInt((ch.attackRange / 20f) * 600f + 250f);
         DrawLuxuryStatSlider(
             new Rect(0, curY, innerW, sliderH),
-            LanguageSelectionUI.Localize("Range", "Ù…Ø¯Ù‰ Ø§Ù„Ù‚ØªØ§Ù„", "Ð”Ð°Ð»ÑŒÐ½Ð¾ÑÑ‚ÑŒ", "PortÃ©e", "Alcance", "Reichweite", "à¤¸à¥€à¤®à¤¾", "å°„ç¨‹", "å°„ç¨‹", "Alcance", "Ø¨Ø±Ø¯"),
+            LanguageSelectionUI.Localize("Range", "مدى القتال", "Дальность", "Portée", "Alcance", "Reichweite", "सीमा", "射程", "射程", "Alcance", "برد"),
             ch.attackRange / 20f,
             rngScore,
             new Color(0.95f, 0.80f, 0.30f)
@@ -1211,11 +1217,10 @@ public class CharacterSelectionUI : MonoBehaviour
         curY += sliderH + sliderGap;
 
         // Attack Cadence -> Rating e.g. 520
-        float attacksPerSec = 1f / Mathf.Max(0.1f, ch.attackCooldown);
         int cadScore = Mathf.RoundToInt(Mathf.Clamp01(1f - (ch.attackCooldown / 3f)) * 500f + 300f);
         DrawLuxuryStatSlider(
             new Rect(0, curY, innerW, sliderH),
-            LanguageSelectionUI.Localize("Cadence", "ØªØªØ§Ø¨Ø¹ Ø§Ù„Ø¶Ø±Ø¨Ø§Øª", "Ð¢ÐµÐ¼Ð¿", "Cadence", "Cadencia", "Schlagtempo", "à¤¤à¤¾à¤²", "æ”»é€Ÿ", "é€£æ’ƒ", "CadÃªncia", "Ø¢Ù‡Ù†Ú¯"),
+            LanguageSelectionUI.Localize("Cadence", "تتابع الضربات", "Темп", "Cadence", "Cadencia", "Schlagtempo", "ताल", "攻速", "連撃", "Cadência", "آهنگ"),
             Mathf.Clamp01(1f - (ch.attackCooldown / 3f)),
             cadScore,
             new Color(0.80f, 0.50f, 0.95f)
@@ -1226,7 +1231,7 @@ public class CharacterSelectionUI : MonoBehaviour
         int mobScore = Mathf.RoundToInt((ch.jumpForce / 16f) * 500f + 320f);
         DrawLuxuryStatSlider(
             new Rect(0, curY, innerW, sliderH),
-            LanguageSelectionUI.Localize("Mobility", "Ø§Ù„Ù…Ø±ÙˆÙ†Ø© ÙˆØ§Ù„Ù‚ÙØ²", "ÐœÐ¾Ð±Ð¸Ð»ÑŒÐ½Ð¾ÑÑ‚ÑŒ", "MobilitÃ©", "Movilidad", "MobilitÃ¤t", "à¤—à¤¤à¤¿à¤¶à¥€à¤²à¤¤à¤¾", "æœºåŠ¨", "æ©Ÿå‹•åŠ›", "Mobilidade", "ØªØ­Ø±Ú©"),
+            LanguageSelectionUI.Localize("Mobility", "المرونة والقفز", "Мобильность", "Mobilité", "Movilidad", "Mobilität", "गतिशीलता", "机动", "機動力", "Mobilidade", "تحرک"),
             ch.jumpForce / 16f,
             mobScore,
             new Color(0.35f, 0.95f, 0.70f)
@@ -1245,14 +1250,15 @@ public class CharacterSelectionUI : MonoBehaviour
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = new Color(0.85f, 0.80f, 0.45f) }
         };
-        string squadStr = $"ðŸ‘¥ {LanguageSelectionUI.Localize("Squad Limit: ", "Ø³Ù‚Ù Ø§Ù„ÙØ±ÙŠÙ‚: ", "Ð›Ð¸Ð¼Ð¸Ñ‚ Ð¾Ñ‚Ñ€ÑÐ´Ð°: ", "Limite d'Ã©quipe : ", "LÃ­mite: ", "Trupplimit: ", "à¤¦à¤¸à¥à¤¤à¤¾ à¤¸à¥€à¤®à¤¾: ", "å°é˜Ÿä¸Šé™: ", "ãƒãƒ¼ãƒ ä¸Šé™: ", "Limite: ", "Ø³Ù‚Ù ØªÛŒÙ…: ")}{ch.maxPerTeam}   â€¢   {GetAttackTypeLabel(ch.attackType)}";
+        string squadLabel = LanguageSelectionUI.Localize("Squad Limit: ", "سقف الفريق: ", "Лимит отряда: ", "Limite d'équipe : ", "Límite: ", "Trupplimit: ", "दस्ता सीमा: ", "小队上限: ", "チーム上限: ", "Limite: ", "سقف تیم: ");
+        string squadStr = $"👥 {squadLabel}{ch.maxPerTeam}   •   {GetAttackTypeLabel(ch.attackType)}";
         GUI.Label(ribRect, squadStr, squadStyle);
         curY += ribH + 12f;
 
         GUI.EndScrollView();
     }
 
-    // ==================== SACRED WARDROBE TAB
+    // ==================== SACRED WARDROBE TAB ====================
     void DrawSkinsTab(Rect scrollRect, CharacterData ch)
     {
         float innerW = scrollRect.width - 16f;
@@ -1280,131 +1286,74 @@ public class CharacterSelectionUI : MonoBehaviour
 
                 // Card Background
                 Color cardBg = isEquipped
-                    ? new Color(0.08f, 0.22f, 0.12f, 0.95f)
-                    : (isPreviewing ? new Color(0.12f, 0.16f, 0.14f, 0.95f) : new Color(0.05f, 0.08f, 0.06f, 0.92f));
+                    ? new Color(0.08f, 0.18f, 0.12f, 0.96f)
+                    : (isPreviewing ? new Color(0.06f, 0.12f, 0.08f, 0.92f) : new Color(0.04f, 0.07f, 0.05f, 0.88f));
                 GUI.color = cardBg;
                 GUI.DrawTexture(cardR, Texture2D.whiteTexture);
 
                 Color borderCol = isEquipped
-                    ? new Color(0.35f, 0.98f, 0.50f, 0.95f)
-                    : (isUnlocked ? new Color(0.4f, 0.7f, 0.5f, 0.6f) : new Color(0.35f, 0.35f, 0.35f, 0.5f));
+                    ? new Color(0.25f, 0.95f, 0.45f, 0.95f)
+                    : (isPreviewing ? new Color(1.0f, 0.85f, 0.35f, 0.90f) : new Color(0.40f, 0.45f, 0.35f, 0.50f));
                 DrawBorder(cardR, borderCol, isEquipped ? 2f : 1f);
                 GUI.color = Color.white;
 
-                // Left: Skin Color Swatch
-                float iconBoxW = 36f;
-                Rect iconBox = new Rect(cardR.x + 6f, cardR.y + 7f, iconBoxW, cardH - 14f);
-                GUI.color = skin.skinColor;
-                GUI.DrawTexture(iconBox, Texture2D.whiteTexture);
-                DrawBorder(iconBox, Color.black, 1f);
-                GUI.color = Color.white;
+                // Skin Title & Lore
+                GUIStyle skinNameStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 11,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleLeft,
+                    normal = { textColor = isEquipped ? new Color(0.40f, 1f, 0.60f) : (isPreviewing ? new Color(1f, 0.90f, 0.40f) : new Color(0.90f, 0.92f, 0.85f)) }
+                };
+                string sName = GetLocalizedSkinName(skin.skinName, s);
+                GUI.Label(new Rect(cardR.x + 8f, cardR.y + 4f, cardR.width * 0.62f, 18f), sName, skinNameStyle);
 
-                string skinEmoji = (s == 0) ? "🛡️" : (s == 1 ? "🌿" : (s == 2 ? "🔥" : (s == 3 ? "⚡" : "👑")));
-                GUIStyle sIconStyle = new GUIStyle(GUI.skin.label);
-                sIconStyle.fontSize = 14;
-                sIconStyle.alignment = TextAnchor.MiddleCenter;
-                GUI.Label(iconBox, skinEmoji, sIconStyle);
+                GUIStyle skinDescStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 8,
+                    wordWrap = true,
+                    alignment = TextAnchor.UpperLeft,
+                    normal = { textColor = new Color(0.70f, 0.85f, 0.75f, 0.85f) }
+                };
+                string sDesc = GetLocalizedSkinDescription(skin.description, s);
+                GUI.Label(new Rect(cardR.x + 8f, cardR.y + 22f, cardR.width * 0.62f, 44f), sDesc, skinDescStyle);
 
-                // Middle: Name, Stat Buffs, and Description
-                float textX = cardR.x + iconBoxW + 10f;
-                float btnW = 98f;
-                float textW = cardR.width - iconBoxW - btnW - 18f;
-
-                GUIStyle sNameStyle = new GUIStyle(GUI.skin.label);
-                sNameStyle.fontSize = Mathf.Clamp((int)(innerW * 0.034f), 9, 11);
-                sNameStyle.fontStyle = FontStyle.Bold;
-                sNameStyle.normal.textColor = isEquipped ? new Color(0.4f, 1f, 0.55f) : (isUnlocked ? new Color(0.95f, 0.88f, 0.5f) : new Color(0.7f, 0.7f, 0.7f));
-                GUI.Label(new Rect(textX, cardR.y + 4f, textW, 18f), GetLocalizedSkinName(skin.skinName, s), sNameStyle);
-
-                // Stat Buff tags
-                string buffText = "";
-                if (skin.healthMultiplier > 1f) buffText += $"+{(skin.healthMultiplier - 1f) * 100:F0}% HP  ";
-                if (skin.damageMultiplier > 1f) buffText += $"+{(skin.damageMultiplier - 1f) * 100:F0}% ATK  ";
-                if (skin.speedMultiplier > 1f) buffText += $"+{(skin.speedMultiplier - 1f) * 100:F0}% SPD  ";
-                if (string.IsNullOrEmpty(buffText)) buffText = LanguageSelectionUI.Localize("Standard Base Attributes", "السمات الأساسية القياسية", "Базовые характеристики", "Attributs de base", "Atributos básicos", "Standard-Attribute", "मानक आधार विशेषताएँ", "标准基础属性", "基本ステータス", "Atributos Básicos", "ویژگی‌های پایه استاندارد");
-
-                GUIStyle buffStyle = new GUIStyle(GUI.skin.label);
-                buffStyle.fontSize = Mathf.Clamp((int)(innerW * 0.026f), 8, 9);
-                buffStyle.fontStyle = FontStyle.Bold;
-                buffStyle.normal.textColor = new Color(0.35f, 0.95f, 0.45f);
-                GUI.Label(new Rect(textX, cardR.y + 22f, textW, 16f), buffText, buffStyle);
-
-                GUIStyle descStyle = new GUIStyle(GUI.skin.label);
-                descStyle.fontSize = Mathf.Clamp((int)(innerW * 0.024f), 7, 8);
-                descStyle.normal.textColor = new Color(0.75f, 0.82f, 0.75f, 0.80f);
-                descStyle.wordWrap = true;
-                GUI.Label(new Rect(textX, cardR.y + 38f, textW, 28f), GetLocalizedSkinDescription(skin.description, s), descStyle);
-
-                // Right: Action Button
-                Rect btnRect = new Rect(cardR.x + cardR.width - btnW - 6f, cardR.y + (cardH - 30f) / 2f, btnW, 30f);
+                // Right Action Button (Equip / Preview / Buy)
+                float btnW = Mathf.Clamp(cardR.width * 0.32f, 80f, 110f);
+                float btnH = 28f;
+                Rect actRect = new Rect(cardR.x + cardR.width - btnW - 8f, cardR.y + (cardH - btnH) * 0.5f, btnW, btnH);
 
                 if (isEquipped)
                 {
-                    GUIStyle eqLabelStyle = new GUIStyle(GUI.skin.label);
-                    eqLabelStyle.fontSize = Mathf.Clamp((int)(innerW * 0.028f), 8, 10);
-                    eqLabelStyle.fontStyle = FontStyle.Bold;
-                    eqLabelStyle.alignment = TextAnchor.MiddleCenter;
-                    eqLabelStyle.normal.textColor = new Color(0.35f, 1f, 0.45f);
-                    string eqStr = LanguageSelectionUI.Localize("✓ EQUIPPED", "✓ مجهّز", "✓ НАДЕТО", "✓ EQUIPADO", "✓ ÉQUIPÉ", "✓ AUSGERÜSTET", "✓ सुसज्जित", "✓ 已装备", "✓ 装備中", "✓ EQUIPADO", "✓ مجهز شده");
-                    GUI.Label(btnRect, eqStr, eqLabelStyle);
+                    GUIStyle eqStyle = new GUIStyle(GUI.skin.label)
+                    {
+                        fontSize = 9,
+                        fontStyle = FontStyle.Bold,
+                        alignment = TextAnchor.MiddleCenter,
+                        normal = { textColor = new Color(0.35f, 1f, 0.5f) }
+                    };
+                    GUI.Label(actRect, "✓ " + LanguageSelectionUI.Localize("EQUIPPED", "مجهز", "НАДЕТ", "ÉQUIPÉ", "EQUIPADO", "AUSGERÜSTET", "सुसज्जित", "已装备", "装備中", "EQUIPADO", "مجهز"), eqStyle);
                 }
                 else if (isUnlocked)
                 {
-                    string eqBtnStr = LanguageSelectionUI.Localize("EQUIP", "تجهيز", "НАДЕТЬ", "EQUIPAR", "ÉQUIPER", "AUSRÜSTEN", "सुसज्जित करें", "装备", "装備する", "EQUIPAR", "تجهیز");
-                    if (DrawActionButton(btnRect, eqBtnStr, new Color(0.2f, 0.60f, 0.28f)))
+                    string equipBtnText = LanguageSelectionUI.Localize("EQUIP", "تجهيز", "НАДЕТЬ", "ÉQUIPER", "EQUIPAR", "AUSRÜSTEN", "सुसज्जित करें", "装备", "装備する", "EQUIPAR", "تجهیز");
+                    if (EnchantedNatureGUI.DrawOrganicLeafButton(actRect, equipBtnText, new Color(0.25f, 0.85f, 0.45f), 9))
                     {
                         EquipSkin(ch, s);
                     }
                 }
                 else
                 {
-                    // Locked Skin Button
-                    switch (skin.unlockMethod)
+                    string unlockText = $"{skin.requiredCost} " + LanguageSelectionUI.Localize("Coins", "عملة", "монет", "pièces", "monedas", "Münzen", "सिक्के", "金币", "コイン", "moedas", "سکه");
+                    if (skin.unlockMethod == CharacterSkin.UnlockMethod.AccountLevel)
+                        unlockText = $"Lv.{skin.requiredLevel}";
+                    else if (skin.unlockMethod == CharacterSkin.UnlockMethod.PurchaseGems)
+                        unlockText = $"{skin.requiredCost} " + LanguageSelectionUI.Localize("Gems", "جوهرة", "гемов", "gemmes", "gemas", "Edelsteine", "रत्न", "宝石", "宝石", "gemas", "الماس");
+
+                    if (EnchantedNatureGUI.DrawOrganicLeafButton(actRect, unlockText, new Color(0.95f, 0.75f, 0.25f), 9))
                     {
-                        case CharacterSkin.UnlockMethod.AccountLevel:
-                            bool canClaim = PlayerProfile.Instance != null && PlayerProfile.Instance.AccountLevel >= skin.requiredLevel;
-                            string lvlBtn = canClaim
-                                ? LanguageSelectionUI.Localize($"CLAIM (Lv.{skin.requiredLevel})", $"استلام (مستوى {skin.requiredLevel})", $"ЗАБРАТЬ (Ур.{skin.requiredLevel})", $"RECLAMAR (Nvl.{skin.requiredLevel})", $"RÉCLAMER (Niv.{skin.requiredLevel})", $"BEANSPRUCHEN (St.{skin.requiredLevel})", $"दावा करें (स्तर {skin.requiredLevel})", $"领取 (等级 {skin.requiredLevel})", $"獲得 (Lv.{skin.requiredLevel})", $"REIVINDICAR (Nvl.{skin.requiredLevel})", $"دریافت (سطح {skin.requiredLevel})")
-                                : $"🪙 {skin.requiredCost}";
-                            Color lvlCol = canClaim ? new Color(0.25f, 0.65f, 0.35f) : new Color(0.65f, 0.5f, 0.15f);
-                            if (DrawActionButton(btnRect, lvlBtn, lvlCol))
-                            {
-                                UnlockSkin(ch, s, skin);
-                            }
-                            break;
-
-                        case CharacterSkin.UnlockMethod.WatchAds:
-                            string adBtn = LanguageSelectionUI.Localize("🎬 1 AD", "🎬 إعلان 1", "🎬 1 РЕКЛАМА", "🎬 1 ANUNCIO", "🎬 1 PUB", "🎬 1 WERBUNG", "🎬 1 विज्ञापन", "🎬 1 广告", "🎬 1 広告", "🎬 1 ANÚNCIO", "🎬 ۱ تبلیغ");
-                            if (DrawActionButton(btnRect, adBtn, new Color(0.25f, 0.5f, 0.75f)))
-                            {
-                                UnlockSkin(ch, s, skin);
-                            }
-                            break;
-
-                        case CharacterSkin.UnlockMethod.PurchaseCoins:
-                            string coinBtn = $"🪙 {skin.requiredCost}";
-                            if (DrawActionButton(btnRect, coinBtn, new Color(0.7f, 0.55f, 0.15f)))
-                            {
-                                UnlockSkin(ch, s, skin);
-                            }
-                            break;
-
-                        case CharacterSkin.UnlockMethod.PurchaseGems:
-                            string gemBtn = $"💎 {skin.requiredCost}";
-                            if (DrawActionButton(btnRect, gemBtn, new Color(0.6f, 0.25f, 0.75f)))
-                            {
-                                UnlockSkin(ch, s, skin);
-                            }
-                            break;
+                        UnlockSkin(ch, s, skin);
                     }
-                }
-
-                // Click to preview skin on model
-                if (GUI.Button(new Rect(cardR.x, cardR.y, cardR.width - btnW - 8f, cardR.height), GUIContent.none, GUIStyle.none))
-                {
-                    currentSkinIndex = s;
-                    currentSkin = skin;
-                    ApplySkinToPreviewModel(ch, skin);
                 }
 
                 curY += cardH + 6f;
@@ -1414,91 +1363,113 @@ public class CharacterSelectionUI : MonoBehaviour
         GUI.EndScrollView();
     }
 
-    // ==================== LUXURY RPG ATTRIBUTE CARD ====================
-    void DrawLuxuryAttributeCard(Rect rect, string icon, string title, string value, string bonus, float ratio, Color gaugeColor, string badgeText, Color badgeColor)
+    // ==================== LUXURY STAT SLIDER (IMAGE 2 STYLE) ====================
+    void DrawLuxuryStatSlider(Rect rect, string label, float valueNorm, int scoreVal, Color barColor)
     {
-        ratio = Mathf.Clamp01(ratio);
+        valueNorm = Mathf.Clamp01(valueNorm);
 
-        // Obsidian glass card background
-        GUI.color = new Color(0.045f, 0.085f, 0.065f, 0.92f);
-        GUI.DrawTexture(rect, Texture2D.whiteTexture);
-        DrawBorder(rect, new Color(gaugeColor.r * 0.45f, gaugeColor.g * 0.45f, gaugeColor.b * 0.45f, 0.55f), 1f);
-        GUI.color = Color.white;
+        float labelW = rect.width * 0.32f;
+        float scoreW = 46f;
+        float barW = rect.width - labelW - scoreW - 12f;
 
-        // Top line: Left Title with Icon
-        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
-        titleStyle.fontSize = Mathf.Clamp((int)(rect.width * 0.042f), 10, 12);
-        titleStyle.fontStyle = FontStyle.Bold;
-        titleStyle.alignment = TextAnchor.MiddleLeft;
-        titleStyle.normal.textColor = new Color(0.95f, 0.92f, 0.85f);
-        GUI.Label(new Rect(rect.x + 8f, rect.y + 3f, rect.width * 0.44f, 18f), $"{icon} {title}", titleStyle);
-
-        // Top line: Right Rating Badge
-        if (!string.IsNullOrEmpty(badgeText))
+        // Label on left
+        GUIStyle lblStyle = new GUIStyle(GUI.skin.label)
         {
-            float badgeW = Mathf.Clamp(rect.width * 0.30f, 75f, 115f);
-            float badgeH = 17f;
-            Rect badgeRect = new Rect(rect.x + rect.width - badgeW - 6f, rect.y + 4f, badgeW, badgeH);
+            fontSize = Mathf.Clamp((int)(rect.width * 0.040f), 10, 12),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft,
+            normal = { textColor = new Color(0.92f, 0.90f, 0.82f) }
+        };
+        GUI.Label(new Rect(rect.x, rect.y, labelW, rect.height), label, lblStyle);
 
-            GUI.color = new Color(badgeColor.r * 0.25f, badgeColor.g * 0.25f, badgeColor.b * 0.25f, 0.9f);
-            GUI.DrawTexture(badgeRect, Texture2D.whiteTexture);
-            DrawBorder(badgeRect, new Color(badgeColor.r, badgeColor.g, badgeColor.b, 0.85f), 1f);
-            GUI.color = Color.white;
+        // Thin luxury groove in center
+        float grooveH = 6f;
+        float grooveY = rect.y + (rect.height - grooveH) * 0.5f;
+        float barX = rect.x + labelW + 4f;
+        Rect grooveRect = new Rect(barX, grooveY, barW, grooveH);
 
-            GUIStyle badgeStyle = new GUIStyle(GUI.skin.label);
-            badgeStyle.fontSize = Mathf.Clamp((int)(badgeW * 0.095f), 8, 10);
-            badgeStyle.fontStyle = FontStyle.Bold;
-            badgeStyle.alignment = TextAnchor.MiddleCenter;
-            badgeStyle.normal.textColor = Color.white;
-            GUI.Label(badgeRect, badgeText, badgeStyle);
-        }
-
-        // Top line: Value & Buff bonus (placed between title and badge)
-        GUIStyle valStyle = new GUIStyle(GUI.skin.label);
-        valStyle.fontSize = Mathf.Clamp((int)(rect.width * 0.040f), 10, 12);
-        valStyle.fontStyle = FontStyle.Bold;
-        valStyle.alignment = TextAnchor.MiddleRight;
-        valStyle.normal.textColor = new Color(1.0f, 0.92f, 0.45f);
-
-        float rightOffset = !string.IsNullOrEmpty(badgeText) ? (rect.width * 0.32f + 10f) : 10f;
-        string fullVal = value + (!string.IsNullOrEmpty(bonus) ? $" <color=#55FF88>{bonus}</color>" : "");
-        valStyle.richText = true;
-        GUI.Label(new Rect(rect.x + rect.width * 0.40f, rect.y + 3f, rect.width - rect.width * 0.40f - rightOffset, 18f), fullVal, valStyle);
-
-        // Bottom line: Jewel Gauge Bar (Height: 7px)
-        float barX = rect.x + 8f;
-        float barY = rect.y + rect.height - 13f;
-        float barW = rect.width - 16f;
-        float barH = 7f;
-
-        // Recessed Groove
-        Rect grooveRect = new Rect(barX, barY, barW, barH);
-        GUI.color = new Color(0.02f, 0.04f, 0.03f, 0.95f);
+        // Groove background
+        GUI.color = new Color(0.04f, 0.07f, 0.05f, 0.95f);
         GUI.DrawTexture(grooveRect, Texture2D.whiteTexture);
 
-        // Active Jewel Gradient Fill
-        if (ratio > 0.01f)
+        // Active fill
+        if (valueNorm > 0.01f)
         {
-            Rect fillRect = new Rect(barX, barY, barW * ratio, barH);
-            GUI.color = new Color(gaugeColor.r, gaugeColor.g, gaugeColor.b, 0.92f);
+            Rect fillRect = new Rect(barX, grooveY, barW * valueNorm, grooveH);
+            GUI.color = new Color(barColor.r, barColor.g, barColor.b, 0.92f);
             GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
 
-            // Leading Edge Glow Specular
-            float edgeX = barX + barW * ratio - 3f;
-            GUI.color = new Color(1f, 1f, 1f, 0.6f);
-            GUI.DrawTexture(new Rect(edgeX, barY, 3f, barH), Texture2D.whiteTexture);
+            // Leading edge highlight
+            float edgeX = barX + barW * valueNorm - 2f;
+            GUI.color = new Color(1f, 1f, 1f, 0.75f);
+            GUI.DrawTexture(new Rect(edgeX, grooveY, 2f, grooveH), Texture2D.whiteTexture);
         }
 
-        // Tick marks at 25%, 50%, 75%
-        GUI.color = new Color(1f, 1f, 1f, 0.25f);
-        GUI.DrawTexture(new Rect(barX + barW * 0.25f, barY, 1f, barH), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(barX + barW * 0.50f, barY, 1f, barH), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(barX + barW * 0.75f, barY, 1f, barH), Texture2D.whiteTexture);
-
-        // Gold frame for groove
+        // Gold border for groove
         DrawBorder(grooveRect, new Color(0.70f, 0.60f, 0.25f, 0.65f), 1f);
         GUI.color = Color.white;
+
+        // Exact numeric score on right (Image 2 style: 780, 550, 465, 607)
+        GUIStyle scoreStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.Clamp((int)(rect.width * 0.040f), 10, 12),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleRight,
+            normal = { textColor = new Color(1.0f, 0.88f, 0.40f) }
+        };
+        GUI.Label(new Rect(rect.x + rect.width - scoreW, rect.y, scoreW, rect.height), scoreVal.ToString(), scoreStyle);
     }
+
+    // ==================== HERO FANTASY EPITHETS (IMAGE 2 STYLE) ====================
+    string GetHeroEpithet(string charName)
+    {
+        string low = charName != null ? charName.ToLower() : "";
+        if (low.Contains("archer")) return LanguageSelectionUI.Localize("the Forest Warden", "حارسة الغابة", "Страж Леса", "Gardienne des Bois", "Guardiana del Bosque", "Waldhüterin", "वन संरक्षक", "森林守卫", "森の番人", "Guardiã da Floresta", "نگهبان جنگل");
+        if (low.Contains("paladin")) return LanguageSelectionUI.Localize("the Dawnpiercer", "قاهرة الظلام", "Пронзающая Рассвет", "Perce-Aube", "Perforaalbas", "Dämmerungsbrecherin", "भोर-वेधक", "破晓之刃", "暁の穿ち手", "Perfuradora da Alvorada", "شکافنده سپیده‌دم");
+        if (low.Contains("warrior")) return LanguageSelectionUI.Localize("the Barkwarden", "حامي اللحاء", "Страж Коры", "Garde-Écorce", "Guardián de la Corteza", "Rindenwächter", "छाल संरक्षक", "树皮守卫", "樹皮の番人", "Guardião da Casca", "نگهبان پوست درخت");
+        if (low.Contains("berserker")) return LanguageSelectionUI.Localize("the Cinderveil", "لهيب الرماد", "Пепельный Вихрь", "Voile de Cendre", "Velo de Ceniza", "Aschenschleier", "राख का परदा", "灰烬之幕", "灰の帳", "Véu das Cinzas", "نقاب خاکستر");
+        if (low.Contains("mage")) return LanguageSelectionUI.Localize("the Blightfang", "حائك التعاويذ", "Гибельный Клык", "Croc Fléau", "Colmillo Corrupto", "Pestzahn", "विनाशक दंत", "枯萎之牙", "病牙の魔術師", "Presa Corrompida", "نیش آفت");
+        if (low.Contains("tank") || low.Contains("ironclad")) return LanguageSelectionUI.Localize("the Earthshaker", "زلزال الأرض", "Сотрясатель Земли", "Secoueur de Terre", "Sacudidor de Tierras", "Erderschütterer", "धरती कंपकंपाने वाला", "震地巨兽", "大地を揺るがす者", "Abalador da Terra", "لرزاننده زمین");
+        if (low.Contains("assassin") || low.Contains("shadowblade")) return LanguageSelectionUI.Localize("the Nightstalker", "شبح الظلال", "Ночной Охотник", "Traqueur Nocturne", "Acechador Nocturno", "Nachtpirscher", "निशाचर शिकारी", "暗夜潜行者", "夜の狩人", "Espreitador Noturno", "شکارچی شب");
+        if (low.Contains("bomber")) return LanguageSelectionUI.Localize("the Doomhammer", "مطرقة الهلاك", "Молот Рока", "Marteau Funeste", "Martillo del Juicio", "Schicksalshammer", "प्रलय का हथौड़ा", "末日重锤", "破滅の槌", "Martelo da Perdição", "پتک هلاکت");
+        if (low.Contains("shaman")) return LanguageSelectionUI.Localize("the Spiritweaver", "ناطق الأرواح", "Ткач Духов", "Tisseur d'Esprits", "Tejedor de Espíritus", "Geisterweber", "आत्मा बुनकर", "织灵萨满", "精霊織り", "Tecelão de Espíritos", "روح‌باف");
+        if (low.Contains("druid")) return LanguageSelectionUI.Localize("the Canopycaller", "حكيم الطبيعة", "Голос Крон", "Voix des Cimes", "Llamador del Dosel", "Kronenrufer", "वितान आह्वायक", "树冠呼唤者", "樹冠の呼び手", "Invocador da Copa", "فراخواننده سایبان");
+        return LanguageSelectionUI.Localize("the Sacred Sentinel", "الحارس المقدس", "Священный Страж", "Sentinelle Sacrée", "Centinela Sagrado", "Heiliger Wächter", "पवित्र संतरी", "神圣哨兵", "聖なる番兵", "Sentinela Sagrado", "دیده‌بان مقدس");
+    }
+
+    // ==================== BOTTOM NAVIGATION STRIP (IMAGE 2 STYLE) ====================
+    void DrawBottomNavigationStrip(float sw, float sh)
+    {
+        float barY = sh * 0.970f;
+        float barH = sh * 0.030f;
+
+        GUIStyle hintKeyStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.Clamp((int)(sw * 0.010f), 10, 12),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft,
+            normal = { textColor = new Color(0.95f, 0.85f, 0.35f) }
+        };
+
+        // Left Navigation Hints: [B] Back    [A] Select
+        string backHint = LanguageSelectionUI.Localize("[B] Back", "[B] رجوع", "[B] Назад", "[B] Retour", "[B] Volver", "[B] Zurück", "[B] वापस", "[B] 返回", "[B] 戻る", "[B] Voltar", "[B] بازگشت");
+        string selectHint = LanguageSelectionUI.Localize("[A] Select", "[A] اختيار", "[A] Выбрать", "[A] Choisir", "[A] Elegir", "[A] Wählen", "[A] चुनें", "[A] 选择", "[A] 選択", "[A] Escolher", "[A] انتخاب");
+
+        GUI.Label(new Rect(sw * 0.025f, barY, 120f, barH), backHint, hintKeyStyle);
+        GUI.Label(new Rect(sw * 0.025f + 110f, barY, 130f, barH), selectHint, hintKeyStyle);
+
+        // Right Navigation Hint: [ESC] Exit
+        GUIStyle exitKeyStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.Clamp((int)(sw * 0.010f), 10, 12),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleRight,
+            normal = { textColor = new Color(0.85f, 0.75f, 0.40f) }
+        };
+        string exitHint = LanguageSelectionUI.Localize("[ESC] Exit", "[ESC] خروج", "[ESC] Выход", "[ESC] Quitter", "[ESC] Salir", "[ESC] Beenden", "[ESC] बाहर निकलें", "[ESC] 退出", "[ESC] 終了", "[ESC] Sair", "[ESC] خروج");
+        GUI.Label(new Rect(sw * 0.975f - 180f, barY, 180f, barH), exitHint, exitKeyStyle);
+    }
+
 
     void EquipSkin(CharacterData ch, int skinIdx)
     {
@@ -1970,111 +1941,5 @@ public class CharacterSelectionUI : MonoBehaviour
                 fa: "نگهبانی باتجربه از درخت کهنسال و غول‌پیکر که از محراب‌های مقدس محافظت می‌کند و راهبر نبردهاست."
             );
         }
-    }
-    // ==================== LUXURY STAT SLIDER (IMAGE 2 STYLE) ====================
-    void DrawLuxuryStatSlider(Rect rect, string label, float valueNorm, int scoreVal, Color barColor)
-    {
-        valueNorm = Mathf.Clamp01(valueNorm);
-
-        float labelW = rect.width * 0.32f;
-        float scoreW = 46f;
-        float barW = rect.width - labelW - scoreW - 12f;
-
-        // Label on left
-        GUIStyle lblStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = Mathf.Clamp((int)(rect.width * 0.040f), 10, 12),
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.92f, 0.90f, 0.82f) }
-        };
-        GUI.Label(new Rect(rect.x, rect.y, labelW, rect.height), label, lblStyle);
-
-        // Thin luxury groove in center
-        float grooveH = 6f;
-        float grooveY = rect.y + (rect.height - grooveH) * 0.5f;
-        float barX = rect.x + labelW + 4f;
-        Rect grooveRect = new Rect(barX, grooveY, barW, grooveH);
-
-        // Groove background
-        GUI.color = new Color(0.04f, 0.07f, 0.05f, 0.95f);
-        GUI.DrawTexture(grooveRect, Texture2D.whiteTexture);
-
-        // Active fill
-        if (valueNorm > 0.01f)
-        {
-            Rect fillRect = new Rect(barX, grooveY, barW * valueNorm, grooveH);
-            GUI.color = new Color(barColor.r, barColor.g, barColor.b, 0.92f);
-            GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
-
-            // Leading edge highlight
-            float edgeX = barX + barW * valueNorm - 2f;
-            GUI.color = new Color(1f, 1f, 1f, 0.75f);
-            GUI.DrawTexture(new Rect(edgeX, grooveY, 2f, grooveH), Texture2D.whiteTexture);
-        }
-
-        // Gold border for groove
-        DrawBorder(grooveRect, new Color(0.70f, 0.60f, 0.25f, 0.65f), 1f);
-        GUI.color = Color.white;
-
-        // Exact numeric score on right (Image 2 style: 780, 550, 465, 607)
-        GUIStyle scoreStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = Mathf.Clamp((int)(rect.width * 0.040f), 10, 12),
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleRight,
-            normal = { textColor = new Color(1.0f, 0.88f, 0.40f) }
-        };
-        GUI.Label(new Rect(rect.x + rect.width - scoreW, rect.y, scoreW, rect.height), scoreVal.ToString(), scoreStyle);
-    }
-
-    // ==================== HERO FANTASY EPITHETS (IMAGE 2 STYLE) ====================
-    string GetHeroEpithet(string charName)
-    {
-        string low = charName != null ? charName.ToLower() : "";
-        if (low.Contains("archer")) return LanguageSelectionUI.Localize("the Forest Warden", "Ø­Ø§Ø±Ø³Ø© Ø§Ù„ØºØ§Ø¨Ø©", "Ð¡Ñ‚Ñ€Ð°Ð¶ Ð›ÐµÑÐ°", "Gardienne des Bois", "Guardiana del Bosque", "WaldhÃ¼terin", "à¤µà¤¨ à¤¸à¤‚à¤°à¤•à¥à¤·à¤•", "æ£®æž—å®ˆå«", "æ£®ã®ç•ªäºº", "GuardiÃ£ da Floresta", "Ù†Ú¯Ù‡Ø¨Ø§Ù† Ø¬Ù†Ú¯Ù„");
-        if (low.Contains("paladin")) return LanguageSelectionUI.Localize("the Dawnpiercer", "Ù‚Ø§Ù‡Ø±Ø© Ø§Ù„Ø¸Ù„Ø§Ù…", "ÐŸÑ€Ð¾Ð½Ð·Ð°ÑŽÑ‰Ð°Ñ Ð Ð°ÑÑÐ²ÐµÑ‚", "Perce-Aube", "Perforaalbas", "DÃ¤mmerungsbrecherin", "à¤­à¥‹à¤°-à¤µà¥‡à¤§à¤•", "ç ´æ™“ä¹‹åˆƒ", "æšã®ç©¿ã¡æ‰‹", "Perfuradora da Alvorada", "Ø´Ú©Ø§ÙÙ†Ø¯Ù‡ Ø³Ù¾ÛŒØ¯Ù‡â€ŒØ¯Ù…");
-        if (low.Contains("warrior")) return LanguageSelectionUI.Localize("the Barkwarden", "Ø­Ø§Ù…ÙŠ Ø§Ù„Ù„Ø­Ø§Ø¡", "Ð¡Ñ‚Ñ€Ð°Ð¶ ÐšÐ¾Ñ€Ñ‹", "Garde-Ã‰corce", "GuardiÃ¡n de la Corteza", "RindenwÃ¤chter", "à¤›à¤¾à¤² à¤¸à¤‚à¤°à¤•à¥à¤·à¤•", "æ ‘çš®å®ˆå«", "æ¨¹çš®ã®ç•ªäºº", "GuardiÃ£o da Casca", "Ù†Ú¯Ù‡Ø¨Ø§Ù† Ù¾ÙˆØ³Øª Ø¯Ø±Ø®Øª");
-        if (low.Contains("berserker")) return LanguageSelectionUI.Localize("the Cinderveil", "Ù„Ù‡ÙŠØ¨ Ø§Ù„Ø±Ù…Ø§Ø¯", "ÐŸÐµÐ¿ÐµÐ»ÑŒÐ½Ñ‹Ð¹ Ð’Ð¸Ñ…Ñ€ÑŒ", "Voile de Cendre", "Velo de Ceniza", "Aschenschleier", "à¤°à¤¾à¤– à¤•à¤¾ à¤ªà¤°à¤¦à¤¾", "ç°çƒ¬ä¹‹å¹•", "ç°ã®å¸³", "VÃ©u das Cinzas", "Ù†Ù‚Ø§Ø¨ Ø®Ø§Ú©Ø³ØªØ±");
-        if (low.Contains("mage")) return LanguageSelectionUI.Localize("the Blightfang", "Ø­Ø§Ø¦Ùƒ Ø§Ù„ØªØ¹Ø§ÙˆÙŠØ°", "Ð“Ð¸Ð±ÐµÐ»ÑŒÐ½Ñ‹Ð¹ ÐšÐ»Ñ‹Ðº", "Croc FlÃ©au", "Colmillo Corrupto", "Pestzahn", "à¤µà¤¿à¤¨à¤¾à¤¶à¤• à¤¦à¤‚à¤¤", "æž¯èŽä¹‹ç‰™", "ç—…ç‰™ã®é­”è¡“å¸«", "Presa Corrompida", "Ù†ÛŒØ´ Ø¢ÙØª");
-        if (low.Contains("tank") || low.Contains("ironclad")) return LanguageSelectionUI.Localize("the Earthshaker", "Ø²Ù„Ø²Ø§Ù„ Ø§Ù„Ø£Ø±Ø¶", "Ð¡Ð¾Ñ‚Ñ€ÑÑÐ°Ñ‚ÐµÐ»ÑŒ Ð—ÐµÐ¼Ð»Ð¸", "Secoueur de Terre", "Sacudidor de Tierras", "ErderschÃ¼tterer", "à¤§à¤°à¤¤à¥€ à¤•à¤‚à¤ªà¤•à¤‚à¤ªà¤¾à¤¨à¥‡ à¤µà¤¾à¤²à¤¾", "éœ‡åœ°å·¨å…½", "å¤§åœ°ã‚’æºã‚‹ãŒã™è€…", "Abalador da Terra", "Ù„Ø±Ø²Ø§Ù†Ù†Ø¯Ù‡ Ø²Ù…ÛŒÙ†");
-        if (low.Contains("assassin") || low.Contains("shadowblade")) return LanguageSelectionUI.Localize("the Nightstalker", "Ø´Ø¨Ø­ Ø§Ù„Ø¸Ù„Ø§Ù„", "ÐÐ¾Ñ‡Ð½Ð¾Ð¹ ÐžÑ…Ð¾Ñ‚Ð½Ð¸Ðº", "Traqueur Nocturne", "Acechador Nocturno", "Nachtpirscher", "à¤¨à¤¿à¤¶à¤¾à¤šà¤° à¤¶à¤¿à¤•à¤¾à¤°à¥€", "æš—å¤œæ½œè¡Œè€…", "å¤œã®ç‹©äºº", "Espreitador Noturno", "Ø´Ú©Ø§Ø±Ú†ÛŒ Ø´Ø¨");
-        if (low.Contains("bomber")) return LanguageSelectionUI.Localize("the Doomhammer", "Ù…Ø·Ø±Ù‚Ø© Ø§Ù„Ù‡Ù„Ø§Ùƒ", "ÐœÐ¾Ð»Ð¾Ñ‚ Ð Ð¾ÐºÐ°", "Marteau Funeste", "Martillo del Juicio", "Schicksalshammer", "à¤ªà¥à¤°à¤²à¤¯ à¤•à¤¾ à¤¹à¤¥à¥Œà¤¡à¤¼à¤¾", "æœ«æ—¥é‡é”¤", "ç ´æ»…ã®æ§Œ", "Martelo da PerdiÃ§Ã£o", "Ù¾ØªÚ© Ù‡Ù„Ø§Ú©Øª");
-        if (low.Contains("shaman")) return LanguageSelectionUI.Localize("the Spiritweaver", "Ù†Ø§Ø·Ù‚ Ø§Ù„Ø£Ø±ÙˆØ§Ø­", "Ð¢ÐºÐ°Ñ‡ Ð”ÑƒÑ…Ð¾Ð²", "Tisseur d'Esprits", "Tejedor de EspÃ­ritus", "Geisterweber", "à¤†à¤¤à¥à¤®à¤¾ à¤¬à¥à¤¨à¤•à¤°", "ç»‡çµè¨æ»¡", "ç²¾éœŠç¹”ã‚Š", "TecelÃ£o de EspÃ­ritos", "Ø±ÙˆØ­â€ŒØ¨Ø§Ù");
-        if (low.Contains("druid")) return LanguageSelectionUI.Localize("the Canopycaller", "Ø­ÙƒÙŠÙ… Ø§Ù„Ø·Ø¨ÙŠØ¹Ø©", "Ð“Ð¾Ð»Ð¾Ñ ÐšÑ€Ð¾Ð½", "Voix des Cimes", "Llamador del Dosel", "Kronenrufer", "à¤µà¤¿à¤¤à¤¾à¤¨ à¤†à¤¹à¥à¤µà¤¾à¤¯à¤•", "æ ‘å† å‘¼å”¤è€…", "æ¨¹å† ã®å‘¼ã³æ‰‹", "Invocador da Copa", "ÙØ±Ø§Ø®ÙˆØ§Ù†Ù†Ø¯Ù‡ Ø³Ø§ÛŒØ¨Ø§Ù†");
-        return LanguageSelectionUI.Localize("the Sacred Sentinel", "Ø§Ù„Ø­Ø§Ø±Ø³ Ø§Ù„Ù…Ù‚Ø¯Ø³", "Ð¡Ð²ÑÑ‰ÐµÐ½Ð½Ñ‹Ð¹ Ð¡Ñ‚Ñ€Ð°Ð¶", "Sentinelle SacrÃ©e", "Centinela Sagrado", "Heiliger WÃ¤chter", "à¤ªà¤µà¤¿à¤¤à¥à¤° à¤¸à¤‚à¤¤à¤°à¥€", "ç¥žåœ£å“¨å…µ", "è–ãªã‚‹ç•ªå…µ", "Sentinela Sagrado", "Ø¯ÛŒØ¯Ù‡â€ŒØ¨Ø§Ù† Ù…Ù‚Ø¯Ø³");
-    }
-
-    // ==================== BOTTOM NAVIGATION STRIP (IMAGE 2 STYLE) ====================
-    void DrawBottomNavigationStrip(float sw, float sh)
-    {
-        float barY = sh * 0.970f;
-        float barH = sh * 0.030f;
-
-        GUIStyle hintKeyStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = Mathf.Clamp((int)(sw * 0.010f), 10, 12),
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.95f, 0.85f, 0.35f) }
-        };
-
-        // Left Navigation Hints: [B] Back    [A] Select
-        string backHint = LanguageSelectionUI.Localize("â’· Back", "â’· Ø±Ø¬ÙˆØ¹", "â’· ÐÐ°Ð·Ð°Ð´", "â’· Retour", "â’· Volver", "â’· ZurÃ¼ck", "â’· à¤µà¤¾à¤ªà¤¸", "â’· è¿”å›ž", "â’· æˆ»ã‚‹", "â’· Voltar", "â’· Ø¨Ø§Ø²Ú¯Ø´Øª");
-        string selectHint = LanguageSelectionUI.Localize("â’¶ Select", "â’¶ Ø§Ø®ØªÙŠØ§Ø±", "â’¶ Ð’Ñ‹Ð±Ñ€Ð°Ñ‚ÑŒ", "â’¶ Choisir", "â’¶ Elegir", "â’¶ WÃ¤hlen", "â’¶ à¤šà¥à¤¨à¥‡à¤‚", "â’¶ é€‰æ‹©", "â’¶ é¸æŠž", "â’¶ Escolher", "â’¶ Ø§Ù†ØªØ®Ø§Ø¨");
-
-        GUI.Label(new Rect(sw * 0.025f, barY, 120f, barH), backHint, hintKeyStyle);
-        GUI.Label(new Rect(sw * 0.025f + 110f, barY, 130f, barH), selectHint, hintKeyStyle);
-
-        // Right Navigation Hint: [ESC] Exit
-        GUIStyle exitKeyStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = Mathf.Clamp((int)(sw * 0.010f), 10, 12),
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleRight,
-            normal = { textColor = new Color(0.85f, 0.75f, 0.40f) }
-        };
-        string exitHint = LanguageSelectionUI.Localize("â“† Exit (Esc)", "â“† Ø®Ø±ÙˆØ¬ (Esc)", "â“† Ð’Ñ‹Ñ…Ð¾Ð´ (Esc)", "â“† Quitter (Ã‰chap)", "â“† Salir (Esc)", "â“† Beenden (Esc)", "â“† à¤¬à¤¾à¤¹à¤° à¤¨à¤¿à¤•à¤²à¥‡à¤‚", "â“† é€€å‡º (Esc)", "â“† çµ‚äº† (Esc)", "â“† Sair (Esc)", "â“† Ø®Ø±ÙˆØ¬ (Esc)");
-        GUI.Label(new Rect(sw * 0.975f - 180f, barY, 180f, barH), exitHint, exitKeyStyle);
     }
 }
