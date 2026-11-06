@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -187,6 +187,7 @@ public class TreeGrowth : MonoBehaviour
     public static float GetHeightMultiplier(Vector3 attackerPosition)
     {
         float y = attackerPosition.y;
+        bool shieldDown = !IsShieldActive;
 
         GameObject treeLevels = GameObject.Find("TreeLevels");
         if (treeLevels != null)
@@ -195,16 +196,16 @@ public class TreeGrowth : MonoBehaviour
             Transform l2 = treeLevels.transform.Find("Level_2");
             Transform l1 = treeLevels.transform.Find("Level_1");
 
-            if (l3 != null && y >= l3.position.y - 1.5f) return 1.00f; // Level 3 / Top: 100% (أقصى قوة كاملة)
-            if (l2 != null && y >= l2.position.y - 1.5f) return 0.60f; // Level 2: 60% (أكثر)
-            if (l1 != null && y >= l1.position.y - 1.5f) return 0.35f; // Level 1: 35% (أكثر قليلاً)
-            return 0.15f; // Ground / Base (تحت المستوى الأول): 15% (تأثير ضعيف جداً)
+            if (l3 != null && y >= l3.position.y - 1.5f) return 1.00f; // Level 3 / Top: 100%
+            if (l2 != null && y >= l2.position.y - 1.5f) return shieldDown ? 0.90f : 0.60f; // Level 2
+            if (l1 != null && y >= l1.position.y - 1.5f) return shieldDown ? 0.85f : 0.35f; // Level 1
+            return shieldDown ? 0.80f : 0.15f; // Ground / Base
         }
 
         if (y >= 22f) return 1.00f;
-        if (y >= 14f) return 0.60f;
-        if (y >= 4.5f) return 0.35f;
-        return 0.15f;
+        if (y >= 14f) return shieldDown ? 0.90f : 0.60f;
+        if (y >= 4.5f) return shieldDown ? 0.85f : 0.35f;
+        return shieldDown ? 0.80f : 0.15f;
     }
 
     void Update()
@@ -585,7 +586,7 @@ public class TreeGrowth : MonoBehaviour
         }
 
         // مشاهدة الدمار والنيازك لمدة 5 ثوانٍ كاملة وفق طلب اللاعب
-        float celebrationDuration = 5.0f;
+        float celebrationDuration = 6.0f;
         float elapsed = 0f;
         float nextMeteorTime = 0.05f;
 

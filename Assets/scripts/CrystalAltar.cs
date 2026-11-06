@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
@@ -1053,7 +1053,7 @@ public class CrystalAltar : NetworkBehaviour
             bRadii.Add(Random.Range(2.2f, 5.0f));
         }
 
-        float celebrationDuration = 5.2f;
+        float celebrationDuration = 7.0f;
         float elapsed = 0f;
 
         while (elapsed < celebrationDuration)
@@ -1120,9 +1120,10 @@ public class CrystalAltar : NetworkBehaviour
 
         if (celestialLightObj != null) Destroy(celestialLightObj);
         if (auroraRingGroup != null) Destroy(auroraRingGroup);
-        if (flowerGroup != null) Destroy(flowerGroup);
         if (petalGroup != null) Destroy(petalGroup);
-        if (butterflyGroup != null) Destroy(butterflyGroup);
+        // Leave flowers and butterflies blooming in background during victory screen!
+        if (flowerGroup != null) Destroy(flowerGroup, 90f);
+        if (butterflyGroup != null) Destroy(butterflyGroup, 90f);
 
         try
         {

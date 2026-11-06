@@ -558,14 +558,14 @@ public class BotController : NetworkBehaviour
                         return;
                     }
 
-                    // تقسيم استراتيجي للمدمرين: 70% تدمير الشجرة و30% ملاحقة حامل الكريستالة ومنعه من الوصول للمذبح
+                    // تقسيم استراتيجي للمدمرين: 85% تدمير الشجرة بسرعة قصوى و15% اعتراض حامل الكريستالة القريب
                     int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
-                    if (botRatio >= 7) // 30% صيادو الكريستالة
+                    if (botRatio >= 8 && Vector3.Distance(transform.position, carrier.transform.position) <= 15f)
                     {
                         EnterFight(carrier.transform);
                         return;
                     }
-                    else // 70% مهاجمو الشجرة
+                    else
                     {
                         enemyTarget = null;
                         currentState = BotState.AttackTree;
@@ -596,51 +596,12 @@ public class BotController : NetworkBehaviour
         // 4. للمدمرين (Destroyer Bots): بمجرد موت الزعماء الثلاثة وسقوط الدرع:
         if (team == PlayerMovement.TeamType.Destroyer && allBossesSlain)
         {
-            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
-            // 15% فقط من المدمرين يراقبون الكريستالة الساقطة بينما 85% يصبون كل تركيزهم على تقطيع الشجرة
-            if (botRatio >= 9 && CrystalItem.Instance != null && CrystalItem.Instance.isDropped.Value)
-            {
-                currentState = BotState.GuardDroppedCrystal;
-                return;
-            }
-
-            Transform veryCloseEnemy = FindClosestEnemy();
-            // لا ينشغل المدمر بقتال جانبي إلا إذا كان العدو ملاصقاً له جداً (أقل من 2.0 م)
-            if (veryCloseEnemy != null && Vector3.Distance(transform.position, veryCloseEnemy.position) <= 2.0f)
-            {
-                EnterFight(veryCloseEnemy);
-                return;
-            }
-
-            // تدمير الشجرة بأقصى قوة: الصعود إلى الطابق الثالث إن أمكن لضرب الشجرة بمضاعف 100%!
-            Transform l3 = GetLevel3Transform();
-            if (l3 != null && (l3.position.y - transform.position.y) > 2.0f)
-            {
-                // إذا كان البوت يضرب الشجرة بالفعل على طابقه الحالي في نطاق الهجوم، يضرب فوراً
-                CharacterCombat myCombat = GetComponent<CharacterCombat>();
-                float reach = myCombat != null ? Mathf.Max(6.5f, myCombat.attackRange + 4.0f) : 6.5f;
-                Vector3 treeDiff = treeTarget != null ? (transform.position - treeTarget.position) : Vector3.zero;
-                treeDiff.y = 0f;
-                if (treeDiff.magnitude <= reach)
-                {
-                    enemyTarget = null;
-                    currentState = BotState.AttackTree;
-                    return;
-                }
-
-                currentState = BotState.Advance;
-                hasDestination = false;
-                currentTargetLevel = l3;
-                return;
-            }
-
-            // تركيز مباشر كاسح على ضرب الشجرة وتدميرها
+            // Destroyer bots relentlessly attack tree trunk from current level without climbing ramps
             enemyTarget = null;
             currentState = BotState.AttackTree;
             return;
         }
 
-        // فحص هل يمكن إلحاق ضرر إضافي بالشجرة حالياً (قبل بلوغ حد الـ 35% من صحتها في وجود الدرع)
         bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
             (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.355f) : 10f));
 
@@ -836,15 +797,15 @@ public class BotController : NetworkBehaviour
 
         CharacterCombat combat = GetComponent<CharacterCombat>();
         bool isRanged = combat != null && (combat.attackType == CharacterCombat.AttackType.Ranged || combat.attackRange >= 5.5f);
-        float maxAttackDist = isRanged ? Mathf.Max(6.8f, combat.attackRange * 0.85f) : 5.6f;
+        float maxAttackDist = isRanged ? Mathf.Max(7.5f, combat.attackRange * 0.90f) : 6.0f;
 
-        // التحرك إلى المحيط المباشر للشجرة (4.15 م) إذا كان البوت بعيداً
         if (dist > maxAttackDist)
         {
-            if (agent != null && agent.isOnNavMesh)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.isStopped = false;
                 agent.stoppingDistance = 0.3f;
+                agent.speed = Mathf.Max(sprintSpeed + personalOffset, 11.0f);
             }
             Vector3 dest = FindClosestTreePosition();
             if (!hasDestination || Vector3.Distance(currentDestination, dest) > 1.2f)
@@ -854,17 +815,17 @@ public class BotController : NetworkBehaviour
         }
         else
         {
-            // في مدى ضرب الشجرة: توقف، التفت نحو جذع الشجرة، واضربه بكل قوة!
-            if (agent != null && agent.isOnNavMesh)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.isStopped = true;
+                agent.velocity = Vector3.zero;
             }
 
             Vector3 lookDir = (treeCenter - transform.position);
             lookDir.y = 0f;
             if (lookDir.sqrMagnitude > 0.01f)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), 12f * Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), 14f * Time.deltaTime);
             }
 
             if (combat != null)
