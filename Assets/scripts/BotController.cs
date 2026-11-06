@@ -620,7 +620,7 @@ public class BotController : NetworkBehaviour
         }
 
         bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
-            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.505f) : 10f));
+            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.425f) : 10f));
 
         // 5. التحقق من الزعيم المستيقظ والطابق القتالي النشط:
         LevelBoss activeBoss = (LevelBossManager.Instance != null && !allBossesSlain)
@@ -696,14 +696,14 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
-            // إذا بلغت الشجرة حد الدرع (50%): تركيز مطلق 100% على قتل الزعيم لكسر الدرع!
+            // إذا بلغت الشجرة حد الدرع (42%): تركيز مطلق 100% على قتل الزعيم لكسر الدرع!
             if (!canTreeTakeMoreDamage)
             {
                 EnterFight(activeBoss.transform);
                 return;
             }
 
-            // إذا كانت الشجرة ما تزال تقبل الضرر فوق 50%: 65% يركزون على الزعيم و35% يضربون الشجرة بضرر الطابق المضاعف!
+            // إذا كانت الشجرة ما تزال تقبل الضرر فوق 42%: 65% يركزون على الزعيم و35% يضربون الشجرة بضرر الطابق المضاعف!
             int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
             if (botRatio < 6)
             {
