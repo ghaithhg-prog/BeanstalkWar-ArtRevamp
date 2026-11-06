@@ -355,6 +355,13 @@ public class BotController : NetworkBehaviour
         botJumpCoroutine = null;
     }
 
+    public Transform GetLevel2Transform()
+    {
+        if (levelTargets != null && levelTargets.Length > 1 && levelTargets[1] != null) return levelTargets[1];
+        GameObject treeLevels = GameObject.Find("TreeLevels");
+        return treeLevels != null ? treeLevels.transform.Find("Level_2") : null;
+    }
+
     public Transform GetLevel3Transform()
     {
         if (levelTargets != null && levelTargets.Length > 2 && levelTargets[2] != null) return levelTargets[2];
@@ -558,9 +565,9 @@ public class BotController : NetworkBehaviour
                         return;
                     }
 
-                    // تقسيم استراتيجي للمدمرين: 85% تدمير الشجرة بسرعة قصوى و15% اعتراض حامل الكريستالة القريب
+                    // تقسيم استراتيجي للمدمرين: 50% اعتراض حامل الكريستالة و50% تدمير الشجرة
                     int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
-                    if (botRatio >= 8 && Vector3.Distance(transform.position, carrier.transform.position) <= 15f)
+                    if (botRatio >= 5)
                     {
                         EnterFight(carrier.transform);
                         return;
@@ -596,14 +603,24 @@ public class BotController : NetworkBehaviour
         // 4. للمدمرين (Destroyer Bots): بمجرد موت الزعماء الثلاثة وسقوط الدرع:
         if (team == PlayerMovement.TeamType.Destroyer && allBossesSlain)
         {
-            // Destroyer bots relentlessly attack tree trunk from current level without climbing ramps
+            int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
+            Transform l2 = GetLevel2Transform();
+            // إذا كان البوت على الأرض: 50% يصعدون للأدوار العليا لإلحاق ضرر مضاعف (65%-100%) و50% يهاجمون الجذع من تحت بضرر خفيف (15%)
+            if (transform.position.y < 3.2f && l2 != null && botRatio >= 5)
+            {
+                currentState = BotState.Advance;
+                hasDestination = false;
+                currentTargetLevel = l2;
+                return;
+            }
+
             enemyTarget = null;
             currentState = BotState.AttackTree;
             return;
         }
 
         bool canTreeTakeMoreDamage = TreeGrowth.Instance != null &&
-            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.355f) : 10f));
+            (TreeGrowth.Instance.currentHealth > (TreeGrowth.IsShieldActive ? (TreeGrowth.Instance.maxHealth * 0.505f) : 10f));
 
         // 5. التحقق من الزعيم المستيقظ والطابق القتالي النشط:
         LevelBoss activeBoss = (LevelBossManager.Instance != null && !allBossesSlain)
@@ -615,7 +632,7 @@ public class BotController : NetworkBehaviour
         bool hasHigherCombatLevel = targetCombatLevel != null && (targetCombatLevel.position.y - transform.position.y) > 2.0f;
 
         // الصعود السريع للأدوار العليا (Level 1, 2, 3):
-        // كما طلب المستخدم: الصعود يمنح مضاعف ضرر عالي للشجرة (35% في الطابق الأول، 60% في الثاني، 100% في الثالث)
+        // كما طلب المستخدم: الصعود يمنح مضاعف ضرر عالي للشجرة (35% في الطابق الأول، 65% في الثاني، 100% في الثالث)
         // بالإضافة لاستهداف الزعيم النشط لكسر درع الشجرة!
         if (hasBossAbove || hasHigherCombatLevel)
         {
@@ -679,14 +696,14 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
-            // إذا بلغت الشجرة حد الدرع (35%): تركيز مطلق 100% على قتل الزعيم لكسر الدرع!
+            // إذا بلغت الشجرة حد الدرع (50%): تركيز مطلق 100% على قتل الزعيم لكسر الدرع!
             if (!canTreeTakeMoreDamage)
             {
                 EnterFight(activeBoss.transform);
                 return;
             }
 
-            // إذا كانت الشجرة ما تزال تقبل الضرر فوق 35%: 65% يركزون على الزعيم و35% يضربون الشجرة بضرر الطابق المضاعف!
+            // إذا كانت الشجرة ما تزال تقبل الضرر فوق 50%: 65% يركزون على الزعيم و35% يضربون الشجرة بضرر الطابق المضاعف!
             int botRatio = Mathf.Abs(gameObject.GetInstanceID()) % 10;
             if (botRatio < 6)
             {
