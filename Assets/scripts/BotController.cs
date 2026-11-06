@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.AI;
 
@@ -80,6 +80,7 @@ public class BotController : NetworkBehaviour
     private float nextTraversalHopTime = 0f;
     private Coroutine botJumpCoroutine = null;
     private bool isBotGlidingWithCrystal = false;
+    public bool IsGlidingWithCrystal => isBotGlidingWithCrystal;
 
     private bool IsServerOrAuthority => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
@@ -96,9 +97,11 @@ public class BotController : NetworkBehaviour
             StopCoroutine(botJumpCoroutine);
             botJumpCoroutine = null;
         }
+        isBotGlidingWithCrystal = false;
         if (agent != null)
         {
             agent.baseOffset = DefaultNavMeshBaseOffset;
+            if (!agent.enabled) agent.enabled = true;
         }
     }
 
@@ -162,6 +165,7 @@ public class BotController : NetworkBehaviour
 
     public void OnRespawn(Vector3 targetSpawnPos)
     {
+        isBotGlidingWithCrystal = false;
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (agent != null)
         {
@@ -369,11 +373,23 @@ public class BotController : NetworkBehaviour
 
         if (PlayerMovement.AreControlsLocked || (GameStateManager.Instance != null && !GameStateManager.Instance.IsPlaying()))
         {
-            if (agent.isOnNavMesh)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.isStopped = true;
                 agent.velocity = Vector3.zero;
             }
+            return;
+        }
+
+        // إذا كان البوت يحمل الكريستالة، ينطلق فوراً لإيصالها إلى المذبح دون أي عوائق أو تجمد
+        if (currentState == BotState.DeliverCrystal || (CrystalItem.Instance != null && CrystalItem.Instance.IsCarrier(gameObject)))
+        {
+            if (currentState != BotState.DeliverCrystal)
+            {
+                enemyTarget = null;
+                currentState = BotState.DeliverCrystal;
+            }
+            UpdateDeliverCrystal();
             return;
         }
 
@@ -383,7 +399,7 @@ public class BotController : NetworkBehaviour
             if (!agentReady) return;
         }
 
-        if (!agent.isOnNavMesh)
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
             agentReady = false;
             return;
@@ -407,7 +423,7 @@ public class BotController : NetworkBehaviour
         EnforceTreeTrunkAvoidance();
 
         // قفزات نادرة وانسيابية للبوتات أثناء الركض في الممرات والمنحنيات للصعود السريع
-        if (agent.velocity.sqrMagnitude > 4.5f && Time.time >= nextTraversalHopTime)
+        if (agent != null && agent.enabled && agent.isOnNavMesh && agent.velocity.sqrMagnitude > 4.5f && Time.time >= nextTraversalHopTime)
         {
             nextTraversalHopTime = Time.time + Random.Range(10f, 18f);
             TriggerBotJump(0.65f);
@@ -433,7 +449,7 @@ public class BotController : NetworkBehaviour
             if (treeDiff.magnitude > 5.5f) shouldSprint = true;
         }
 
-        if (agent.isOnNavMesh)
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             float targetSpeed = shouldSprint ? (sprintSpeed + personalOffset) : (moveSpeed + personalOffset);
             agent.speed = targetSpeed;
@@ -1369,6 +1385,8 @@ public class BotController : NetworkBehaviour
         if (PlayerMovement.AreControlsLocked) return;
 
         CrystalAltar altar = FindClosestAltar();
+        if (altar == null) altar = CrystalAltar.Instance;
+
         if (altar != null)
         {
             Vector3 altarCenter = altar.transform.position;
@@ -1376,13 +1394,22 @@ public class BotController : NetworkBehaviour
                 new Vector2(transform.position.x, transform.position.z),
                 new Vector2(altarCenter.x, altarCenter.z)
             );
+            float vertDist = Mathf.Abs(transform.position.y - altarCenter.y);
 
-            // ذكاء حاسم للبوت الحامي: إذا وصل داخل دائرة المذبح (أقل من 2.2م من المركز):
+            // 1. وصول البوت إلى قلب المذبح المقدس (The Sacred Sanctuary Zone)
+            // إذا كان البوت على الأرض وقريب جداً من مركز المذبح (أقل من 2.2م أفقياً و 2.0م عمودياً):
             // يثبت أقدامه فوراً في قلب المذبح ويبقى صامداً طوال الـ 3 ثوانٍ حتى يتم التعميد والفوز!
-            if (horizDist <= 2.2f)
+            if (horizDist <= 2.2f && vertDist <= 2.0f)
             {
                 isBotGlidingWithCrystal = false;
-                if (agent != null && !agent.enabled) agent.enabled = true;
+                if (agent != null && !agent.enabled)
+                {
+                    agent.enabled = true;
+                    if (NavMesh.SamplePosition(transform.position, out NavMeshHit landHit, 4f, NavMesh.AllAreas))
+                    {
+                        agent.Warp(landHit.position);
+                    }
+                }
 
                 if (agent != null && agent.isOnNavMesh)
                 {
@@ -1399,7 +1426,7 @@ public class BotController : NetworkBehaviour
                     {
                         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), 10f * Time.deltaTime);
                     }
-                    if (CrystalItem.Instance != null && Vector3.Distance(transform.position, closeThreat.position) <= 4.5f)
+                    if (CrystalItem.Instance != null && Vector3.Distance(transform.position, closeThreat.position) <= 5.5f)
                     {
                         CrystalItem.Instance.RequestShockwaveRpc();
                     }
@@ -1412,67 +1439,84 @@ public class BotController : NetworkBehaviour
                 return;
             }
 
-            // ذكاء القفز والطيران الانسيابي (Feather Wings Glide):
-            // إذا كان البوت على ارتفاع عالٍ (طابق علوي أو برج) وبحوزته الكريستالة:
-            // يقفز من الحافة ويهبط انسيابياً كالريشة نحو المذبح دون أي ضرر سقوط!
-            if (transform.position.y > 4.5f || isBotGlidingWithCrystal)
+            // 2. القفز الفوري والهبوط الانسيابي بأجنحة الريشة (Feather Wings Glide)
+            // إذا كان البوت على ارتفاع أعلى من مستوى الأرض (أعلى من 1.5م، سواء على المنصة العلوية للشجرة أو في الهواء):
+            // يقفز مباشرة نحو المذبح دون أن يعيقه الـ NavMesh أو يتجمد مكانه على الحافة!
+            if (transform.position.y > 1.5f || isBotGlidingWithCrystal)
             {
                 Vector3 toAltar = (altarCenter - transform.position);
                 Vector3 flatDir = new Vector3(toAltar.x, 0f, toAltar.z).normalized;
 
-                bool isAirborne = !Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, out RaycastHit groundHit, 1.4f, ~LayerMask.GetMask("Ignore Raycast", "Player"));
-
-                if (isAirborne || isBotGlidingWithCrystal)
+                // تفعيل الطيران الانسيابي فوراً وتعطيل تقييد الـ NavMesh
+                isBotGlidingWithCrystal = true;
+                if (agent != null && agent.enabled)
                 {
-                    isBotGlidingWithCrystal = true;
-                    if (agent != null && agent.enabled) agent.enabled = false;
+                    agent.enabled = false;
+                }
 
-                    // طيران انسيابي آمن كالريشة نحو المذبح (Glide)
-                    float glideHorizSpeed = 10.8f;
-                    float glideFallSpeed = 4.25f; // هبوط انسيابي أسرع بنسبة 25% لسرعة إيصال الكريستالة
-                    transform.position += (flatDir * glideHorizSpeed + Vector3.down * glideFallSpeed) * Time.deltaTime;
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flatDir), 10f * Time.deltaTime);
+                CharacterVisualAnimator visualAnim = GetComponentInChildren<CharacterVisualAnimator>();
+                if (visualAnim != null)
+                {
+                    visualAnim.TriggerJumpGesture();
+                }
 
-                    // فحص الهبوط على الأرض قرب المذبح
-                    if (transform.position.y <= 1.2f || (groundHit.collider != null && groundHit.distance < 1.2f))
+                // طيران انسيابي آمن كالريشة نحو المذبح (Glide)
+                // سرعة أفقية 12.5م/ث + سرعة هبوط عمودي أسرع بنسبة 25% (5.25م/ث) لتأمين الفوز السريع للحماة
+                float glideHorizSpeed = 12.5f;
+                float glideFallSpeed = 5.25f;
+
+                transform.position += (flatDir * glideHorizSpeed + Vector3.down * glideFallSpeed) * Time.deltaTime;
+                if (flatDir.sqrMagnitude > 0.01f)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flatDir), 12f * Time.deltaTime);
+                }
+
+                // فحص الهبوط على أرضية الحقل قرب المذبح
+                bool nearGround = transform.position.y <= (altarCenter.y + 0.45f);
+                if (!nearGround && Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, out RaycastHit groundHit, 0.65f, ~LayerMask.GetMask("Ignore Raycast", "Player")))
+                {
+                    if (groundHit.point.y < 1.0f)
                     {
-                        isBotGlidingWithCrystal = false;
-                        if (agent != null)
+                        nearGround = true;
+                    }
+                }
+
+                if (nearGround)
+                {
+                    isBotGlidingWithCrystal = false;
+                    transform.position = new Vector3(transform.position.x, altarCenter.y, transform.position.z);
+                    if (agent != null)
+                    {
+                        agent.enabled = true;
+                        if (NavMesh.SamplePosition(transform.position, out NavMeshHit landHit, 6f, NavMesh.AllAreas))
                         {
-                            agent.enabled = true;
-                            if (NavMesh.SamplePosition(transform.position, out NavMeshHit landHit, 4f, NavMesh.AllAreas))
-                            {
-                                agent.Warp(landHit.position);
-                            }
+                            agent.Warp(landHit.position);
                         }
                     }
-                    return;
                 }
-                else
-                {
-                    // البوت لا يزال على سطح المنصة: يوجه حركته مباشرة نحو حافة المنصة المطلة على المذبح ليقفز!
-                    if (agent != null && agent.isOnNavMesh)
-                    {
-                        agent.isStopped = false;
-                        agent.speed = Mathf.Max(sprintSpeed + personalOffset, 11f);
-                        agent.SetDestination(transform.position + flatDir * 6f);
-                    }
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flatDir), 8f * Time.deltaTime);
-                    return;
-                }
+                return;
             }
 
-            // إذا لم يصل بعد وهو على الأرض، يتحرك نحو المركز الدقيق للمذبح
+            // 3. الجري السريع على الأرض نحو مركز المذبح (Ground Sprint to Altar)
             if (NavMesh.SamplePosition(altarCenter, out NavMeshHit navHit, 6f, NavMesh.AllAreas))
             {
                 altarCenter = navHit.position;
+            }
+
+            if (agent != null && !agent.enabled)
+            {
+                agent.enabled = true;
+                if (NavMesh.SamplePosition(transform.position, out NavMeshHit landHit, 4f, NavMesh.AllAreas))
+                {
+                    agent.Warp(landHit.position);
+                }
             }
 
             if (agent != null && agent.isOnNavMesh)
             {
                 agent.isStopped = false;
                 agent.stoppingDistance = 0.1f;
-                agent.speed = Mathf.Max(sprintSpeed + personalOffset, 10.5f); // High-speed crystal sprint
+                agent.speed = Mathf.Max(sprintSpeed + personalOffset, 12.0f); // سرعة قصوى لتسليم الكريستالة
                 agent.SetDestination(altarCenter);
             }
             currentDestination = altarCenter;
@@ -1486,7 +1530,7 @@ public class BotController : NetworkBehaviour
         if (CrystalItem.Instance != null)
         {
             Transform enemy = FindClosestEnemy();
-            if (enemy != null && Vector3.Distance(transform.position, enemy.position) <= 5f)
+            if (enemy != null && Vector3.Distance(transform.position, enemy.position) <= 5.5f)
             {
                 CrystalItem.Instance.RequestShockwaveRpc();
             }

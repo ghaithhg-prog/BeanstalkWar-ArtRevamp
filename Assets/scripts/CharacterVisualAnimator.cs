@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Animations;
 
@@ -326,6 +326,10 @@ public class CharacterVisualAnimator : MonoBehaviour
         else if (parentAgent != null && parentAgent.enabled)
         {
             currentSpeed = parentAgent.velocity.magnitude;
+        }
+        else if (parentBot != null && parentBot.IsGlidingWithCrystal)
+        {
+            currentSpeed = 12.0f;
         }
 
         bool isLocalHuman = (parentBot == null) && (playerMovement == null || playerMovement.IsOwner);
