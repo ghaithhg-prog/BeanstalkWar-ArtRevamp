@@ -462,15 +462,15 @@ public class TreeGrowth : MonoBehaviour
         // إلغاء أي حمل أو تعميد للكريستالة فوراً عند موت الشجرة
         if (CrystalItem.Instance != null)
         {
-            CrystalItem.Instance.CancelAndDropForTreeDeath();
+        // CrystalItem CancelAndDrop deferred until 2.0s tie window expires
         }
-        CrystalAltar.CancelAllChannelling();
+        // CrystalAltar CancelAllChannelling deferred until 2.0s tie window expires
 
         // إشعار فوري لمدير اللعبة بتدمير الشجرة وقفل النصر للمدمرين
         GameStateManager.Instance?.NotifyTreeDestroyed();
 
         // تجميد كافة اللاعبين والبوتات فوراً لمشاهدة مشهد الدمار والسقوط
-        PlayerMovement.FreezeAllPlayers(true);
+        // PlayerMovement FreezeAllPlayers deferred until 2.0s tie window expires
 
         Debug.Log("🌲💥 Tree permanently destroyed! Initiating cinematic collapse sequence...");
         StartCoroutine(CinematicTreeCollapseRoutine());
@@ -491,7 +491,7 @@ public class TreeGrowth : MonoBehaviour
         Transform pivot = transform.parent != null ? transform.parent : transform;
 
         // تجميد كافة اللاعبين والبوتات فوراً لمشاهدة مشهد الدمار والسقوط
-        PlayerMovement.FreezeAllPlayers(true);
+        // Early FreezeAllPlayers removed to allow 2.0s tie window
 
         // المرحلة الأولى: هزة عنيفة وتشقق الجذع واهتزاز الشاشة وصوت التصدع (0.5 ثانية)
         ThirdPersonCamera.Shake(1.2f, 0.55f);
@@ -512,7 +512,7 @@ public class TreeGrowth : MonoBehaviour
         }
 
         // المرحلة الثانية: سقوط جاذبي سينمائي متسارع مهيب (1.2 ثانية)
-        float fallDuration = 1.2f;
+        float fallDuration = 1.5f; // 0.5s groan + 1.5s fall = exactly 2.0s tie window
         float elapsedFall = 0f;
         ThirdPersonCamera.Shake(fallDuration + 0.5f, 0.45f);
 
@@ -538,6 +538,13 @@ public class TreeGrowth : MonoBehaviour
 
         // المرحلة الثالثة: الارتطام الكارثي بالأرض واحتفال الدمار لـ 5 ثوانٍ كاملة يشاهد فيها اللاعبون سقوط النيازك والانفجارات
         ThirdPersonCamera.Shake(2.5f, 0.85f);
+        // End of 2.0s tie window: if match is not a Draw, cancel crystal & freeze players
+        if (GameStateManager.Instance == null || !GameStateManager.Instance.IsDrawMatch)
+        {
+            if (CrystalItem.Instance != null) CrystalItem.Instance.CancelAndDropForTreeDeath();
+            CrystalAltar.CancelAllChannelling();
+            PlayerMovement.FreezeAllPlayers(true);
+        }
         SpawnGroundImpactShockwave(pivot.position, 90f);
         SpawnCollapseDebris(pivot.position + fallAxis * 20f, 25);
 

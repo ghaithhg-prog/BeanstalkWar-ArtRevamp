@@ -332,7 +332,7 @@ public class MatchEndStatsUI : MonoBehaviour
 
             subtitleText = LanguageSelectionUI.Localize(
                 "🌿 The Sacred Tree Fell and The Crystal Arrived Together — Neither Side is Defeated! 🌿",
-                ar: "🌿 دُمّرت الشجرة ووصلت الكريستالة في آنٍ واحد، لم يُهزم أحد وعمّ السلام! 🌿",
+                ar: "\ud83c\udf3f \u062a\u0645 \u062a\u062f\u0645\u064a\u0631 \u0627\u0644\u0634\u062c\u0631\u0629 \u0648\u0625\u064a\u0635\u0627\u0644 \u0627\u0644\u0643\u0631\u064a\u0633\u062a\u0627\u0644\u0629 \u0625\u0644\u0649 \u0627\u0644\u0645\u0630\u0628\u062d\u060c \u0627\u0644\u0644\u0642\u0627\u0621 \u062a\u0639\u0627\u062f\u0644! \ud83c\udf3f",
                 fa: "🌿 درخت سقوط کرد و کریستال همزمان رسید — هیچ‌کس شکست نخورد! 🌿",
                 ru: "🌿 Древо пало, и Кристалл доставлен одновременно — Никто не побежден! 🌿",
                 fr: "🌿 L'Arbre est tombé et le Cristal est arrivé ensemble — Personne n'est vaincu ! 🌿",

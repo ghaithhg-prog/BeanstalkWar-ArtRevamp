@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -254,7 +254,7 @@ public class GameStateManager : MonoBehaviour
     // End Match & Mutual Climax Resolution
     // =========================
 
-    public const float MAX_TIE_WINDOW = 1.5f;
+    public const float MAX_TIE_WINDOW = 2.0f;
 
     public void NotifyTreeDestroyed()
     {
@@ -265,7 +265,7 @@ public class GameStateManager : MonoBehaviour
         // If Crystal was already consecrated within strict 1.0 - 1.5s window
         if (CrystalConsecratedTime > 0f)
         {
-            float diff = TreeDestroyedTime - CrystalConsecratedTime;
+        float diff = Mathf.Abs(TreeDestroyedTime - CrystalConsecratedTime);
             if (diff >= 0f && diff <= MAX_TIE_WINDOW)
             {
                 DeclareDraw();
@@ -274,7 +274,7 @@ public class GameStateManager : MonoBehaviour
         }
 
         // If game was already marked ended for Protectors within 1.5s, convert to Draw!
-        if (currentState == GameState.Ended && (Time.time - matchEndedTimestamp <= MAX_TIE_WINDOW) && finalWinner.ToLower().Contains("protector"))
+        if (currentState == GameState.Ended && CrystalConsecratedTime > 0f && Mathf.Abs(TreeDestroyedTime - CrystalConsecratedTime) <= MAX_TIE_WINDOW)
         {
             DeclareDraw();
         }
@@ -285,7 +285,7 @@ public class GameStateManager : MonoBehaviour
         // إذا سقطت الشجرة مسبقاً، نتحقق بدقة من الفارق الزمني (إذا تجاوز 1.5 ثانية، يُرفض فوز الحماة تماماً)
         if (TreeDestroyedTime > 0f)
         {
-            float diff = Time.time - TreeDestroyedTime;
+        float diff = Mathf.Abs(Time.time - TreeDestroyedTime);
             if (diff > MAX_TIE_WINDOW)
             {
                 Debug.Log($"[GameStateManager] Crystal consecrated too late ({diff:F2}s after Tree destruction). Tree collapse prevails! Consecration rejected.");
@@ -311,7 +311,7 @@ public class GameStateManager : MonoBehaviour
         Debug.Log($"[GameStateManager] 🌟 Crystal Consecrated timestamp recorded at {CrystalConsecratedTime:F2}s");
 
         // If game was already marked ended for Destroyers within 1.5s, convert to Draw!
-        if (currentState == GameState.Ended && (Time.time - matchEndedTimestamp <= MAX_TIE_WINDOW) && finalWinner.ToLower().Contains("destroyer"))
+        if (currentState == GameState.Ended && TreeDestroyedTime > 0f && Mathf.Abs(CrystalConsecratedTime - TreeDestroyedTime) <= MAX_TIE_WINDOW)
         {
             DeclareDraw();
         }
@@ -345,7 +345,7 @@ public class GameStateManager : MonoBehaviour
         if (currentState == GameState.Ended)
         {
             // If match already ended within the last 1.5s, check for mutual tie
-            if (!IsDrawMatch && (Time.time - matchEndedTimestamp <= MAX_TIE_WINDOW))
+            if (!IsDrawMatch && TreeDestroyedTime > 0f && CrystalConsecratedTime > 0f && Mathf.Abs(TreeDestroyedTime - CrystalConsecratedTime) <= MAX_TIE_WINDOW)
             {
                 if ((winner == "Destroyers" && finalWinner.ToLower().Contains("protector")) ||
                     (winner == "Protectors" && finalWinner.ToLower().Contains("destroyer")) ||
@@ -363,12 +363,7 @@ public class GameStateManager : MonoBehaviour
             winner = "Draw";
             IsDrawMatch = true;
         }
-        else if (winner.ToLower().Contains("protector") && TreeDestroyedTime > 0f && (Time.time - TreeDestroyedTime <= MAX_TIE_WINDOW))
-        {
-            winner = "Draw";
-            IsDrawMatch = true;
-        }
-        else if (winner.ToLower().Contains("destroyer") && CrystalConsecratedTime > 0f && (Time.time - CrystalConsecratedTime <= MAX_TIE_WINDOW))
+        else if (TreeDestroyedTime > 0f && CrystalConsecratedTime > 0f && Mathf.Abs(TreeDestroyedTime - CrystalConsecratedTime) <= MAX_TIE_WINDOW)
         {
             winner = "Draw";
             IsDrawMatch = true;
