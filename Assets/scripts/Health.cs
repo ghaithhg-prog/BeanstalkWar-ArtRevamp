@@ -637,13 +637,13 @@ public class Health : MonoBehaviour
     // =========================================================================
     // Curved Health Arc covering 45% of the circle from the bottom at character base
     // =========================================================================
-    void DrawCurvedBaseArc(PlayerMovement.TeamType currentTeam, Color teamColor, string teamLabel, bool isHumanOwner)
+        void DrawCurvedBaseArc(PlayerMovement.TeamType currentTeam, Color teamColor, string teamLabel, bool isHumanOwner)
     {
         if (Camera.main == null) return;
 
-        // Ground-level projection at character feet
-        Vector3 basePos = transform.position + Vector3.up * 0.15f;
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(basePos);
+        // Ground-level projection at character feet (zero vertical offset into legs)
+        Vector3 groundWorldPos = transform.position;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(groundWorldPos);
 
         if (screenPos.z < 0) return;
 
@@ -653,13 +653,16 @@ public class Health : MonoBehaviour
         float alpha = Mathf.Clamp01(1f - (distance - 22f) / 16f);
         if (alpha <= 0.02f) return;
 
-        Vector2 center = new Vector2(screenPos.x, Screen.height - screenPos.y);
+        // Offset center downward in screen space so the arc rests completely below the character's body
+        float groundOffsetScreen = Mathf.Clamp(22f - distance * 0.25f, 14f, 26f);
+        Vector2 center = new Vector2(screenPos.x, Screen.height - screenPos.y + groundOffsetScreen);
 
-        float rx = Mathf.Clamp(38f - distance * 0.55f, 22f, 42f);
-        float ry = rx * 0.70f;
+        // Generous radius framing the ground disc cleanly outside the character feet
+        float rx = Mathf.Clamp(54f - distance * 0.65f, 32f, 58f);
+        float ry = rx * 0.62f; // Perspective foreshortening for natural ground alignment
 
         // 45% of 360 deg = 162 deg, centered at bottom (90 deg): [9 deg to 171 deg]
-        const int SEGMENTS = 26;
+        const int SEGMENTS = 28;
         float startAngle = 171f;
         float totalSpan = 162f;
         float stepDeg = totalSpan / SEGMENTS;
@@ -667,10 +670,11 @@ public class Health : MonoBehaviour
         float healthRatio = Mathf.Clamp01(currentHealth / maxHealth);
         float ghostRatio = Mathf.Clamp01(ghostHealth / maxHealth);
 
+        // Dynamic vibrant colors
         Color activeHealthColor;
         if (healthRatio > 0.55f)
         {
-            activeHealthColor = Color.Lerp(new Color(0.18f, 0.82f, 1f), new Color(0.12f, 0.96f, 0.52f), (healthRatio - 0.55f) / 0.45f);
+            activeHealthColor = Color.Lerp(new Color(0.18f, 0.82f, 1f), new Color(0.12f, 0.98f, 0.52f), (healthRatio - 0.55f) / 0.45f);
         }
         else if (healthRatio > 0.25f)
         {
@@ -678,17 +682,21 @@ public class Health : MonoBehaviour
         }
         else
         {
-            float pulse = 0.82f + 0.18f * Mathf.Sin(Time.time * 9f);
-            activeHealthColor = new Color(1.0f, 0.15f, 0.22f, pulse);
+            float pulse = 0.80f + 0.20f * Mathf.Sin(Time.time * 10f);
+            activeHealthColor = new Color(1.0f, 0.14f, 0.22f, pulse);
         }
 
-        Color trackBgColor = new Color(0.04f, 0.06f, 0.08f, 0.82f * alpha);
-        Color trackRimColor = new Color(teamColor.r, teamColor.g, teamColor.b, 0.50f * alpha);
-        Color ghostColor = new Color(1.0f, 0.86f, 0.32f, 0.85f * alpha);
-        Color healthFillCol = new Color(activeHealthColor.r, activeHealthColor.g, activeHealthColor.b, activeHealthColor.a * alpha);
+        // Fluid energy shimmer wave traveling along the arc to feel dynamic and alive
+        float flowPhase = Mathf.Repeat(Time.time * 0.65f, 1.4f) - 0.2f;
+        float breath = 0.94f + 0.06f * Mathf.Sin(Time.time * 2.8f);
 
-        float segLength = ((rx + ry) * 0.5f * Mathf.Deg2Rad * stepDeg) + 1.2f;
+        Color trackBgBase = new Color(0.04f, 0.06f, 0.08f, 0.85f * alpha);
+        Color trackRimBase = new Color(teamColor.r, teamColor.g, teamColor.b, 0.55f * alpha * breath);
+        Color ghostColorBase = new Color(1.0f, 0.88f, 0.32f, 0.88f * alpha);
 
+        float segLength = ((rx + ry) * 0.5f * Mathf.Deg2Rad * stepDeg) + 1.4f;
+
+        // Render tapered crescent blade segments (wide & thick at root, tapering smoothly to sleek tip)
         for (int i = 0; i < SEGMENTS; i++)
         {
             float tMid = (i + 0.5f) / SEGMENTS;
@@ -702,27 +710,64 @@ public class Health : MonoBehaviour
             float ty = -ry * Mathf.Cos(rad);
             float rot = Mathf.Atan2(ty, tx) * Mathf.Rad2Deg;
 
-            // 1. Dark Track Background
-            DrawRotatedRect(ptX, ptY, segLength, 6.0f, rot, trackBgColor);
-            DrawRotatedRect(ptX, ptY, segLength, 1.2f, rot, trackRimColor);
+            // Geometric tapering: starts bold/wide (11px track, 8px fill) and smoothly tapers down (3.8px track, 2.4px fill)
+            float taperT = Mathf.SmoothStep(0f, 1f, tMid);
+            float trackThick = Mathf.Lerp(11.0f, 3.8f, taperT);
+            float fillThick = Mathf.Lerp(8.0f, 2.4f, taperT);
 
-            // 2. Ghost Damage Arc
+            // Shimmer gleam traveling along the blade
+            float shimmerDist = Mathf.Abs(tMid - flowPhase);
+            float shimmerBoost = Mathf.Clamp01(1f - shimmerDist / 0.16f) * 0.35f;
+
+            Color segFillColor = new Color(
+                Mathf.Clamp01(activeHealthColor.r + shimmerBoost),
+                Mathf.Clamp01(activeHealthColor.g + shimmerBoost),
+                Mathf.Clamp01(activeHealthColor.b + shimmerBoost),
+                activeHealthColor.a * alpha
+            );
+
+            // 1. Dark Track Background with Tapered Bevel
+            DrawRotatedRect(ptX, ptY, segLength, trackThick, rot, trackBgBase);
+
+            // Fine Neon Contour Rim
+            DrawRotatedRect(ptX, ptY, segLength, 1.2f, rot, trackRimBase);
+
+            // 2. Ghost Damage Lag Arc (Tapered)
             if (ghostRatio > healthRatio && tMid <= ghostRatio)
             {
-                DrawRotatedRect(ptX, ptY, segLength, 4.2f, rot, ghostColor);
+                DrawRotatedRect(ptX, ptY, segLength, fillThick, rot, ghostColorBase);
             }
 
-            // 3. Active Health Arc
+            // 3. Active Health Arc (Tapered Crescent Blade)
             if (tMid <= healthRatio)
             {
-                DrawRotatedRect(ptX, ptY, segLength, 4.2f, rot, healthFillCol);
+                DrawRotatedRect(ptX, ptY, segLength, fillThick, rot, segFillColor);
             }
         }
 
-        // Pill badge with HP number for in-world bots & opponents
+        // Weighted Socket Cap at the Origin / Root (left side)
+        float rootAngleRad = startAngle * Mathf.Deg2Rad;
+        float rootX = center.x + rx * Mathf.Cos(rootAngleRad);
+        float rootY = center.y + ry * Mathf.Sin(rootAngleRad);
+        float rootRot = Mathf.Atan2(-ry * Mathf.Cos(rootAngleRad), rx * Mathf.Sin(rootAngleRad)) * Mathf.Rad2Deg;
+        DrawRotatedRect(rootX, rootY, 3.5f, 12f, rootRot, new Color(teamColor.r, teamColor.g, teamColor.b, 0.90f * alpha));
+
+        // Leading-Edge Spark Node at current health tip
+        if (healthRatio > 0.02f && healthRatio <= 1.0f)
+        {
+            float headAngleRad = (startAngle - healthRatio * totalSpan) * Mathf.Deg2Rad;
+            float headX = center.x + rx * Mathf.Cos(headAngleRad);
+            float headY = center.y + ry * Mathf.Sin(headAngleRad);
+            float headRot = Mathf.Atan2(-ry * Mathf.Cos(headAngleRad), rx * Mathf.Sin(headAngleRad)) * Mathf.Rad2Deg;
+            float headTaper = Mathf.SmoothStep(0f, 1f, healthRatio);
+            float headSize = Mathf.Lerp(9.0f, 3.5f, headTaper);
+            DrawRotatedRect(headX, headY, 2.5f, headSize + 2.5f, headRot, new Color(1f, 1f, 1f, 0.95f * alpha));
+        }
+
+        // Pill badge with HP number for in-world bots & opponents (placed neatly below the lowest arc curve)
         if (!isHumanOwner)
         {
-            float badgeY = center.y + ry + 4f;
+            float badgeY = center.y + ry + 6f;
             float badgeW = 46f;
             float badgeH = 14f;
             Rect badgeRect = new Rect(center.x - badgeW * 0.5f, badgeY, badgeW, badgeH);
