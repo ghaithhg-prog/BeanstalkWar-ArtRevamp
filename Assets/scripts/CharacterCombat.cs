@@ -32,6 +32,7 @@ public class CharacterCombat : NetworkBehaviour
     public PlayerMovement.TeamType team;
 
     private float nextAttackTime = 0f;
+    private float bufferedAttackTime = 0f;
 
     // زر الموبايل
     public static bool MobileAttackHeld { get; set; } = false;
@@ -148,18 +149,14 @@ public class CharacterCombat : NetworkBehaviour
 
         AlignWithCamera();
 
-        bool mouseAttack = Input.GetMouseButtonDown(0);
-        bool keyAttack = Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.E);
+        // Support continuous attack on held mouse or keys
+        bool mouseAttack = Input.GetMouseButton(0);
+        bool keyAttack = Input.GetKey(KeyCode.F) || Input.GetKey(KeyCode.E);
         bool mobileAttack = attackButtonPressed || MobileAttackHeld;
         attackButtonPressed = false;
 
-        if (!mouseAttack && !keyAttack && !mobileAttack)
-        {
-            return;
-        }
-
-        // لا نهاجم إذا كان الضغط على زر تفاعلي في واجهة المستخدم
-        if (mouseAttack && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        // Do not attack if mouse click starts over interactive UI
+        if (Input.GetMouseButtonDown(0) && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             var pointerData = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
             var rayResults = new System.Collections.Generic.List<RaycastResult>();
@@ -177,7 +174,15 @@ public class CharacterCombat : NetworkBehaviour
             if (isButton) return;
         }
 
-        TryPlayerAttack();
+        if (mouseAttack || keyAttack || mobileAttack)
+        {
+            bufferedAttackTime = Time.time + 0.25f; // 0.25s input buffer
+        }
+
+        if (Time.time <= bufferedAttackTime)
+        {
+            TryPlayerAttack();
+        }
     }
 
     // =========================
@@ -186,19 +191,18 @@ public class CharacterCombat : NetworkBehaviour
 
     void TryPlayerAttack()
     {
-        if (Time.time <
-            nextAttackTime)
+        if (Time.time < nextAttackTime)
         {
             return;
         }
+
+        bufferedAttackTime = 0f; // Consume buffer
 
         CalculateDirectionFromCenter();
 
         PerformAttack();
 
-        nextAttackTime =
-            Time.time +
-            attackCooldown;
+        nextAttackTime = Time.time + attackCooldown;
     }
 
     // =========================

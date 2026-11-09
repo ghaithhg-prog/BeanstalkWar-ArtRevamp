@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
@@ -157,6 +157,15 @@ public class MatchEndStatsUI : MonoBehaviour
         _isGameOverStatic = true;
         if (isGameOver) return;
         isGameOver = true;
+
+        // Hide in-game tree health bar Canvas so it never overlaps victory modal
+        TreeGrowth tree = FindAnyObjectByType<TreeGrowth>();
+        if (tree != null && tree.healthBarFill != null)
+        {
+            Canvas c = tree.healthBarFill.GetComponentInParent<Canvas>();
+            if (c != null) c.enabled = false;
+            else tree.healthBarFill.gameObject.SetActive(false);
+        }
         winningTeamName = winner;
         gameOverTime = Time.time;
 
@@ -277,7 +286,7 @@ public class MatchEndStatsUI : MonoBehaviour
     {
         if (!isGameOver) return;
 
-        GUI.depth = -500;
+        GUI.depth = -2000;
 
         // Dim background overlay
         GUI.color = new Color(0f, 0f, 0f, 0.78f);
@@ -287,7 +296,7 @@ public class MatchEndStatsUI : MonoBehaviour
         float boxWidth = Mathf.Min(Screen.width * 0.94f, 820f);
         float boxHeight = Mathf.Min(Screen.height * 0.92f, 610f);
         float startX = (Screen.width - boxWidth) / 2f;
-        float startY = Mathf.Max(20f, (Screen.height - boxHeight) / 2f);
+        float startY = Mathf.Max(32f, (Screen.height - boxHeight) / 2f);
 
         // 1. Ancient Parchment Background Frame with Radiant Pulsing Border
         float glowPulse = (Mathf.Sin(Time.time * 3.5f) + 1f) * 0.5f;
@@ -396,28 +405,30 @@ public class MatchEndStatsUI : MonoBehaviour
             bannerColor = new Color(1f, 0.35f, 0.2f);
         }
 
-        Rect titleRect = new Rect(startX + 20f, startY + 20f, boxWidth - 40f, 32f);
+        Rect titleRect = new Rect(startX + 20f, startY + 24f, boxWidth - 40f, 34f);
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.024f), 15, 20),
-            fontStyle = FontStyle.Bold
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.022f), 15, 19),
+            fontStyle = FontStyle.Bold,
+            clipping = TextClipping.Overflow
         };
         titleStyle.normal.textColor = bannerColor;
         GUI.Label(titleRect, titleText, titleStyle);
 
-        Rect subRect = new Rect(startX + 20f, startY + 52f, boxWidth - 40f, 28f);
+        Rect subRect = new Rect(startX + 20f, startY + 58f, boxWidth - 40f, 26f);
         GUIStyle subStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = 17,
-            fontStyle = FontStyle.Bold
+            fontSize = 16,
+            fontStyle = FontStyle.Bold,
+            clipping = TextClipping.Overflow
         };
         subStyle.normal.textColor = isDraw ? new Color(0.85f, 0.95f, 1f) : new Color(1f, 0.88f, 0.35f);
         GUI.Label(subRect, subtitleText, subStyle);
 
         // Match Stakes & Rewards Banner with Rating Score & 10-Tier info
-        Rect rewardRect = new Rect(startX + 20f, startY + 82f, boxWidth - 40f, 22f);
+        Rect rewardRect = new Rect(startX + 20f, startY + 86f, boxWidth - 40f, 22f);
         GUIStyle rewardStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
@@ -491,7 +502,7 @@ public class MatchEndStatsUI : MonoBehaviour
         GUI.Label(rewardRect, rewardStr + ratingSuffix, rewardStyle);
 
         // 3. Stats Table Header with Radiant Golden Polish
-        float tableY = startY + 112f;
+        float tableY = startY + 114f;
         Rect headerRect = new Rect(startX + 20f, tableY, boxWidth - 40f, 28f);
         Color headerBorder = Color.Lerp(new Color(0.65f, 0.50f, 0.25f, 0.85f), new Color(1f, 0.85f, 0.35f, 1f), glowPulse);
         EnchantedNatureGUI.DrawWoodPlate(headerRect, new Color(0.22f, 0.16f, 0.10f, 0.98f), headerBorder);
@@ -509,16 +520,16 @@ public class MatchEndStatsUI : MonoBehaviour
         colX += 180f;
         GUI.Label(new Rect(colX, tableY + 4f, 80f, 20f), LanguageSelectionUI.Localize("TEAM", "الفريق", "КОМАНДА", "EQUIPO", "ÉQUIPE", "TEAM", "दल", "队伍", "チーム", "EQUIPE"), colHeaderStyle);
         colX += 85f;
-        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("KILLS", "قتلى", "УБИЙСТВА", "BAJAS", "ÉLIMINATIONS", "KILLS", "हताहत", "击杀", "キル", "ABATES"), colHeaderStyle);
-        colX += 48f;
-        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("DEATHS", "وفيات", "СМЕРТИ", "MUERTES", "MORTS", "TODE", "मृत्यु", "死亡", "デス", "MORTES"), colHeaderStyle);
-        colX += 48f;
+        GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("KILLS", "قتلى", "УБИЙСТВА", "BAJAS", "ÉLIMINATIONS", "KILLS", "हताहत", "击杀", "キル", "ABATES"), colHeaderStyle);
+        colX += 52f;
+        GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("DEATHS", "وفيات", "СМЕРТИ", "MUERTES", "MORTS", "TODE", "मृत्यु", "死亡", "デス", "MORTES"), colHeaderStyle);
+        colX += 62f;
         GUI.Label(new Rect(colX, tableY + 4f, 65f, 20f), LanguageSelectionUI.Localize("DAMAGE", "ضرر", "УРОН", "DAÑO", "DÉGÂTS", "SCHADEN", "क्षति", "伤害", "ダメージ", "DANO"), colHeaderStyle);
         colX += 68f;
-        GUI.Label(new Rect(colX, tableY + 4f, 45f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉस", "首领", "ボス", "CHEFE"), colHeaderStyle);
-        colX += 48f;
-        GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("CRYSTAL", "كريستال", "КРИСТАЛЛ", "CRISTAL", "CRISTAL", "KRISTALL", "क्रिस्टल", "水晶", "クリスタル", "CRISTAL"), colHeaderStyle);
-        colX += 62f;
+        GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉस", "首领", "ボス", "CHEFE"), colHeaderStyle);
+        colX += 52f;
+        GUI.Label(new Rect(colX, tableY + 4f, 62f, 20f), LanguageSelectionUI.Localize("CRYSTAL", "كريستال", "КРИСТАЛЛ", "CRISTAL", "CRISTAL", "KRISTALL", "क्रिस्टल", "水晶", "クリスタル", "CRISTAL"), colHeaderStyle);
+        colX += 66f;
         GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("SCORE", "نقاط", "СЧЕТ", "PUNTOS", "SCORE", "PUNKTE", "स्कोर", "积分", "スコア", "PONTUAÇÃO"), colHeaderStyle);
         colX += 62f;
         GUI.Label(new Rect(colX, tableY + 4f, 40f, 20f), "+👤", colHeaderStyle);
@@ -577,20 +588,20 @@ public class MatchEndStatsUI : MonoBehaviour
             GUI.Label(new Rect(rX, currRowY + 4f, 80f, 20f), teamStr, teamStyle);
             rX += 85f;
 
-            GUI.Label(new Rect(rX, currRowY + 4f, 45f, 20f), s.kills.ToString(), rowTextStyle);
-            rX += 48f;
-            GUI.Label(new Rect(rX, currRowY + 4f, 45f, 20f), s.deaths.ToString(), rowTextStyle);
-            rX += 48f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.kills.ToString(), rowTextStyle);
+            rX += 52f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 58f, 20f), s.deaths.ToString(), rowTextStyle);
+            rX += 62f;
             GUI.Label(new Rect(rX, currRowY + 4f, 65f, 20f), ((int)s.damageDealt).ToString(), rowTextStyle);
             rX += 68f;
-            GUI.Label(new Rect(rX, currRowY + 4f, 45f, 20f), s.bossesKilled > 0 ? $"⚔️{s.bossesKilled}" : "-", rowTextStyle);
-            rX += 48f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.bossesKilled > 0 ? $"⚔️{s.bossesKilled}" : "-", rowTextStyle);
+            rX += 52f;
 
             string crystalStr = s.deliveredCrystal
                 ? LanguageSelectionUI.Localize("⭐ YES", "⭐ نعم", "⭐ ДА", "⭐ SÍ", "⭐ OUI", "⭐ JA", "⭐ हाँ", "⭐ 是", "⭐ 完了", "⭐ SIM")
                 : "-";
-            GUI.Label(new Rect(rX, currRowY + 4f, 58f, 20f), crystalStr, rowTextStyle);
-            rX += 62f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 62f, 20f), crystalStr, rowTextStyle);
+            rX += 66f;
 
             GUIStyle scoreStyle = new GUIStyle(rowTextStyle);
             scoreStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);

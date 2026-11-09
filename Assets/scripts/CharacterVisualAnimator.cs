@@ -67,7 +67,7 @@ public class CharacterVisualAnimator : MonoBehaviour
     private float walkCycle = 0f;
     private float moveBlend = 0f;
     private float attackGestureTimer = 0f;
-    private float attackGestureDuration = 0.72f;
+    private float attackGestureDuration = 0.48f;
     private float jumpGestureTimer = 0f;
     private bool isAttacking = false;
     private bool isDeadState = false;
@@ -760,7 +760,7 @@ public class CharacterVisualAnimator : MonoBehaviour
     public void TriggerAttackGesture()
     {
         if (isDeadState) return;
-        attackGestureDuration = 0.72f;
+        attackGestureDuration = 0.48f;
         attackGestureTimer = attackGestureDuration;
 
         if (usePlayableGraph && playableGraph.IsValid())
@@ -768,12 +768,12 @@ public class CharacterVisualAnimator : MonoBehaviour
             if (playDraw.IsValid())
             {
                 playDraw.SetTime(0);
-                playDraw.SetSpeed(1.85f);
+                playDraw.SetSpeed(2.4f);
             }
             if (playRecoil.IsValid())
             {
                 playRecoil.SetTime(0);
-                playRecoil.SetSpeed(1.35f);
+                playRecoil.SetSpeed(1.8f);
             }
         }
     }

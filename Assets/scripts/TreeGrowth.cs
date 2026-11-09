@@ -209,6 +209,15 @@ public class TreeGrowth : MonoBehaviour
 
     void Update()
     {
+        if (MatchEndStatsUI.IsGameOverActive)
+        {
+            if (healthBarFill != null && healthBarFill.canvas != null && healthBarFill.canvas.enabled)
+            {
+                healthBarFill.canvas.enabled = false;
+            }
+            return;
+        }
+
         UpdateHealthBar();
 
         // إدارة مؤقت العد التنازلي لـ 10 ثوانٍ لصمود درع الشجرة بعد هزيمة الزعماء الثلاثة
