@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using TMPro;
 
@@ -8,6 +8,8 @@ public class Health : MonoBehaviour
 
     public float maxHealth = 200f;
     public float currentHealth;
+    [System.NonSerialized]
+    public float ghostHealth = -1f;
     public bool isDead = false;
     public static float damageFlashTimer = 0f;
     public static void TriggerDamageFlash(float intensity = 0.5f) { damageFlashTimer = Mathf.Max(damageFlashTimer, intensity); }
@@ -31,6 +33,7 @@ public class Health : MonoBehaviour
         {
             currentHealth = maxHealth;
         }
+        ghostHealth = currentHealth;
         initialized = true;
     }
 
@@ -59,8 +62,10 @@ public class Health : MonoBehaviour
         {
             initialized = true;
             if (currentHealth <= 0f) currentHealth = maxHealth;
+            ghostHealth = currentHealth;
             isDead = false;
         }
+        if (ghostHealth <= 0f) ghostHealth = currentHealth;
 
         // ✅ ابحث عن RespawnText وأخفه
         if (respawnText == null)
@@ -82,6 +87,17 @@ public class Health : MonoBehaviour
         if (spawnInvulnerabilityTimer > 0f)
         {
             spawnInvulnerabilityTimer -= Time.deltaTime;
+        }
+
+        // Smoothly drain ghost damage bar towards current health (Free Fire damage lag effect)
+        if (ghostHealth < 0f) ghostHealth = currentHealth;
+        if (ghostHealth > currentHealth)
+        {
+            ghostHealth = Mathf.MoveTowards(ghostHealth, currentHealth, Time.deltaTime * 65f);
+        }
+        else if (ghostHealth < currentHealth)
+        {
+            ghostHealth = currentHealth;
         }
     }
 
@@ -360,6 +376,7 @@ public class Health : MonoBehaviour
         }
 
         currentHealth = maxHealth;
+        ghostHealth = maxHealth;
         isDead = false;
         IsLocalPlayerDead = false;
         currentRespawnCountdown = 0f;
@@ -453,47 +470,293 @@ public class Health : MonoBehaviour
                 pt: "⚔️ DESTRUIDOR"
             );
 
-        // موقع فوق رأس اللاعب
-        Vector3 headPos = transform.position + Vector3.up * 2.3f;
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(headPos);
+        if (isHumanOwner)
+        {
+            // 1. Free Fire AAA Style Health HUD at the bottom center of the screen
+            DrawFreeFirePlayerHealthHUD(currentTeam, teamColor, teamLabel);
 
-        // لا ترسم إذا كان اللاعب خلف الكاميرا
-        if (screenPos.z < 0) return;
+            // 2. Curved Health Arc covering 45% of the circle from the bottom around player base
+            DrawCurvedBaseArc(currentTeam, teamColor, teamLabel, isHumanOwner: true);
+        }
+        else
+        {
+            // For normal in-world characters and bots: 45% curved bottom health arc at character base
+            DrawCurvedBaseArc(currentTeam, teamColor, teamLabel, isHumanOwner: false);
+        }
+    }
 
-        // حساب المسافة للتحكم بالحجم والإخفاء
-        float distance = Vector3.Distance(Camera.main.transform.position, transform.position);
-        if (distance > 35f) return;
+    // =========================================================================
+    // Free Fire AAA Player Health HUD at Bottom of the Screen
+    // =========================================================================
+    void DrawFreeFirePlayerHealthHUD(PlayerMovement.TeamType currentTeam, Color teamColor, string teamLabel)
+    {
+        float sw = Screen.width;
+        float sh = Screen.height;
 
-        float barWidth = Mathf.Clamp(75f - distance * 0.7f, 50f, 75f);
-        float barHeight = 8f;
+        float hudW = Mathf.Clamp(sw * 0.36f, 380f, 480f);
+        float hudH = 34f;
+        float hudX = (sw - hudW) * 0.5f;
+        float hudY = sh - 52f; // Bottom center of screen, exactly like Free Fire
 
-        float x = screenPos.x - barWidth / 2f;
-        float y = Screen.height - screenPos.y - barHeight - 6f;
+        Rect hudRect = new Rect(hudX, hudY, hudW, hudH);
 
-        // 1. خلفية داكنة نصف شفافة مع إطار بلون الفريق المشع
-        GUI.color = new Color(0.06f, 0.06f, 0.1f, 0.88f);
-        GUI.DrawTexture(new Rect(x - 2, y - 2, barWidth + 4, barHeight + 4), Texture2D.whiteTexture);
+        // 1. Dark Translucent Carbon Plate with Chamfered Edges
+        GUI.color = new Color(0.04f, 0.06f, 0.09f, 0.92f);
+        GUI.DrawTexture(hudRect, Texture2D.whiteTexture);
 
-        // إطار علوي وسفلي بلون الفريق
+        // Neon Rim in Team Color
         GUI.color = teamColor;
-        GUI.DrawTexture(new Rect(x - 2, y - 2, barWidth + 4, 1.5f), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(x - 2, y + barHeight + 0.5f, barWidth + 4, 1.5f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX, hudY, hudW, 1.5f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX, hudY + hudH - 1.5f, hudW, 1.5f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX, hudY, 2.5f, hudH), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX + hudW - 2.5f, hudY, 2.5f, hudH), Texture2D.whiteTexture);
 
-        // 2. شريط الصحة بتدرج لوني يعكس صحة الفريق
-        float healthPercent = Mathf.Clamp01(currentHealth / maxHealth);
-        Color fillGrad = Color.Lerp(new Color(0.9f, 0.15f, 0.15f), teamColor, healthPercent);
-        GUI.color = fillGrad;
-        GUI.DrawTexture(new Rect(x, y, barWidth * healthPercent, barHeight), Texture2D.whiteTexture);
+        // Gold Corner Accent Trim
+        GUI.color = new Color(1.0f, 0.85f, 0.35f, 0.9f);
+        GUI.DrawTexture(new Rect(hudX, hudY, 5f, 3f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX + hudW - 5f, hudY, 5f, 3f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX, hudY + hudH - 3f, 5f, 3f), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(hudX + hudW - 5f, hudY + hudH - 3f, 5f, 3f), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        // 3. اسم ووسم الفريق فوق الشريط
-        GUIStyle teamStyle = new GUIStyle(GUI.skin.label);
-        teamStyle.alignment = TextAnchor.MiddleCenter;
-        teamStyle.fontSize = 9;
-        teamStyle.fontStyle = FontStyle.Bold;
-        teamStyle.normal.textColor = teamColor;
+        // 2. Hero Information & Class Badge
+        string heroName = "";
+        CharacterCombat combat = GetComponent<CharacterCombat>();
+        if (combat != null && combat.characterData != null)
+        {
+            heroName = combat.characterData.characterName;
+        }
+        else
+        {
+            heroName = gameObject.name.Replace("(Clone)", "").Trim();
+        }
 
-        GUI.Label(new Rect(x - 30, y - 16f, barWidth + 60, 15f), teamLabel, teamStyle);
+        PlayerXP playerXp = GetComponent<PlayerXP>();
+        string lvlText = (playerXp != null) ? "Lv." + playerXp.currentLevel.Value + " " : "";
+
+        Font gameFont = EnchantedNatureGUI.GetActiveGameFont();
+
+        GUIStyle heroStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft,
+            font = gameFont
+        };
+        heroStyle.normal.textColor = teamColor;
+
+        string leftText = lvlText + teamLabel + "  \u2022  " + heroName;
+        GUI.Label(new Rect(hudX + 10f, hudY + 1f, hudW * 0.55f, 15f), leftText, heroStyle);
+
+        // 3. Free Fire Style Numerical Display ("HP 200 / 200")
+        float healthRatio = Mathf.Clamp01(currentHealth / maxHealth);
+        float ghostRatio = Mathf.Clamp01(ghostHealth / maxHealth);
+
+        int curHp = Mathf.Max(0, Mathf.CeilToInt(currentHealth));
+        int maxHp = Mathf.CeilToInt(maxHealth);
+
+        GUIStyle hpStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleRight,
+            font = gameFont
+        };
+        hpStyle.normal.textColor = Color.white;
+
+        string hpText = "HP  " + curHp + " / " + maxHp;
+        GUI.color = new Color(0f, 0f, 0f, 0.85f);
+        GUI.Label(new Rect(hudX + hudW * 0.45f + 1f, hudY + 2f, hudW * 0.55f - 11f, 15f), hpText, hpStyle);
+        GUI.color = Color.white;
+        GUI.Label(new Rect(hudX + hudW * 0.45f, hudY + 1f, hudW * 0.55f - 10f, 15f), hpText, hpStyle);
+
+        // 4. Free Fire Health Bar Slot
+        float barX = hudX + 8f;
+        float barY = hudY + 17f;
+        float barW = hudW - 16f;
+        float barH = 12f;
+
+        // Dark Track Background
+        GUI.color = new Color(0.06f, 0.08f, 0.12f, 0.95f);
+        GUI.DrawTexture(new Rect(barX, barY, barW, barH), Texture2D.whiteTexture);
+
+        // Ghost Damage Lag Bar (Bright Amber / White)
+        if (ghostRatio > 0.001f)
+        {
+            GUI.color = new Color(1.0f, 0.86f, 0.32f, 0.88f);
+            GUI.DrawTexture(new Rect(barX, barY, barW * ghostRatio, barH), Texture2D.whiteTexture);
+        }
+
+        // Active Health Fill (Dynamic Free Fire Gradient)
+        Color activeHealthCol;
+        if (healthRatio > 0.55f)
+        {
+            activeHealthCol = Color.Lerp(new Color(0.18f, 0.82f, 1.0f), new Color(0.12f, 0.96f, 0.52f), (healthRatio - 0.55f) / 0.45f);
+        }
+        else if (healthRatio > 0.25f)
+        {
+            activeHealthCol = new Color(1.0f, 0.74f, 0.15f);
+        }
+        else
+        {
+            float pulse = 0.80f + 0.20f * Mathf.Sin(Time.time * 10f);
+            activeHealthCol = new Color(1.0f, 0.12f, 0.22f, pulse);
+        }
+
+        GUI.color = activeHealthCol;
+        GUI.DrawTexture(new Rect(barX, barY, barW * healthRatio, barH), Texture2D.whiteTexture);
+
+        // Tactical Dividers (25%, 50%, 75%)
+        GUI.color = new Color(0.03f, 0.05f, 0.08f, 0.90f);
+        for (int s = 1; s <= 3; s++)
+        {
+            float tickX = barX + barW * (s * 0.25f);
+            GUI.DrawTexture(new Rect(tickX - 0.75f, barY, 1.5f, barH), Texture2D.whiteTexture);
+        }
+        GUI.color = Color.white;
+
+        // 5. Curved 45% Bottom Accent Trim below the HUD
+        float arcCenterY = hudY + hudH + 2f;
+        float arcRadius = hudW * 0.22f;
+        for (int i = 0; i < 18; i++)
+        {
+            float t = (float)i / 18f;
+            float angleDeg = 171f - t * 162f;
+            float rad = angleDeg * Mathf.Deg2Rad;
+            float ptX = (hudX + hudW * 0.5f) + arcRadius * Mathf.Cos(rad);
+            float ptY = arcCenterY + (arcRadius * 0.32f) * Mathf.Sin(rad);
+
+            float tx = arcRadius * Mathf.Sin(rad);
+            float ty = -(arcRadius * 0.32f) * Mathf.Cos(rad);
+            float rot = Mathf.Atan2(ty, tx) * Mathf.Rad2Deg;
+
+            DrawRotatedRect(ptX, ptY, 4f, 1.5f, rot, new Color(teamColor.r, teamColor.g, teamColor.b, 0.60f));
+        }
+    }
+
+    // =========================================================================
+    // Curved Health Arc covering 45% of the circle from the bottom at character base
+    // =========================================================================
+    void DrawCurvedBaseArc(PlayerMovement.TeamType currentTeam, Color teamColor, string teamLabel, bool isHumanOwner)
+    {
+        if (Camera.main == null) return;
+
+        // Ground-level projection at character feet
+        Vector3 basePos = transform.position + Vector3.up * 0.15f;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(basePos);
+
+        if (screenPos.z < 0) return;
+
+        float distance = Vector3.Distance(Camera.main.transform.position, transform.position);
+        if (distance > 38f) return;
+
+        float alpha = Mathf.Clamp01(1f - (distance - 22f) / 16f);
+        if (alpha <= 0.02f) return;
+
+        Vector2 center = new Vector2(screenPos.x, Screen.height - screenPos.y);
+
+        float rx = Mathf.Clamp(38f - distance * 0.55f, 22f, 42f);
+        float ry = rx * 0.70f;
+
+        // 45% of 360 deg = 162 deg, centered at bottom (90 deg): [9 deg to 171 deg]
+        const int SEGMENTS = 26;
+        float startAngle = 171f;
+        float totalSpan = 162f;
+        float stepDeg = totalSpan / SEGMENTS;
+
+        float healthRatio = Mathf.Clamp01(currentHealth / maxHealth);
+        float ghostRatio = Mathf.Clamp01(ghostHealth / maxHealth);
+
+        Color activeHealthColor;
+        if (healthRatio > 0.55f)
+        {
+            activeHealthColor = Color.Lerp(new Color(0.18f, 0.82f, 1f), new Color(0.12f, 0.96f, 0.52f), (healthRatio - 0.55f) / 0.45f);
+        }
+        else if (healthRatio > 0.25f)
+        {
+            activeHealthColor = new Color(1.0f, 0.76f, 0.18f);
+        }
+        else
+        {
+            float pulse = 0.82f + 0.18f * Mathf.Sin(Time.time * 9f);
+            activeHealthColor = new Color(1.0f, 0.15f, 0.22f, pulse);
+        }
+
+        Color trackBgColor = new Color(0.04f, 0.06f, 0.08f, 0.82f * alpha);
+        Color trackRimColor = new Color(teamColor.r, teamColor.g, teamColor.b, 0.50f * alpha);
+        Color ghostColor = new Color(1.0f, 0.86f, 0.32f, 0.85f * alpha);
+        Color healthFillCol = new Color(activeHealthColor.r, activeHealthColor.g, activeHealthColor.b, activeHealthColor.a * alpha);
+
+        float segLength = ((rx + ry) * 0.5f * Mathf.Deg2Rad * stepDeg) + 1.2f;
+
+        for (int i = 0; i < SEGMENTS; i++)
+        {
+            float tMid = (i + 0.5f) / SEGMENTS;
+            float angleMid = startAngle - tMid * totalSpan;
+            float rad = angleMid * Mathf.Deg2Rad;
+
+            float ptX = center.x + rx * Mathf.Cos(rad);
+            float ptY = center.y + ry * Mathf.Sin(rad);
+
+            float tx = rx * Mathf.Sin(rad);
+            float ty = -ry * Mathf.Cos(rad);
+            float rot = Mathf.Atan2(ty, tx) * Mathf.Rad2Deg;
+
+            // 1. Dark Track Background
+            DrawRotatedRect(ptX, ptY, segLength, 6.0f, rot, trackBgColor);
+            DrawRotatedRect(ptX, ptY, segLength, 1.2f, rot, trackRimColor);
+
+            // 2. Ghost Damage Arc
+            if (ghostRatio > healthRatio && tMid <= ghostRatio)
+            {
+                DrawRotatedRect(ptX, ptY, segLength, 4.2f, rot, ghostColor);
+            }
+
+            // 3. Active Health Arc
+            if (tMid <= healthRatio)
+            {
+                DrawRotatedRect(ptX, ptY, segLength, 4.2f, rot, healthFillCol);
+            }
+        }
+
+        // Pill badge with HP number for in-world bots & opponents
+        if (!isHumanOwner)
+        {
+            float badgeY = center.y + ry + 4f;
+            float badgeW = 46f;
+            float badgeH = 14f;
+            Rect badgeRect = new Rect(center.x - badgeW * 0.5f, badgeY, badgeW, badgeH);
+
+            GUI.color = new Color(0.04f, 0.06f, 0.09f, 0.90f * alpha);
+            GUI.DrawTexture(badgeRect, Texture2D.whiteTexture);
+
+            GUI.color = new Color(teamColor.r, teamColor.g, teamColor.b, 0.85f * alpha);
+            GUI.DrawTexture(new Rect(badgeRect.x, badgeRect.y, badgeRect.width, 1.2f), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(badgeRect.x, badgeRect.yMax - 1.2f, badgeRect.width, 1.2f), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            GUIStyle badgeStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 9,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter
+            };
+            badgeStyle.normal.textColor = new Color(1f, 1f, 1f, 0.95f * alpha);
+
+            string emoji = currentTeam == PlayerMovement.TeamType.Protector ? "\uD83D\uDEE1\uFE0F" : "\u2694\uFE0F";
+            GUI.Label(badgeRect, emoji + " " + Mathf.CeilToInt(currentHealth), badgeStyle);
+        }
+    }
+
+    static void DrawRotatedRect(float cx, float cy, float width, float height, float rotDeg, Color col)
+    {
+        Color oldColor = GUI.color;
+        Matrix4x4 oldMat = GUI.matrix;
+        GUI.color = col;
+        GUIUtility.RotateAroundPivot(rotDeg, new Vector2(cx, cy));
+        GUI.DrawTexture(new Rect(cx - width * 0.5f, cy - height * 0.5f, width, height), Texture2D.whiteTexture);
+        GUI.matrix = oldMat;
+        GUI.color = oldColor;
     }
 
     void DrawDeathRespawnScreen()
