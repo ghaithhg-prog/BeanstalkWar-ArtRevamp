@@ -760,7 +760,7 @@ public class GameIntroBriefingUI : MonoBehaviour
         {
             case 0: return 440f;
             case 1: return 490f;
-            case 2: return 460f;
+            case 2: return 560f;
             case 3: return 440f;
             default: return 450f;
         }
@@ -975,19 +975,19 @@ public class GameIntroBriefingUI : MonoBehaviour
         GUI.Label(new Rect(left.x + 14f, left.y + 12f, left.width - 28f, 28f), protRoadmap, CreateHeadingStyle(15, new Color(0.35f, 0.92f, 1f)));
 
         string protectorSteps = LanguageSelectionUI.Localize(
-            "STEP 1 — DEFEND & HEAL THE TREE:\nAttack the Sacred Tree trunk whenever it is damaged to restore its HP.\n\nSTEP 2 — SLAY ALL 3 BOSSES (LEVELS 1, 2, 3):\nClimb the platforms and defeat the 3 Bosses to accelerate tree growth and break the 3 Crystal Seals.\n\nSTEP 3 — GRAB THE SACRED CRYSTAL:\nWhen all 3 Bosses die, 'THE CRYSTAL IS READY!' Picking it up grants +35% Speed Boost and Sacred Feather Fall (0 fall damage)!\n\nSTEP 4 — DELIVER TO THE SACRED ALTAR:\nCarry the Crystal to the glowing Sacred Altar on the ground (Press [E] for Shockwave Blast) to WIN!",
-            ar: "الخطوة 1 — الدفاع عن الشجرة وعلاجها:\nهاجم جذع الشجرة المقدسة كلما تضررت لاستعادة نقاط صحتها.\n\nالخطوة 2 — القضاء على الزعماء الثلاثة (مستويات 1، 2، 3):\nاصعد المنصات واهزم الزعماء لتسريع نمو الشجرة وفك أختام الكريستالة الثلاثة.\n\nالخطوة 3 — أخذ الكريستالة المقدسة:\nعند موت الزعماء الثلاثة تظهر رسالة: 'الكريستالة جاهزة!'. حمل الكريستالة يمنح +35% سرعة إضافية وسقوط الريشة المقدس (0 ضرر سقوط)!\n\nالخطوة 4 — إيصالها إلى المذبح المقدس:\nاحمل الكريستالة إلى المذبح المتوهج على الأرض (اضغط [E] لإطلاق موجة صدمة) لتحقيق الفوز!",
-            fa: "گام ۱ — دفاع و درمان درخت:\nهر زمان که به تنه درخت آسیب رسید، به آن حمله کنید تا سلامتش بازیابی شود.\n\nگام ۲ — نابودی هر ۳ غول (طبقات ۱، ۲، ۳):\nبه سکوها صعود کرده و ۳ غول را شکست دهید تا رشد تسریع شده و ۳ مهر بلور شکسته شوند.\n\nگام ۳ — برداشتن بلور مقدس:\nبا مرگ هر ۳ غول، 'بلور آماده است!' برداشتن آن +۴۲٪ افزایش سرعت و پرتاب بدون آسیب سقوط (۰ آسیب سقوط) می‌دهد!\n\nگام ۴ — تحویل به محراب مقدس:\nبلور را به محراب درخشان روی زمین ببرید (برای موج ضربه‌ای [E] را بزنید) تا برنده شوید!",
-            de: "SCHRITT 1 — BAUM VERTEIDIGEN & HEILEN:\nGreift den Stamm an, um HP wiederherzustellen.\n\nSCHRITT 2 — ALLE 3 BOSSE TÖTEN:\nKlettert auf die Plattformen und besiegt die 3 Bosse, um das Wachstum zu beschleunigen und Siegel zu brechen.\n\nSCHRITT 3 — HEILIGEN KRISTALL NEHMEN:\nSind alle 3 Bosse tot, ist der Kristall bereit! Bringt +35% Tempo und Federfall (0 Fallschaden)!\n\nSCHRITT 4 — ZUM ALTAR BRINGEN:\nTragt den Kristall zum leuchtenden Altar am Boden (drückt [E] für Schockwelle), um zu GEWINNEN!",
-            it: "PASSO 1 — DIFENDI E GUARISCI L'ALBERO:\nAttacca il tronco per ripristinare i suoi HP.\n\nPASSO 2 — UCCIDI I 3 BOSS (LIVELLI 1, 2, 3):\nSali sulle piattaforme ed elimina i 3 Boss per rompere i sigilli.\n\nPASSO 3 — PRENDI IL CRISTALLO SACRO:\nMorti i 3 Boss, il Cristallo è pronto! Ottieni +35% Velocità e Caduta Piuma (0 danni da caduta)!\n\nPASSO 4 — CONSEGNA ALL'ALTARE SACRO:\nPorta il Cristallo all'Altare a terra (premi [E] per Onda d'Urto) per VINCERE!",
-            tr: "ADIM 1 — AĞACI SAVUN VE İYİLEŞTİR:\nCanını yenilemek için Kutsal Ağaç gövdesine vurun.\n\nADIM 2 — 3 PATRONU KATLET (SEVİYE 1, 2, 3):\nPlatformlara tırmanın ve 3 Kristal Mührünü kırmak için Boss'ları yenin.\n\nADIM 3 — KUTSAL KRİSTALİ AL:\n3 Patron da öldüğünde Kristal hazır! Taşıyıcı +%35 Hız ve Tüy Düşüşü (0 düşme hasarı) kazanır!\n\nADIM 4 — KUTSAL SUNAĞA TAŞI:\nKristali yerdeki parlayan Sunaka taşıyın (Şok Dalgası için [E]'ye basın) ve KAZANIN!",
-            ru: "ШАГ 1 — ЗАЩИТА И ЛЕЧЕНИЕ ДЕРЕВА:\nАтакуйте ствол Дерева, чтобы восстановить его здоровье.\n\nШАГ 2 — ПОБЕДИТЕ 3 БОССОВ (УРОВНИ 1, 2, 3):\nПоднимайтесь на платформы и побеждайте Боссов, снимая 3 Печати.\n\nШАГ 3 — ВОЗЬМИТЕ КРИСТАЛЛ:\nПри гибели 3 Боссов Кристалл готов! Носитель получает +35% к скорости и Падение Перышком (0 урона от падений)!\n\nШАГ 4 — ДОСТАВЬТЕ К АЛТАРЮ:\nОтнесите Кристалл к Алтарю на земле (нажмите [E] для волны) для ПОБЕДЫ!",
-            es: "PASO 1 — DEFENDER Y CURAR EL ÁRBOL:\nAtaca el tronco para restaurar su salud.\n\nPASO 2 — VENCER A LOS 3 JEFES (NIVELES 1, 2, 3):\nSube a las plataformas y derrota a los 3 Jefes para romper los sellos.\n\nPASO 3 — RECOGER EL CRISTAL SAGRADO:\n¡El portador del Cristal recibe +35% de velocidad y Caída de Pluma Sagrada (0 daño de caída)!\n\nPASO 4 — LLEVARLO AL ALTAR SAGRADO:\nLlévalo al Altar en el suelo (pulsa [E] para onda expansiva) ¡para GANAR!",
-            fr: "ÉTAPE 1 — DÉFENDRE ET SOIGNER L'ARBRE :\nAttaquez le tronc pour restaurer ses PV.\n\nÉTAPE 2 — VAINCRE LES 3 BOSS (NIVEAUX 1, 2, 3) :\nMontez sur les plateformes et éliminez les 3 Boss pour briser les sceaux.\n\nÉTAPE 3 — PRENDRE LE CRISTAL SACRÉ :\nLe porteur du Cristal gagne +35% de vitesse et Chute de Plume Sacrée (0 dégât de chute) !\n\nÉTAPE 4 — LIVRER À L'AUTEL SACRÉ :\nPortez le Cristal à l'Autel au sol (appuyez sur [E] pour onde de choc) pour GAGNER !",
-            zh: "第1步 — 守卫并治愈圣树：\n在古树受损时攻击树干为其补充生命值。\n\n第2步 — 击杀全部3位首领：\n登上高层平台斩杀首领，加速古树生长并破除3道封印。\n\n第3步 — 拾取神圣水晶：\n三首领陨落后水晶解封！拾取者获得+35%移速与神圣羽落（0跌落伤害）！\n\n第4步 — 护送至神圣祭坛：\n将水晶运至地面发光祭坛（按[E]释放震荡冲击）夺取最终胜利！",
-            ja: "ステップ1 — 巨木の防衛と回復：\nダメージを受けた樹幹を攻撃してHPを急速回復させよ。\n\nステップ2 — 3大ボスの討伐：\n足場を登って3体のボスを撃破し、樹木の成長と水晶の封印解除を促せ。\n\nステップ3 — 聖なる水晶の奪回：\n全ボス討伐で水晶出現！運搬者は移動速度+35%とフェザーフォール（落下ダメージ0）を獲得！\n\nステップ4 — 聖なる祭壇への奉納：\n水晶を地上の祭壇へ運べ（[E]キーで敵を吹き飛ばす衝撃波発動）！完全勝利へ！",
-            hi: "चरण 1 — पेड़ की रक्षा और इलाज करें:\nइसके स्वास्थ्य को बहाल करने के लिए पेड़ के तने पर हमला करें।\n\nचरण 2 — तीनों बॉस को मारें:\nमंचों पर चढ़ें और तीनों बॉस को हराकर मुहरें तोड़ें।\n\nचरण 3 — पवित्र क्रिस्टल लें:\nतीनों बॉस मरने पर क्रिस्टल तैयार है! +35% गति और शून्य गिरावट क्षति!\n\nचरण 4 — पवित्र वेदी तक पहुंचाएं:\nक्रिस्टल को जमीन पर स्थित वेदी तक ले जाएं (शॉकवेव के लिए [E] दबाएं) और जीतें!",
-            pt: "PASSO 1 — DEFENDER E CURAR A ÁRVORE:\nAtaque o tronco para restaurar seus PV.\n\nPASSO 2 — DERROTAR OS 3 CHEFES (NÍVEIS 1, 2, 3):\nSuba nas plataformas e derrote os 3 Chefes para romper os selos.\n\nPASSO 3 — PEGAR O CRISTAL SAGRADO:\nQuando os 3 Chefes caírem, o Cristal fica pronto! Dá +35% de Velocidade e Queda Suave (0 dano de queda)!\n\nPASSO 4 — ENTREGAR NO ALTAR SAGRADO:\nLeve o Cristal ao Altar no chão (pressione [E] para Onda de Choque) para VENCER!"
+            "STEP 1 — DEFEND & HEAL THE TREE:\nAttack the Sacred Tree trunk whenever it is damaged to restore its HP.\n\nSTEP 2 — SLAY ALL 3 BOSSES (LEVELS 1, 2, 3):\nClimb the platforms and defeat the 3 Bosses to accelerate tree growth and break the 3 Crystal Seals.\n\nSTEP 3 — GRAB THE SACRED CRYSTAL:\nWhen all 3 Bosses die, 'THE CRYSTAL IS READY!' Picking it up grants +35% Speed Boost and Sacred Feather Fall (0 fall damage)!\n\nSTEP 4 — DELIVER TO SACRED ALTAR (>2s BEFORE TREE FALLS):\nCarry the Crystal to the glowing Sacred Altar on the ground (Press [E] for Shockwave Blast) to WIN!\n*Must arrive >2.0s before Tree falls; simultaneous climax within 2s triggers a Peaceful Mutual Tie!",
+            ar: "الخطوة 1 — الدفاع عن الشجرة وعلاجها:\nهاجم جذع الشجرة المقدسة كلما تضررت لاستعادة نقاط صحتها.\n\nالخطوة 2 — القضاء على الزعماء الثلاثة (مستويات 1، 2، 3):\nاصعد المنصات واهزم الزعماء لتسريع نمو الشجرة وفك أختام الكريستالة الثلاثة.\n\nالخطوة 3 — أخذ الكريستالة المقدسة:\nعند موت الزعماء الثلاثة تظهر رسالة: 'الكريستالة جاهزة!'. حمل الكريستالة يمنح +35% سرعة إضافية وسقوط الريشة المقدس (0 ضرر سقوط)!\n\nالخطوة 4 — إيصالها للمذبح المقدس (قبل سقوط الشجرة بـ >2ث):\nاحمل الكريستالة إلى المذبح المتوهج على الأرض (اضغط [E] لموجة صدمة) لتحقيق الفوز!\n*يجب أن تصل قبل سقوط الشجرة بأكثر من ثانيتين؛ تزامن الحدثين بفارق أقل من ثانيتين يحسم اللقاء تعادلاً سلمياً!",
+            fa: "گام ۱ — دفاع و درمان درخت:\nهر زمان که به تنه درخت آسیب رسید، به آن حمله کنید تا سلامتش بازیابی شود.\n\nگام ۲ — نابودی هر ۳ غول (طبقات ۱، ۲، ۳):\nبه سکوها صعود کرده و ۳ غول را شکست دهید تا رشد تسریع شده و ۳ مهر بلور شکسته شوند.\n\nگام ۳ — برداشتن بلور مقدس:\nبا مرگ هر ۳ غول، 'بلور آماده است!' برداشتن آن +۳۵٪ افزایش سرعت و سقوط پر (۰ آسیب سقوط) می‌دهد!\n\nگام ۴ — تحویل به محراب مقدس (بیش از ۲ ثانیه قبل از سقوط درخت):\nبلور را به محراب برسانید تا برنده شوید! (رسیدن همزمان با سقوط درخت در کمتر از ۲ ثانیه مساوی و صلح است!)",
+            de: "SCHRITT 1 — BAUM VERTEIDIGEN & HEILEN:\nGreift den Stamm an, um HP wiederherzustellen.\n\nSCHRITT 2 — ALLE 3 BOSSE TÖTEN:\nBesiegt die 3 Bosse, um das Wachstum zu beschleunigen und Siegel zu brechen.\n\nSCHRITT 3 — HEILIGEN KRISTALL NEHMEN:\nSind alle 3 Bosse tot, ist der Kristall bereit! Bringt +35% Tempo und Federfall!\n\nSCHRITT 4 — ZUM ALTAR BRINGEN (>2s VOR DEM BAUMFALL):\nTragt den Kristall zum Altar, um zu GEWINNEN! (Gleichzeitiges Eintreffen innerhalb 2s = Unentschieden!)",
+            it: "PASSO 1 — DIFENDI E GUARISCI L'ALBERO:\nAttacca il tronco per ripristinare i suoi HP.\n\nPASSO 2 — UCCIDI I 3 BOSS (LIVELLI 1, 2, 3):\nSali sulle piattaforme ed elimina i 3 Boss per rompere i sigilli.\n\nPASSO 3 — PRENDI IL CRISTALLO SACRO:\nOttieni +35% Velocità e Caduta Piuma (0 danni da caduta)!\n\nPASSO 4 — CONSEGNA ALL'ALTARE (>2s PRIMA DELLA CADUTA):\nPorta il Cristallo all'Altare per VINCERE! (Simultaneo entro 2s = Pareggio pacifico!)",
+            tr: "ADIM 1 — AĞACI SAVUN VE İYİLEŞTİR:\nCanını yenilemek için Kutsal Ağaç gövdesine vurun.\n\nADIM 2 — 3 PATRONU KATLET (SEVİYE 1, 2, 3):\nPlatformlara tırmanın ve 3 Kristal Mührünü kırmak için Boss'ları yenin.\n\nADIM 3 — KUTSAL KRİSTALİ AL:\nTaşıyıcı +%35 Hız ve Tüy Düşüşü kazanır!\n\nADIM 4 — KUTSAL SUNAĞA TAŞI (AĞAÇ YIKILMADAN >2 SN ÖNCE):\nKristali Sunaka taşıyarak KAZANIN! (2 saniye içinde eşzamanlılık Barışçıl Beraberliktir!)",
+            ru: "ШАГ 1 — ЗАЩИТА И ЛЕЧЕНИЕ ДЕРЕВА:\nАтакуйте ствол Дерева для восстановления HP.\n\nШАГ 2 — ПОБЕДИТЕ 3 БОССОВ:\nСнимите 3 Печати.\n\nШАГ 3 — ВОЗЬМИТЕ КРИСТАЛЛ:\n+35% к скорости и Падение Перышком (0 урона)!\n\nШАГ 4 — ДОСТАВЬТЕ К АЛТАРЮ (>2 СЕК ДО ПАДЕНИЯ ДЕРЕВА):\nОтнесите Кристалл к Алтарю для ПОБЕДЫ! (При разнице менее 2 сек наступает Мирная Ничья!)",
+            es: "PASO 1 — DEFENDER Y CURAR EL ÁRBOL:\nAtaca el tronco para restaurar su salud.\n\nPASO 2 — VENCER A LOS 3 JEFES:\nSube a las plataformas para romper sellos.\n\nPASO 3 — RECOGER EL CRISTAL SAGRADO:\n+35% velocidad y Caída de Pluma.\n\nPASO 4 — LLEVAR AL ALTAR (>2s ANTES DE CAER EL ÁRBOL):\n¡Llévalo al Altar para GANAR! (¡Si ambos caen en menos de 2s, es Empate Pacífico!)",
+            fr: "ÉTAPE 1 — DÉFENDRE ET SOIGNER L'ARBRE :\nSoignez le tronc.\n\nÉTAPE 2 — VAINCRE LES 3 BOSS :\nBrisez les 3 sceaux.\n\nÉTAPE 3 — PRENDRE LE CRISTAL SACRÉ :\n+35% de vitesse et chute de plume.\n\nÉTAPE 4 — LIVRER À L'AUTEL (>2s AVANT LA CHUTE DE L'ARBRE) :\nPortez le Cristal à l'Autel pour GAGNER ! (Simultané en <2s = Match Nul Pacifique !)",
+            zh: "第1步 — 守卫并治愈圣树：\n攻击树干为其补充生命值。\n\n第2步 — 击杀全部3位首领：\n斩杀首领破除3道封印。\n\n第3步 — 拾取神圣水晶：\n获得+35%移速与羽落无伤！\n\n第4步 — 护送至神圣祭坛（需在倒塌前>2秒）：\n送达祭坛即可夺冠！（相隔不足2秒触发和平平局！）",
+            ja: "ステップ1 — 巨木の防衛と回復：\n樹幹を攻撃してHP回復。\n\nステップ2 — 3大ボスの討伐：\nボスを倒して封印解除。\n\nステップ3 — 聖なる水晶の奪回：\n移動速度+35%＆落下無傷！\n\nステップ4 — 祭壇へ奉納（伐倒より2秒以上前）：\n祭壇へ運んで勝利をつかめ！（2秒以内の同時発生は引き分け！）",
+            hi: "चरण 1 — पेड़ की रक्षा और इलाज करें।\n\nचरण 2 — तीनों बॉस को मारकर मुहरें तोड़ें।\n\nचरण 3 — पवित्र क्रिस्टल लें (+35% गति)।\n\nचरण 4 — पेड़ गिरने से 2 सेकंड पहले वेदी तक पहुँचाएँ! (2 सेकंड में दोनों = शांतिपूर्ण बराबरी!)",
+            pt: "PASSO 1 — DEFENDER E CURAR A ÁRVORE.\n\nPASSO 2 — DERROTAR OS 3 CHEFES.\n\nPASSO 3 — PEGAR O CRISTAL SACRADO (+35% velocidade).\n\nPASSO 4 — ENTREGAR NO ALTAR (>2s ANTES DA QUEDA):\nLeve ao Altar para VENCER! (Simultâneo em <2s = Empate Pacífico!)"
         );
         GUI.Label(new Rect(left.x + 16f, left.y + 48f, left.width - 32f, left.height - 60f), protectorSteps, CreateBodyStyle(12, Color.white));
 
@@ -998,21 +998,60 @@ public class GameIntroBriefingUI : MonoBehaviour
         GUI.Label(new Rect(right.x + 14f, right.y + 12f, right.width - 28f, 28f), destRoadmap, CreateHeadingStyle(15, new Color(1f, 0.45f, 0.28f)));
 
         string destroyerSteps = LanguageSelectionUI.Localize(
-            "STEP 1 — WEAKEN THE TREE & HUNT BOSSES:\nStrike the Tree down toward its 15% Shield limit, and climb Levels 1, 2, and 3 to slay the 3 Guardian Bosses.\n\nSTEP 2 — 10s DIVINE SHIELD COUNTDOWN:\nWhen Boss 3 falls, a 10-second Divine countdown begins before the shield shatters completely!\n\nSTEP 3 — INTERCEPT CRYSTAL CARRIERS:\nIf a Protector grabs the Crystal, hunt them down immediately so they drop it on the ground!\n\nSTEP 4 — TOPPLE THE SACRED TREE:\nUnleash attacks on the Tree! Higher platforms grant full damage (Ground: 20%, L1: 35%, L2: 42%, L3/Top: 100%) until HP reaches 0 to WIN!",
-            ar: "الخطوة 1 — إضعاف الشجرة وصيد الزعماء:\nاضربوا الشجرة حتى حد درع 15%، واصعدوا المستويات 1 و2 و3 للقضاء على الزعماء الثلاثة.\n\nالخطوة 2 — عد تنازلي 10 ثوانٍ لدرع الصمود:\nعند سقوط الزعيم الثالث، يبدأ عد تنازلي مدته 10 ثوانٍ قبل زوال الدرع بالكامل!\n\nالخطوة 3 — اعتراض حاملي الكريستالة:\nإذا أخذ أحد الحماة الكريستالة، لاحقوه فوراً واقضوا عليه لتسقط الكريستالة على الأرض!\n\nالخطوة 4 — إسقاط الشجرة المقدسة:\nهاجموا جذع الشجرة! المنصات العالية تمنح القوة الكاملة (الأرض: 20%، م1: 35%، م2: 42%، م3/القمة: 100%) حتى تصل صحتها إلى 0 للفوز!",
-            fa: "گام ۱ — تضعیف درخت و شکار غول‌ها:\nبه درخت ضربه بزنید تا به سقف سپر ۱۵٪ برسد و برای نابودی ۳ غول به طبقات صعود کنید.\n\nگام ۲ — شمارش ۱۰ ثانیه‌ای سپر مقدس:\nبا سقوط غول سوم، شمارش ۱۰ ثانیه‌ای تا خرد شدن کامل سپر آغاز می‌شود!\n\nگام ۳ — رهگیری حاملان بلور:\nاگر یک محافظ بلور را برداشت، سریعاً او را شکار کنید تا بلور روی زمین بیفتد!\n\nگام ۴ — واژگونی درخت مقدس:\nتمام آتش خود را روی تنه بریزید! سکوهای بالاتر آسیب کامل می‌دهند (زمین: ۲۰٪، سطح ۱: ۴۲٪، سطح ۲: ۴۲٪، سطح ۳/قله: ۱۰۰٪) تا سلامت به ۰ برسد و پیروز شوید!",
-            de: "SCHRITT 1 — BAUM SCHWÄCHEN & BOSSE JAGEN:\nSchlagt den Baum auf das 15%-Limit und klettert auf die Stufen 1, 2 und 3 für die 3 Bosse.\n\nSCHRITT 2 — 10S-COUNTDOWN DES GÖTTLICHEN SCHILDS:\nStirbt Boss 3, läuft ein 10s-Countdown vor dem vollständigen Schildbruch ab!\n\nSCHRITT 3 — KRISTALLTRÄGER ABFANGEN:\nNimmt ein Beschützer den Kristall, jagt ihn sofort, damit er ihn fallen lässt!\n\nSCHRITT 4 — HEILIGEN BAUM FÄLLEN:\nGreift den Baum an! Höhere Plattformen geben vollen Schaden (Boden: 20%, S1: 35%, S2: 42%, S3/Spitze: 100%) bis 0 HP für den SIEG!",
-            it: "PASSO 1 — INDEBOLISCI L'ALBERO E CACCIA I BOSS:\nColpisci l'Albero fino al 15% e sali ai Livelli 1, 2 e 3 per abbattere i 3 Boss.\n\nPASSO 2 — CONTO ALLA ROVESCIA DI 10S DELLO SCUDO:\nCaduto il Boss 3, parte un conto di 10s prima che lo scudo si infranga del tutto!\n\nPASSO 3 — INTERCETTA I PORTATORI DEL CRISTALLO:\nSe un Protettore prende il Cristallo, abbattilo subito per farglielo cadere!\n\nPASSO 4 — ABBATTI IL SACRO ALBERO:\nScatena attacchi sull'Albero! Piattaforme alte danno pieno danno (Terra: 20%, L1: 35%, L2: 42%, L3/Cima: 100%) fino a 0 HP per VINCERE!",
-            tr: "ADIM 1 — AĞACI ZAYIFLAT VE PATRONLARI AVLA:\nAğacı %15 Kalkan sınırına kadar vurun ve 3 Patronu avlamak için Seviye 1, 2 ve 3'e tırmanın.\n\nADIM 2 — 10 SN İLAHİ KALKAN GERİ SAYIMI:\nPatron 3 düştüğünde, kalkan tamamen kırılmadan önce 10 saniyelik geri sayım başlar!\n\nADIM 3 — KRİSTAL TAŞIYICILARINI ENGELLE:\nBir Koruyucu Kristali alırsa, yere düşürmesi için onu hemen avlayın!\n\nADIM 4 — KUTSAL AĞACI DEVİR:\nAğaca saldırın! Yüksek platformlar tam hasar verir (Zemin: %20, S1: %35, S2: %50, S3/Zirve: %100) ve Can 0 olunca KAZANIN!",
-            ru: "ШАГ 1 — ОСЛАБЬТЕ ДЕРЕВО И ОХОТЬТЕСЬ НА БОССОВ:\nАтакуйте Дерево до предела Щита в 15% и поднимайтесь на Уровни 1, 2, 3 для убийства Боссов.\n\nШАГ 2 — 10 СЕКУНД ДО СНЯТИЯ ЩИТА:\nПри гибели 3-го Босса включается 10-секундный отсчет до полного снятия щита!\n\nШАГ 3 — ПЕРЕХВАТЫВАЙТЕ КРИСТАЛЛ:\nЕсли Защитник взял Кристалл, немедленно уничтожьте его, чтобы выбить Кристалл!\n\nШАГ 4 — СРУБИТЕ СВЯЩЕННОЕ ДЕРЕВО:\nОбрушьте всю мощь на ствол! Высота дает полный урон (Земля: 20%, Ур1: 35%, Ур2: 42%, Ур3/Верх: 100%) до 0 HP для победы!",
-            es: "PASO 1 — DEBILITAR EL ÁRBOL Y CAZAR JEFES:\nGolpea el Árbol hasta el 15% y sube a los Niveles 1, 2 y 3 para abatir a los 3 Jefes.\n\nPASO 2 — CUENTA ATRÁS DE 10S DEL ESCUDO:\nAl caer el 3er Jefe, se inicia una cuenta de 10s antes de que caiga el escudo.\n\nPASO 3 — INTERCEPTAR PORTADORES DEL CRISTAL:\nSi un Protector toma el Cristal, ¡cázalo de inmediato para que lo suelte!\n\nPASO 4 — DERRIBAR EL ÁRBOL SAGRADO:\n¡Ataca el tronco! Las alturas dan daño completo (Suelo: 20%, N1: 35%, N2: 42%, N3/Cima: 100%) hasta 0 de salud para GANAR.",
-            fr: "ÉTAPE 1 — AFFAIBLIR L'ARBRE ET CHASSER LES BOSS :\nFrappez l'Arbre jusqu'à 15% de PV et montez aux Niveaux 1, 2 et 3 pour vaincre les 3 Boss.\n\nÉTAPE 2 — COMPTE À REBOURS DE 10S DU BOUCLIER :\nÀ la mort du 3e Boss, un compte à rebours de 10s s'enclenche avant la chute du bouclier !\n\nÉTAPE 3 — INTERCEPTER LES PORTEURS DU CRISTAL :\nSi un Protecteur prend le Cristal, éliminez-le vite pour lui faire lâcher le Cristal !\n\nÉTAPE 4 — ABATTRE L'ARBRE SACRÉ :\nAttaquez le tronc ! Les hauteurs donnent le plein impact (Sol : 20%, N1 : 42%, N2 : 42%, N3/Sommet : 100%) jusqu'à 0 PV pour GAGNER !",
-            zh: "第1步 — 削弱古树并围剿首领：\n猛攻树干直至触发15%护盾锁定，并攀登第1、2、3层击杀全部3名泰坦首领。\n\n第2步 — 10秒神圣破盾倒计时：\n第3位首领被斩杀时，立即开启10秒破盾倒计时！\n\n第3步 — 全力截杀水晶持有者：\n若守护者拾取水晶，立即全员集火将其斩落，令水晶重重摔落在地！\n\n第4步 — 伐倒神圣古树：\n倾泻狂暴输出！高层平台提供全额巨额伤害（地面20%、L1 42%、L2 42%、L3/树冠100%），生命归零即刻夺冠！",
-            ja: "ステップ1 — 巨木の弱体化とボス狩り：\n幹を攻撃してHP15%のシールド境界まで削り、上層へ登って3大ボスを討ち取れ。\n\nステップ2 — 神聖シールド10秒破断カウント：\n第3ボス撃破時、シールド完全消失までの10秒カウントダウンが発動！\n\nステップ3 — 水晶運搬役の迎撃：\n守護者が水晶を持ったら即座に追撃し、地面にドロップさせよ！\n\nステップ4 — 聖なる巨木の伐倒：\n幹へ猛攻を浴びせよ！高層足場ほど絶大なダメージ（地上20%、階層1 42%、階層2 42%、階層3/頂上 100%）。HPを0にして大勝利をつかめ！",
-            hi: "चरण 1 — पेड़ को कमजोर करें और बॉस का शिकार करें:\nपेड़ को 15% सीमा तक मारें और 3 बॉस को मारने के लिए चढ़ें।\n\nचरण 2 — 10 सेकंड दिव्य ढाल उलटी गिनती:\nजब बॉस 3 मरता है, तो ढाल टूटने से पहले 10 सेकंड की उलटी गिनती शुरू होती है!\n\nचरण 3 — क्रिस्टल वाहकों को रोकें:\nयदि कोई रक्षक क्रिस्टल लेता है, तो उसे तुरंत गिराने के लिए मारें!\n\nचरण 4 — पवित्र पेड़ को गिराएं:\nपेड़ पर हमले करें! ऊंचे मंच पूर्ण क्षति देते हैं। जीत के लिए स्वास्थ्य 0 तक लाएं!",
-            pt: "PASSO 1 — ENFRAQUECER A ÁRVORE E CAÇAR OS CHEFES:\nGolpeie a Árvore até o limite de 15% e suba aos Níveis 1, 2 e 3 para abater os 3 Chefes.\n\nPASSO 2 — CONTAGEM DE 10S DO ESCUDO DIVINO:\nAo abater o 3º Chefe, uma contagem de 10s se inicia antes do escudo quebrar de vez!\n\nPASSO 3 — INTERCEPTAR PORTADORES DO CRISTAL:\nSe um Protetor pegar o Cristal, cace-o de imediato para derrubá-lo no chão!\n\nPASSO 4 — DERRUBAR A ÁRVORE SAGRADA:\nAtaque o tronco com fúria! Plataformas altas dão dano total (Chão: 20%, N1: 35%, N2: 42%, N3/Topo: 100%) até a vida zerar para VENCER!"
+            "STEP 1 — WEAKEN THE TREE & HUNT BOSSES:\nStrike Tree toward 42% limit, and climb Levels 1, 2, and 3 to slay the 3 Guardian Bosses.\n\nSTEP 2 — 10s DIVINE SHIELD COUNTDOWN:\nWhen Boss 3 falls, a 10-second Divine countdown begins before the shield shatters completely!\n\nSTEP 3 — INTERCEPT CRYSTAL CARRIERS:\nIf a Protector grabs the Crystal, hunt them down immediately so they drop it on the ground!\n\nSTEP 4 — TOPPLE TREE (>2s BEFORE CRYSTAL REACHES ALTAR):\nUnleash attacks on Tree! Higher platforms grant full damage until HP reaches 0 to WIN!\n*Must fell Tree >2.0s before Crystal consecration; simultaneous climax within 2s triggers a Peaceful Mutual Tie!",
+            ar: "الخطوة 1 — إضعاف الشجرة وصيد الزعماء:\nاضربوا الشجرة حتى حد درع 42%، واصعدوا المستويات 1 و2 و3 للقضاء على الزعماء الثلاثة.\n\nالخطوة 2 — عد تنازلي 10 ثوانٍ لدرع الصمود:\nعند سقوط الزعيم الثالث، يبدأ عد تنازلي مدته 10 ثوانٍ قبل زوال الدرع بالكامل!\n\nالخطوة 3 — اعتراض حاملي الكريستالة:\nإذا أخذ أحد الحماة الكريستالة، لاحقوه فوراً واقضوا عليه لتسقط الكريستالة على الأرض!\n\nالخطوة 4 — إسقاط الشجرة (>2ث قبل إيصال الكريستالة للمذبح):\nهاجموا جذع الشجرة! المنصات العالية تمنح القوة الكاملة حتى تصل صحتها إلى 0 للفوز!\n*يجب إسقاط الشجرة قبل إيصال الكريستالة بأكثر من ثانيتين؛ تزامن الحدثين بفارق أقل من ثانيتين يحسم اللقاء تعادلاً سلمياً!",
+            fa: "گام ۱ — تضعیف درخت و شکار غول‌ها:\nبه درخت ضربه بزنید تا به سقف سپر ۴۲٪ برسد و برای نابودی ۳ غول به طبقات صعود کنید.\n\nگام ۲ — شمارش ۱۰ ثانیه‌ای سپر مقدس:\nبا سقوط غول سوم، شمارش ۱۰ ثانیه‌ای تا خرد شدن کامل سپر آغاز می‌شود!\n\nگام ۳ — رهگیری حاملان بلور:\nاگر یک محافظ بلور را برداشت، سریعاً او را شکار کنید تا بلور روی زمین بیفتد!\n\nگام ۴ — واژگونی درخت (بیش از ۲ ثانیه قبل از تحویل بلور):\nتمام آتش خود را روی تنه بریزید تا سلامت به ۰ برسد و پیروز شوید! (همزمانی با تحویل بلور در کمتر از ۲ ثانیه مساوی و صلح است!)",
+            de: "SCHRITT 1 — BAUM SCHWÄCHEN & BOSSE JAGEN:\nSchlagt den Baum auf das 42%-Limit und besiegt die 3 Bosse.\n\nSCHRITT 2 — 10S-COUNTDOWN DES SCHILDS:\nStirbt Boss 3, läuft ein 10s-Countdown vor dem vollständigen Schildbruch!\n\nSCHRITT 3 — KRISTALLTRÄGER ABFANGEN:\nNimmt ein Beschützer den Kristall, jagt ihn sofort!\n\nSCHRITT 4 — BAUM FÄLLEN (>2s VOR KRISTALL-WEIHE):\nGreift den Baum an bis 0 HP für den SIEG! (Eintreffen innerhalb 2s = Unentschieden!)",
+            it: "PASSO 1 — INDEBOLISCI L'ALBERO E CACCIA I BOSS:\nColpisci l'Albero fino al 42% e abbatti i 3 Boss.\n\nPASSO 2 — CONTO ALLA ROVESCIA DI 10S DELLO SCUDO:\nCaduto il Boss 3, parte un conto di 10s prima del crollo totale!\n\nPASSO 3 — INTERCETTA I PORTATORI DEL CRISTALLO:\nSe un Protettore prende il Cristallo, abbattilo subito!\n\nPASSO 4 — ABBATTI IL SACRO ALBERO (>2s PRIMA DEL CRISTALLO):\nColpisci fino a 0 HP per VINCERE! (Simultaneo entro 2s = Pareggio pacifico!)",
+            tr: "ADIM 1 — AĞACI ZAYIFLAT VE PATRONLARI AVLA:\nAğacı %42 Kalkan sınırına kadar vurun ve 3 Patronu avlayın.\n\nADIM 2 — 10 SN İLAHİ KALKAN GERİ SAYIMI:\nPatron 3 düştüğünde 10 saniyelik geri sayım başlar!\n\nADIM 3 — KRİSTAL TAŞIYICILARINI ENGELLE:\nKristal taşıyıcısını hemen avlayın!\n\nADIM 4 — AĞACI DEVİR (KRİSTAL SUNAĞA ULAŞMADAN >2 SN ÖNCE):\nCan 0 olunca KAZANIN! (2 saniye içinde eşzamanlılık Barışçıl Beraberliktir!)",
+            ru: "ШАГ 1 — ОСЛАБЬТЕ ДЕРЕВО И ОХОТЬТЕСЬ НА БОССОВ:\nБейте Дерево до 42% и победите 3 Боссов.\n\nШАГ 2 — 10 СЕКУНД ДО СНЯТИЯ ЩИТА:\nОтсчет 10 секунд после гибели 3-го Босса!\n\nШАГ 3 — ПЕРЕХВАТЫВАЙТЕ КРИСТАЛЛ:\nВыбивайте Кристалл из рук Защитников!\n\nШАГ 4 — СРУБИТЕ ДЕРЕВО (>2 СЕК ДО ДОСТАВКИ КРИСТАЛЛА):\nСнизьте HP до 0 для ПОБЕДЫ! (При разнице менее 2 сек наступает Мирная Ничья!)",
+            es: "PASO 1 — DEBILITAR EL ÁRBOL Y CAZAR JEFES:\nGolpea el Árbol hasta el 42% y abate a los 3 Jefes.\n\nPASO 2 — CUENTA ATRÁS DE 10S DEL ESCUDO:\nCuenta de 10s antes de que caiga el escudo.\n\nPASO 3 — INTERCEPTAR PORTADORES DEL CRISTAL:\n¡Caza al portador para que suelte el Cristal!\n\nPASO 4 — DERRIBAR EL ÁRBOL (>2s ANTES DEL CRISTAL):\n¡Lleva su salud al 0% para GANAR! (¡Si ambos caen en menos de 2s, es Empate Pacífico!)",
+            fr: "ÉTAPE 1 — AFFAIBLIR L'ARBRE ET CHASSER LES BOSS :\nFrappez jusqu'à 42% et battez les 3 Boss.\n\nÉTAPE 2 — COMPTE À REBOURS DE 10S DU BOUCLIER :\nCompte à rebours avant la chute du bouclier !\n\nÉTAPE 3 — INTERCEPTER LES PORTEURS DU CRISTAL :\nÉliminez le porteur pour lui faire lâcher le Cristal !\n\nÉTAPE 4 — ABATTRE L'ARBRE (>2s AVANT LE CRISTAL) :\nRéduisez les PV à 0% pour GAGNER ! (Simultané en <2s = Match Nul Pacifique !)",
+            zh: "第1步 — 削弱古树并围剿首领：\n猛攻树干直至42%护盾并击杀3名首领。\n\n第2步 — 10秒神圣破盾倒计时：\n击杀第3位首领开启破盾倒计时！\n\n第3步 — 全力截杀水晶持有者：\n击倒守护者截断水晶传递！\n\n第4步 — 伐倒神圣古树（需在水晶送达前>2秒）：\n生命归零即刻夺冠！（相隔不足2秒触发和平平局！）",
+            ja: "ステップ1 — 巨木の弱体化とボス狩り：\nHP42%まで削り3大ボスを討て。\n\nステップ2 — シールド10秒破断カウント：\n第3ボス撃破でカウントダウン開始！\n\nステップ3 — 水晶運搬役の迎撃：\n水晶所持者を即座に迎撃せよ！\n\nステップ4 — 巨木の伐倒（水晶奉納より2秒以上前）：\nHPを0にして勝利！（2秒以内の同時発生は引き分け！）",
+            hi: "चरण 1 — पेड़ को 42% तक कमजोर करें और 3 बॉस मारें।\n\nचरण 2 — 10 सेकंड ढाल उलटी गिनती।\n\nचरण 3 — क्रिस्टल वाहकों को रोकें।\n\nचरण 4 — क्रिस्टल पहुँचने से 2 सेकंड पहले पेड़ गिराएँ! (2 सेकंड में दोनों = शांतिपूर्ण बराबरी!)",
+            pt: "PASSO 1 — ENFRAQUECER A ÁRVORE E CAÇAR OS CHEFES.\n\nPASSO 2 — CONTAGEM DE 10S DO ESCUDO DIVINO.\n\nPASSO 3 — INTERCEPTAR PORTADORES DO CRISTAL.\n\nPASSO 4 — DERRUBAR A ÁRVORE (>2s ANTES DO CRISTAL):\nZere a vida para VENCER! (Simultâneo em <2s = Empate Pacífico!)"
         );
         GUI.Label(new Rect(right.x + 16f, right.y + 48f, right.width - 32f, right.height - 60f), destroyerSteps, CreateBodyStyle(12, Color.white));
+
+        // Dedicated Golden Plaque Banner: Dual Climax & Peaceful Mutual Tie (2-Second Window)
+        float tieY = area.y + cardH + 12f;
+        Rect tieRect = new Rect(area.x, tieY, area.width, 92f);
+        EnchantedNatureGUI.DrawWoodPlate(tieRect, new Color(0.04f, 0.08f, 0.06f, 0.96f), new Color(1f, 0.85f, 0.35f, 0.95f));
+
+        string tieHeader = LanguageSelectionUI.Localize(
+            "🕊️ DUAL CLIMAX & PEACEFUL TIE RULE (2-SECOND MARGIN)",
+            ar: "🕊️ قاعدة الحسم المزدوج والتعادل السلمي الشامل (فارق ثانيتين)",
+            fa: "🕊️ قانون پایان همزمان و برابری صلح‌آمیز (فرصت ۲ ثانیه‌ای)",
+            ru: "🕊️ ПРАВИЛО ДВОЙНОГО ФИНАЛА И МИРНОЙ НИЧЬЕЙ (2 СЕКУНДЫ)",
+            es: "🕊️ ¡REGLA DE CLÍMAX DUAL Y EMPATE PACÍFICO (MARGEN DE 2 SEGUNDOS)!",
+            fr: "🕊️ RÈGLE DU DOUBLE CLIMAX ET DU MATCH NUL DE PAIX (ÉCART DE 2 SECONDES)",
+            de: "🕊️ REGEL DES PARALLELEN FINALES & FRIEDLICHES UNENTSCHIEDEN (2S-FENSTER)",
+            it: "🕊️ REGOLA DEL DOPPIO CLIMAX E PAREGGIO PACIFICO (MARGINE DI 2 SECONDI)",
+            tr: "🕊️ ÇİFTE FİNAL VE BARIŞÇIL BERABERLİK KURALI (2 SANİYE SINIRI)",
+            hi: "🕊️ दोहरा चरम और शांतिपूर्ण बराबरी का नियम (2 सेकंड का अंतर)",
+            zh: "🕊️ 双重决胜与和平平局法则（2秒绝对窗口）",
+            ja: "🕊️ 同時決着と平和的引き分けルール（2秒のマージン）",
+            pt: "🕊️ REGRA DO CLÍMAX DUPLO E EMPATE PACÍFICO (MARGEM DE 2 SEGUNDOS)"
+        );
+        GUI.Label(new Rect(tieRect.x + 12f, tieRect.y + 8f, tieRect.width - 24f, 24f), tieHeader, CreateHeadingStyle(13, new Color(1f, 0.9f, 0.4f), TextAnchor.MiddleCenter));
+
+        string tieBody = LanguageSelectionUI.Localize(
+            "• TO WIN: Your team must achieve its victory objective MORE THAN 2 SECONDS before the enemy team completes theirs!\n• PEACEFUL TIE: If the Sacred Tree falls and the Sacred Crystal reaches the Altar within 2 seconds of each other, neither team wins — Celestial Peace is restored and both sides share a draw bounty!",
+            ar: "• لتحقيق الفوز الحاسم: يجب على فريقك إتمام هدفه بفارق زمني يزيد عن ثانيتين كاملتين قبل أن ينجز الفريق الخصم هدفه!\n• التعادل السلمي: إذا سقطت الشجرة ووصلت الكريستالة للمذبح في نفس اللحظة (بفارق أقل من 2 ثانيتين)، يُحسم اللقاء تعادلاً سلمياً ويعم السلام دون فائز!",
+            fa: "• برای پیروزی: تیم شما باید هدف خود را بیش از ۲ ثانیه قبل از تکمیل هدف تیم حریف محقق سازد!\n• برابری صلح‌آمیز: اگر سقوط درخت و رسیدن بلور به محراب با فاصله کمتر از ۲ ثانیه رخ دهد، هیچ تیمی پیروز نمی‌شود و صلح آسمانی برقرار می‌گردد!",
+            ru: "• ДЛЯ ПОБЕДЫ: Ваша команда должна выполнить свою цель БОЛЕЕ ЧЕМ НА 2 СЕКУНДЫ раньше команды противника!\n• МИРНАЯ НИЧЬЯ: Если падение Дерева и доставка Кристалла произойдут с разницей менее 2 секунд, победителя нет — наступает Мир!",
+            es: "• PARA GANAR: ¡Tu equipo debe lograr su objetivo con MÁS DE 2 SEGUNDOS de antelación respecto al rival!\n• EMPATE PACÍFICO: Si el Árbol cae y el Cristal llega al Altar en menos de 2 segundos, nadie gana — ¡reina la paz celestial!",
+            fr: "• POUR GAGNER : Votre équipe doit accomplir son objectif PLUS DE 2 SECONDES avant l'équipe adverse !\n• MATCH NUL PACIFIQUE : Si l'Arbre s'effondre et le Cristal arrive en moins de 2s, personne ne gagne — la paix céleste est restaurée !",
+            de: "• ZUM SIEG: Euer Team muss das Ziel MEHR ALS 2 SEKUNDEN vor dem gegnerischen Team abschließen!\n• FRIEDLICHES UNENTSCHIEDEN: Fallen Baum und Kristall innerhalb von 2 Sekunden, gewinnt niemand — Himmlischer Friede herrscht!",
+            it: "• PER VINCERE: La tua squadra deve completare l'obiettivo PIÙ DI 2 SECONDI prima della squadra avversaria!\n• PAREGGIO PACIFICO: Se l'Albero cade e il Cristallo arriva entro 2 secondi, nessuno vince — la pace celeste è ripristinata!",
+            tr: "• KAZANMAK İÇİN: Takımınız zafer hedefini rakip takımdan EN AZ 2 SANİYE ÖNCE tamamlamalıdır!\n• BARIŞÇIL BERABERLİK: Ağacın yıkılması ve Kristalin sunaka ulaşması 2 saniye içinde gerçekleşirse kimse kazanamaz — İlahi Barış ilan edilir!",
+            hi: "• जीतने के लिए: आपकी टीम को विरोधी टीम से 2 सेकंड से अधिक पहले अपना लक्ष्य पूरा करना होगा!\n• शांतिपूर्ण बराबरी: यदि पेड़ गिरने और क्रिस्टल पहुँचने में 2 सेकंड से कम का अंतर हो, तो कोई नहीं जीतता — शांति बहाल होती है!",
+            zh: "• 夺得绝对胜利：己方阵营必须比敌方阵营提前超过2秒达成决胜目标！\n• 和平平局机制：若神树倒塌与圣水晶送达在2秒内同时发生，双方均未获胜——天界重归和平，共享平局赏金！",
+            ja: "• 勝利の絶対条件：敵チームが目的を果たすより2秒以上早く勝利条件を達成しなければならない！\n• 平和的引き分け：神木の倒壊と水晶の奉納が2秒以内で同時発生した場合、勝者は存在せず、天上の調和と平和が訪れる！",
+            pt: "• PARA VENCER: Sua equipe deve atingir o objetivo MAIS DE 2 SEGUNDOS antes da equipe adversária!\n• EMPATE PACÍFICO: Se a Árvore cair e o Cristal chegar em menos de 2s, ninguém vence — a Paz Celestial é restaurada!"
+        );
+        GUI.Label(new Rect(tieRect.x + 14f, tieRect.y + 34f, tieRect.width - 28f, 54f), tieBody, CreateBodyStyle(12, Color.white));
     }
 
     private void DrawSlide4ControlsAndTips(Rect area)
@@ -1461,12 +1500,12 @@ public class GameIntroBriefingUI : MonoBehaviour
 
                 string p4CallBody = runProgress >= 0.95f
                     ? LanguageSelectionUI.Localize(
-                        "• Crystal delivered to Altar! Protectors WIN!\n• Sacred Forest is permanently defended!",
-                        ar: "• تم تسليم الكريستالة للمذبح! فاز الحماة!\n• تمت حماية الغابة المقدسة للأبد!",
-                        ru: "• Кристалл у Алтаря! Защитники ПОБЕДИЛИ!\n• Лес навсегда защищен!",
-                        es: "• ¡Cristal en el Altar! ¡Protectores GANAN!\n• ¡El Bosque Sagrado está a salvo!",
-                        fr: "• Cristal livré à l'Autel ! Les Protecteurs GAGNENT !\n• La Forêt Sacrée est sauvée !",
-                        fa: "• کریستال به محراب رسید! حامیان پیروز شدند!\n• جنگل مقدس برای ابد محافظت شد!"
+                        "• Crystal consecrated >2s before Tree fell! Protectors WIN!\n• (Arriving within 2s of Tree fall triggers a Peaceful Tie!)",
+                        ar: "• وصلت الكريستالة للمذبح قبل سقوط الشجرة بأكثر من ثانيتين! فاز الحماة!\n• (الوصول بالتزامن مع سقوط الشجرة بفارق أقل من ثانيتين يحسم اللقاء تعادلاً سلمياً!)",
+                        ru: "• Кристалл освящен более чем за 2 сек до падения Дерева! Защитники ПОБЕДИЛИ!\n• (Разница менее 2 сек приводит к Ничьей!)",
+                        es: "• ¡Cristal en el Altar >2s antes de caer el Árbol! ¡Protectores GANAN!\n• (¡Simultáneo en <2s es Empate Pacífico!)",
+                        fr: "• Cristal consacré >2s avant la chute de l'Arbre ! Les Protecteurs GAGNENT !\n• (Simultané en <2s = Match Nul Pacifique !)",
+                        fa: "• کریستال بیش از ۲ ثانیه قبل از سقوط درخت به محراب رسید! پیروزی محافظان!\n• (همزمانی در کمتر از ۲ ثانیه مساوی و صلح است!)"
                     )
                     : LanguageSelectionUI.Localize(
                         "• Carry Crystal to Altar on the ground!\n• Press [E] for Shockwave to blast enemies away!",
@@ -1603,12 +1642,12 @@ public class GameIntroBriefingUI : MonoBehaviour
 
                 string d4CallBody = treeCollapsed
                     ? LanguageSelectionUI.Localize(
-                        "• Tree HP reached 0! Sacred Tree has toppled!\n• Destroyers conquer the forest and WIN!",
-                        ar: "• وصلت صحة الشجرة إلى 0! سقطت الشجرة المقدسة!\n• المدمرون استولوا على الغابة وفازوا بالمباراة!",
-                        ru: "• Здоровье Дерева на 0! Дерево рухнуло!\n• Разрушители захватили лес и ПОБЕДИЛИ!",
-                        es: "• ¡La salud llegó a 0! ¡El Árbol Sagrado ha caído!\n• ¡Los Destructores conquistan y GANAN!",
-                        fr: "• PV de l'Arbre à 0 ! Le Haricot Sacré s'est effondré !\n• Les Destructeurs conquièrent et GAGNENT !",
-                        fa: "• درخت غول‌پیکر سقوط کرد! ویرانگران پیروز شدند!\n• قلمرو به تصرف درآمد!"
+                        "• Tree toppled >2s before Crystal consecrated! Destroyers WIN!\n• (Falling within 2s of Crystal consecration triggers a Peaceful Tie!)",
+                        ar: "• سقطت الشجرة قبل وصول الكريستالة للمذبح بأكثر من ثانيتين! فاز المدمرون!\n• (سقوط الشجرة مع وصول الكريستالة بفارق أقل من ثانيتين يحسم اللقاء تعادلاً سلمياً!)",
+                        ru: "• Дерево срублено более чем за 2 сек до доставки Кристалла! Разрушители ПОБЕДИЛИ!\n• (Разница менее 2 сек приводит к Ничьей!)",
+                        es: "• ¡Árbol caído >2s antes de llegar el Cristal! ¡Destructores GANAN!\n• (¡Simultáneo en <2s es Empate Pacífico!)",
+                        fr: "• Arbre abattu >2s avant l'arrivée du Cristal ! Les Destructeurs GAGNENT !\n• (Simultané en <2s = Match Nul Pacifique !)",
+                        fa: "• درخت بیش از ۲ ثانیه قبل از رسیدن کریستال واژگون شد! پیروزی ویرانگران!\n• (همزمانی در کمتر از ۲ ثانیه مساوی و صلح است!)"
                     )
                     : LanguageSelectionUI.Localize(
                         "• Attack Tree from higher platforms for 300% dmg!\n• Bring Tree HP to 0% to fell the Beanstalk and WIN!",
@@ -1736,12 +1775,12 @@ public class GameIntroBriefingUI : MonoBehaviour
                         fa: "کریستال را به محراب مقدس روی زمین برسانید. [E] را برای ایجاد موج انفجاری بزنید. محراب را لمس کنید تا برنده شوید!"
                     );
                     enTip = LanguageSelectionUI.Localize(
-                        "💡 TACTICAL TIP: Press [E] whenever surrounded to trigger a radiant blast that knocks back all nearby enemies!",
-                        ar: "💡 نصيحة تكتيكية: اضغطوا [E] كلما حاصركم الأعداء لإطلاق انفجار إشعاعي يدفع كل من حولكم بعيداً!",
-                        ru: "💡 СОВЕТ: Нажимайте [E] в окружении, чтобы вызвать мощный импульс, сбивающий всех врагов с ног!",
-                        es: "💡 CONSEJO TÁCTICO: ¡Pulsa [E] si te rodean para generar una explosión radiante que repele a los enemigos!",
-                        fr: "💡 CONSEIL TACTIQUE : Appuyez sur [E] si vous êtes encerclé pour déclencher une onde radiante qui repousse !",
-                        fa: "💡 نکته تاکتیکی: هر زمان محاصره شدید [E] را بزنید تا موجی درخشان دشمنان اطراف را به عقب پرتاب کند!"
+                        "💡 TACTICAL TIP: Consecrate Crystal before Tree falls (>2s gap)! If both happen within 2s, it's a Peaceful Tie!",
+                        ar: "💡 نصيحة تكتيكية: أوصلوا الكريستالة قبل سقوط الشجرة بأكثر من ثانيتين! فإذا سقطت الشجرة ووُضعت الكريستالة بفارق أقل من ثانيتين يُحسم اللقاء تعادلاً سلمياً ولا يفوز أحد!",
+                        ru: "💡 СОВЕТ: Освятите Кристалл до падения Дерева (>2 сек)! Разница менее 2 сек — Мирная Ничья!",
+                        es: "💡 CONSEJO TÁCTICO: ¡Consagra el Cristal antes de caer el Árbol (>2s)! ¡En menos de 2s es Empate Pacífico!",
+                        fr: "💡 CONSEIL TACTIQUE : Consacrez le Cristal avant la chute de l'Arbre (>2s) ! En moins de 2s = Match Nul Pacifique !",
+                        fa: "💡 نکته تاکتیکی: بلور را قبل از سقوط درخت برسانید! همزمانی زیر ۲ ثانیه مساوی است!"
                     );
                     break;
             }
@@ -1849,12 +1888,12 @@ public class GameIntroBriefingUI : MonoBehaviour
                         fa: "به تنه حمله کنید (سکوهای بالا ۱۰۰٪ آسیب کامل و زمین ۲۰٪ وارد می‌کنند)! سلامت درخت را به صفر برسانید تا برنده شوید!"
                     );
                     enTip = LanguageSelectionUI.Localize(
-                        "💡 TACTICAL TIP: Climb to higher platforms to deal full 100% height impact directly to the trunk (ground is reduced to 20%)!",
-                        ar: "💡 نصيحة تكتيكية: اصعدوا لمنصات المستوى 2 أو 3 لتوجيه ضرر مضاعف بنسبة 300% بفضل ميزة الارتفاع مباشرة إلى الجذع!",
-                        ru: "💡 СОВЕТ: Поднимитесь на платформы 2 или 3 уровня, чтобы наносить до 300% урона по стволу благодаря множителю высоты!",
-                        es: "💡 CONSEJO TÁCTICO: ¡Sube a plataformas de Nivel 2 o 3 para infligir hasta 300% de daño por multiplicador de altura!",
-                        fr: "💡 CONSEIL TACTIQUE : Montez aux Niveaux 2 ou 3 pour infliger jusqu'à 300% de dégâts de hauteur directement au tronc !",
-                        fa: "💡 نکته تاکتیکی: به سکوهای مرتفع بروید تا ۱۰۰٪ ضربه کامل وارد شود (روی زمین به ۲۰٪ کاهش می‌یابد)!"
+                        "💡 TACTICAL TIP: Fell Tree before Crystal is delivered (>2s gap)! If both happen within 2s, it's a Peaceful Tie!",
+                        ar: "💡 نصيحة تكتيكية: أسقطوا الشجرة قبل وصول الكريستالة للمذبح بأكثر من ثانيتين! فإذا سقطت الشجرة ووُضعت الكريستالة بفارق أقل من ثانيتين يُحسم اللقاء تعادلاً سلمياً ولا يفوز أحد!",
+                        ru: "💡 СОВЕТ: Срубите Дерево до доставки Кристалла (>2 сек)! Разница менее 2 сек — Мирная Ничья!",
+                        es: "💡 CONSEJO TÁCTICO: ¡Derriba el Árbol antes de que llegue el Cristal (>2s)! ¡En menos de 2s es Empate Pacífico!",
+                        fr: "💡 CONSEIL TACTIQUE : Abattez l'Arbre avant la livraison du Cristal (>2s) ! En moins de 2s = Match Nul Pacifique !",
+                        fa: "💡 نکته تاکتیکی: درخت را قبل از رسیدن بلور ساقط کنید! همزمانی زیر ۲ ثانیه مساوی است!"
                     );
                     break;
             }

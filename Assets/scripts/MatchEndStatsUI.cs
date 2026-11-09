@@ -304,7 +304,7 @@ public class MatchEndStatsUI : MonoBehaviour
         Rect mainRect = new Rect(startX, startY, boxWidth, boxHeight);
         EnchantedNatureGUI.DrawLeafPlaque(mainRect, new Color(0.10f, 0.16f, 0.10f, 0.97f), glowingBorder);
 
-        // 2. Victory / Draw Header Banner with Multi-Language Support
+                // 2. Victory / Draw Header Banner with Multi-Language Support
         bool isDraw = winningTeamName.ToLower().Contains("draw") || winningTeamName.ToLower().Contains("tie") || winningTeamName.ToLower().Contains("peace");
         bool isProt = winningTeamName.ToLower().Contains("protector");
 
@@ -315,8 +315,8 @@ public class MatchEndStatsUI : MonoBehaviour
         if (isDraw)
         {
             titleText = LanguageSelectionUI.Localize(
-                "🕊️ CELESTIAL PEACE & DRAW! HARMONY RESTORED! 🕊️",
-                ar: "🕊️ تعادل وحال سلام! عمّ السلام الغابة المقدسة! 🕊️",
+                "🕊️ SIMULTANEOUS CLIMAX: CELESTIAL PEACE & DRAW! 🕊️",
+                ar: "🕊️ تعادل وحال سلام! لا غالب ولا مغلوب! 🕊️",
                 fa: "🕊️ صلح آسمانی و برابری! هماهنگی برقرار شد! 🕊️",
                 ru: "🕊️ НЕБЕСНЫЙ МИР И НИЧЬЯ! ГАРМОНИЯ ВОССТАНОВЛЕНА! 🕊️",
                 fr: "🕊️ PAIX CÉLESTE & ÉGALITÉ ! L'HARMONIE EST RESTAURÉE ! 🕊️",
@@ -331,19 +331,19 @@ public class MatchEndStatsUI : MonoBehaviour
             );
 
             subtitleText = LanguageSelectionUI.Localize(
-                "🌿 The Sacred Tree Fell and The Crystal Arrived Together — Neither Side is Defeated! 🌿",
-                ar: "\ud83c\udf3f \u062a\u0645 \u062a\u062f\u0645\u064a\u0631 \u0627\u0644\u0634\u062c\u0631\u0629 \u0648\u0625\u064a\u0635\u0627\u0644 \u0627\u0644\u0643\u0631\u064a\u0633\u062a\u0627\u0644\u0629 \u0625\u0644\u0649 \u0627\u0644\u0645\u0630\u0628\u062d\u060c \u0627\u0644\u0644\u0642\u0627\u0621 \u062a\u0639\u0627\u062f\u0644! \ud83c\udf3f",
-                fa: "🌿 درخت سقوط کرد و کریستال همزمان رسید — هیچ‌کس شکست نخورد! 🌿",
-                ru: "🌿 Древо пало, и Кристалл доставлен одновременно — Никто не побежден! 🌿",
-                fr: "🌿 L'Arbre est tombé et le Cristal est arrivé ensemble — Personne n'est vaincu ! 🌿",
-                es: "🌿 ¡El Árbol cayó y el Cristal llegó a la vez — Nadie fue derrotado! 🌿",
-                de: "🌿 Der Baum fiel und der Kristall kam zeitgleich an — Niemand ist besiegt! 🌿",
-                it: "🌿 L'Albero è caduto e il Cristallo è arrivato insieme — Nessuno è sconfitto! 🌿",
-                tr: "🌿 Ağaç devrildi ve Kristal aynı anda ulaştı — Kimse yenilmedi! 🌿",
-                hi: "🌿 पवित्र पेड़ गिरा और क्रिस्टल एक साथ पहुँचा — कोई नहीं हारा! 🌿",
-                zh: "🌿 神树倾覆而圣水晶同时送达——无人落败，森林和谐！🌿",
-                ja: "🌿 神木は倒れ、水晶も同時に届いた——誰も敗北せず、調和が訪れた！🌿",
-                pt: "🌿 A Árvore caiu e o Cristal chegou juntos — Ninguém foi derrotado! 🌿"
+                "🌿 The Sacred Tree Fell and The Crystal Arrived Within 2s — Mutual Tie & Peace Prevails! 🌿",
+                ar: "🌿 سقطت الشجرة ووصلت الكريستالة للمذبح في نفس اللحظة (بفارق أقل من ثانيتين) — تعادل الطرفان وحل السلام ولا فائز! 🌿",
+                fa: "🌿 درخت سقوط کرد و کریستال در کمتر از ۲ ثانیه رسید — تعادل برقرار شد و هیچ‌کس پیروز نشد! 🌿",
+                ru: "🌿 Дерево пало и Кристалл доставлен с разницей менее 2 сек — Ничья, наступил мир и победителей нет! 🌿",
+                fr: "🌿 L'Arbre est tombé et le Cristal est arrivé en moins de 2s — Match nul, la paix règne ! 🌿",
+                es: "🌿 ¡El Árbol cayó y el Cristal llegó en menos de 2s — Empate mutuo, reina la paz! 🌿",
+                de: "🌿 Baum gefallen und Kristall angekommen innerhalb 2s — Unentschieden, Friede herrscht! 🌿",
+                it: "🌿 L'Albero è caduto e il Cristallo è arrivato entro 2s — Pareggio, la pace prevale! 🌿",
+                tr: "🌿 Ağaç devrildi ve Kristal 2 saniye içinde ulaştı — Beraberlik, barış sağlandı! 🌿",
+                hi: "🌿 पेड़ गिरा और 2 सेकंड में क्रिस्टल पहुँचा — बराबरी, शांति की स्थापना! 🌿",
+                zh: "🌿 神树倒塌与圣水晶送达相隔不足2秒——双方平局，和平降临无人胜出！🌿",
+                ja: "🌿 神木の倒壊と水晶奉納が2秒以内で同時発生——引き分け、平和が訪れ勝者なし！🌿",
+                pt: "🌿 Árvore caiu e Cristal chegou em menos de 2s — Empate, a paz prevalece! 🌿"
             );
 
             bannerColor = new Color(0.95f, 0.95f, 1f); // Radiant Celestial White-Gold
@@ -351,76 +351,92 @@ public class MatchEndStatsUI : MonoBehaviour
         else if (isProt)
         {
             titleText = LanguageSelectionUI.Localize(
-                "🌟 THE SACRED CRYSTAL REACHED THE SANCTUARY! PROTECTORS WIN! 🌟",
-                "🌟 لقد وصلت الكريستالة للمذبح، فاز الحماة! 🌟",
-                "🌟 КРИСТАЛЛ ДОСТИГ АЛТАРЯ! ЗАЩИТНИКИ ПОБЕДИЛИ! 🌟",
-                "🌟 ¡EL CRISTAL HA LLEGADO AL ALTAR, GANARON LOS PROTECTORES! 🌟",
-                "🌟 LE CRISTAL A ATTEINT L'AUTEL, LES PROTECTEURS ONT GAGNÉ ! 🌟",
-                "🌟 DER KRISTALL HAT DEN ALTAR ERREICHT, DIE BESCHÜTZER HABEN GEWONNEN! 🌟",
-                "🌟 क्रिस्टल वेदी पर पहुंच गया, संरक्षकों की विजय हुई! 🌟",
-                "🌟 水晶已送达圣坛，守护者获胜！🌟",
-                "🌟 水晶が祭壇に到達した、守護者の勝利！🌟",
-                "🌟 O CRISTAL CHEGOU AO ALTAR, OS PROTETORES VENCERAM! 🌟");
+                "🌟 SACRED CRYSTAL REACHED ALTAR FIRST! PROTECTORS WIN! 🌟",
+                ar: "🌟 وصلت الكريستالة للمذبح قبل إسقاط الشجرة — فاز الحماة! 🌟",
+                fa: "🌟 کریستال قبل از سقوط درخت به محراب رسید — پیروزی محافظان! 🌟",
+                ru: "🌟 КРИСТАЛЛ ДОСТИГ АЛТАРЯ РАНЬШЕ ПАДЕНИЯ ДЕРЕВА! ПОБЕДА ЗАЩИТНИКОВ! 🌟",
+                es: "🌟 ¡EL CRISTAL LLEGÓ AL ALTAR ANTES DE CAER EL ÁRBOL! ¡GANAN PROTECTORES! 🌟",
+                fr: "🌟 LE CRISTAL A ATTEINT L'AUTEL AVANT LA CHUTE DE L'ARBRE ! VICTOIRE DES PROTECTEURS ! 🌟",
+                de: "🌟 KRISTALL ERREICHTE ALTAR VOR DEM BAUMFALL! BESCHÜTZER SIEGEN! 🌟",
+                it: "🌟 IL CRISTALLO È ARRIVATO PRIMA DELLA CADUTA DELL'ALBERO! VITTORIA DEI PROTETTORI! 🌟",
+                tr: "🌟 KRİSTAL AĞAÇ YIKILMADAN ÖNCE SUNAĞA ULAŞTI! KORUYUCULAR KAZANDI! 🌟",
+                hi: "🌟 पेड़ गिरने से पहले क्रिस्टल वेदी पर पहुंच गया! संरक्षकों की जीत! 🌟",
+                zh: "🌟 圣水晶在神树倒塌前送达圣坛！守护者大获全胜！🌟",
+                ja: "🌟 神木が倒れる前に水晶が祭壇へ到達！守護者の大勝利！🌟",
+                pt: "🌟 O CRISTAL CHEGOU AO ALTAR ANTES DA QUEDA DA ÁRVORE! PROTETORES VENCEM! 🌟"
+            );
 
             subtitleText = LanguageSelectionUI.Localize(
-                "🌿 THE SACRED GROVE IS SAVED! 🌿",
-                "🌿 تم إنقاذ الغابة المقدسة بسلام! 🌿",
-                "🌿 СВЯЩЕННАЯ РОЩА СПАСЕНА! 🌿",
-                "🌿 ¡EL BOSQUE SAGRADO ESTÁ SALVADO! 🌿",
-                "🌿 LE BOSQUET SACRÉ EST SAUVÉ ! 🌿",
-                "🌿 DER HEILIGE HAIN IST GERETTET! 🌿",
-                "🌿 पवित्र उपवन बच गया! 🌿",
-                "🌿 神圣森林得救了！🌿",
-                "🌿 聖なる森は救われた！🌿",
-                "🌿 O BOSQUE SAGRADO FOI SALVO! 🌿");
+                "🌿 VICTORY REASON: Protectors consecrated Crystal well before Tree could be felled! 🌿",
+                ar: "🌿 سبب الفوز: فاز الحماة لأن الكريستالة وصلت للمذبح قبل إسقاط الشجرة بوقت كافٍ! 🌿",
+                fa: "🌿 علت پیروزی: محافظان بلور را قبل از سرنگونی درخت به محراب رساندند! 🌿",
+                ru: "🌿 ПРИЧИНА ПОБЕДЫ: Защитники освятили Кристалл задолго до падения Дерева! 🌿",
+                es: "🌿 RAZÓN DE VICTORIA: ¡Los Protectores consagraron el Cristal mucho antes de caer el Árbol! 🌿",
+                fr: "🌿 RAISON DE VICTOIRE : Les Protecteurs ont consacré le Cristal bien avant la chute de l'Arbre ! 🌿",
+                de: "🌿 SIEGESGRUND: Beschützer weihten den Kristall vor dem Baumfall! 🌿",
+                it: "🌿 MOTIVO DELLA VITTORIA: I Protettori hanno consacrato il Cristallo prima della caduta! 🌿",
+                tr: "🌿 ZAFER NEDENİ: Koruyucular Kristali Ağaç yıkılmadan önce kutsadılar! 🌿",
+                hi: "🌿 जीत का कारण: रक्षकों ने पेड़ गिरने से पहले क्रिस्टल को वेदी पर स्थापित किया! 🌿",
+                zh: "🌿 获胜缘由：守护者在巨树倾覆前成功护送圣水晶至祭坛！🌿",
+                ja: "🌿 勝利理由：神木が伐倒される前に守護者が水晶の奉納を完了した！🌿",
+                pt: "🌿 MOTIVO DA VITÓRIA: Protetores consagraram o Cristal antes da Árvore ser derrubada! 🌿"
+            );
 
             bannerColor = new Color(0.2f, 0.9f, 0.4f);
         }
         else
         {
             titleText = LanguageSelectionUI.Localize(
-                "🔥 THE GREAT BEANSTALK HAS FALLEN! 🔥",
-                "🔥 سقطت شجرة الفاصولياء العظيمة! 🔥",
-                "🔥 ВЕЛИКИЙ СТЕБЕЛЬ ПАЛ! 🔥",
-                "🔥 ¡EL GRAN TALLO HA CAÍDO! 🔥",
-                "🔥 LE GRAND HARICOT EST TOMBÉ ! 🔥",
-                "🔥 DIE GROSSE BOHNENRANKE IST GEFALLEN! 🔥",
-                "🔥 विशाल सेम का पेड़ गिर गया है! 🔥",
-                "🔥 巨大的魔豆藤倒下了！🔥",
-                "🔥 巨大な豆の木が倒れた！🔥",
-                "🔥 O GRANDE PÉ DE FEIJÃO CAIU! 🔥");
+                "🔥 SACRED TREE FELLED BEFORE CRYSTAL DELIVERED! DESTROYERS WIN! 🔥",
+                ar: "🔥 سقطت الشجرة المقدسة قبل إيصال الكريستالة للمذبح — فاز المدمرون! 🔥",
+                fa: "🔥 درخت مقدس قبل از رسیدن کریستال واژگون شد — پیروزی نابودکنندگان! 🔥",
+                ru: "🔥 ДЕРЕВО СРУБЛЕНО ДО ДОСТАВКИ КРИСТАЛЛА! ПОБЕДА РАЗРУШИТЕЛЕЙ! 🔥",
+                es: "🔥 ¡EL ÁRBOL CAYÓ ANTES DE LLEGAR EL CRISTAL! ¡GANAN DESTRUCTORES! 🔥",
+                fr: "🔥 L'ARBRE EST TOMBÉ AVANT LA LIVRAISON DU CRISTAL ! VICTOIRE DES DESTRUCTEURS ! 🔥",
+                de: "🔥 HEILIGER BAUM VOR KRISTALL-LIEFERUNG GEFALLEN! ZERSTÖRER SIEGEN! 🔥",
+                it: "🔥 L'ALBERO È CADUTO PRIMA DELLA CONSEGNA DEL CRISTALLO! VITTORIA DEI DISTRUTTORI! 🔥",
+                tr: "🔥 AĞAÇ KRİSTAL ULAŞMADAN ÖNCE DEVİRİLDİ! YOK EDİCİLER KAZANDI! 🔥",
+                hi: "🔥 क्रिस्टल पहुँचने से पहले पेड़ गिर गया! विनाशकों की विजय! 🔥",
+                zh: "🔥 圣树在水晶送达前轰然倾覆！破坏者攻伐获胜！🔥",
+                ja: "🔥 水晶が届く前に聖なる巨木が伐倒された！破壊者の完全勝利！🔥",
+                pt: "🔥 A ÁRVORE CAIU ANTES DA ENTREGA DO CRISTAL! DESTRUIDORES VENCEM! 🔥"
+            );
 
             subtitleText = LanguageSelectionUI.Localize(
-                "⚔️ DESTROYERS VICTORIOUS! ⚔️",
-                "⚔️ انتصار فريق المدمرين! ⚔️",
-                "⚔️ ПОБЕДА РАЗРУШИТЕЛЕЙ! ⚔️",
-                "⚔️ ¡VICTORIA DE LOS DESTRUCTORES! ⚔️",
-                "⚔️ VICTOIRE DES DESTRUCTEURS ! ⚔️",
-                "⚔️ DIE ZERSTÖRER HABEN GESIEGT! ⚔️",
-                "⚔️ विनाशकों की विजय! ⚔️",
-                "⚔️ 破坏者获胜！⚔️",
-                "⚔️ 破壊者の勝利！⚔️",
-                "⚔️ VITÓRIA DOS DESTRUIDORES! ⚔️");
+                "⚔️ VICTORY REASON: Destroyers toppled the Tree well before Crystal reached the Altar! ⚔️",
+                ar: "⚔️ سبب الفوز: فاز المدمرون لأن الشجرة سقطت ودُمّرت قبل أن تصل الكريستالة للمذبح بكثير! ⚔️",
+                fa: "⚔️ علت پیروزی: نابودکنندگان درخت را مدت‌ها قبل از رسیدن کریستال واژگون ساختند! ⚔️",
+                ru: "⚔️ ПРИЧИНА ПОБЕДЫ: Разрушители срубили Дерево задолго до доставки Кристалла! ⚔️",
+                es: "⚔️ RAZÓN DE VICTORIA: ¡Los Destructores derribaron el Árbol mucho antes de que el Cristal llegara! ⚔️",
+                fr: "⚔️ RAISON DE VICTOIRE : Les Destructeurs ont abattu l'Arbre bien avant l'arrivée du Cristal ! ⚔️",
+                de: "⚔️ SIEGESGRUND: Zerstörer fällten den Baum lange vor der Kristall-Ankunft! ⚔️",
+                it: "⚔️ MOTIVO DELLA VITTORIA: I Distruttori hanno abbattuto l'Albero ben prima del Cristallo! ⚔️",
+                tr: "⚔️ ZAFER NEDENİ: Yok Ediciler Ağacı Kristal Sunaka ulaşmadan çok önce devirdi! ⚔️",
+                hi: "⚔️ जीत का कारण: विनाशकों ने क्रिस्टल पहुँचने से बहुत पहले पेड़ को गिरा दिया! ⚔️",
+                zh: "⚔️ 获胜缘由：破坏者在水晶抵达祭坛前彻底斩断伐倒神树！⚔️",
+                ja: "⚔️ 勝利理由：水晶が祭壇へ届く前に破壊者が巨木を完全に伐倒した！⚔️",
+                pt: "⚔️ MOTIVO DA VITÓRIA: Destruidores derrubaram a Árvore bem antes do Cristal chegar! ⚔️"
+            );
 
             bannerColor = new Color(1f, 0.35f, 0.2f);
         }
 
-        Rect titleRect = new Rect(startX + 20f, startY + 24f, boxWidth - 40f, 34f);
+        Rect titleRect = new Rect(startX + 20f, startY + 34f, boxWidth - 40f, 32f);
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.022f), 15, 19),
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.021f), 14, 18),
             fontStyle = FontStyle.Bold,
             clipping = TextClipping.Overflow
         };
         titleStyle.normal.textColor = bannerColor;
         GUI.Label(titleRect, titleText, titleStyle);
 
-        Rect subRect = new Rect(startX + 20f, startY + 58f, boxWidth - 40f, 26f);
+        Rect subRect = new Rect(startX + 20f, startY + 68f, boxWidth - 40f, 26f);
         GUIStyle subStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = 16,
+            fontSize = 15,
             fontStyle = FontStyle.Bold,
             clipping = TextClipping.Overflow
         };
@@ -428,7 +444,7 @@ public class MatchEndStatsUI : MonoBehaviour
         GUI.Label(subRect, subtitleText, subStyle);
 
         // Match Stakes & Rewards Banner with Rating Score & 10-Tier info
-        Rect rewardRect = new Rect(startX + 20f, startY + 86f, boxWidth - 40f, 22f);
+        Rect rewardRect = new Rect(startX + 20f, startY + 96f, boxWidth - 40f, 22f);
         GUIStyle rewardStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
@@ -502,7 +518,7 @@ public class MatchEndStatsUI : MonoBehaviour
         GUI.Label(rewardRect, rewardStr + ratingSuffix, rewardStyle);
 
         // 3. Stats Table Header with Radiant Golden Polish
-        float tableY = startY + 114f;
+        float tableY = startY + 124f;
         Rect headerRect = new Rect(startX + 20f, tableY, boxWidth - 40f, 28f);
         Color headerBorder = Color.Lerp(new Color(0.65f, 0.50f, 0.25f, 0.85f), new Color(1f, 0.85f, 0.35f, 1f), glowPulse);
         EnchantedNatureGUI.DrawWoodPlate(headerRect, new Color(0.22f, 0.16f, 0.10f, 0.98f), headerBorder);
@@ -536,7 +552,7 @@ public class MatchEndStatsUI : MonoBehaviour
 
         // 4. Scrollable Stats Rows (Strictly 10 Players & Bots - Bosses Excluded)
         float listY = tableY + 32f;
-        float listHeight = boxHeight - 245f;
+        float listHeight = boxHeight - 255f;
         Rect listRect = new Rect(startX + 20f, listY, boxWidth - 40f, listHeight);
 
         // Sort stats by score and purge any non-player boss entities
