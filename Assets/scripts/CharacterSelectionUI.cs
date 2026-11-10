@@ -265,15 +265,19 @@ public class CharacterSelectionUI : MonoBehaviour
 
         currentPreviewID = characterID;
 
-        if (currentPreviewModel != null)
+        if (turntable != null)
         {
-            Destroy(currentPreviewModel);
+            for (int i = turntable.childCount - 1; i >= 0; i--)
+            {
+                Destroy(turntable.GetChild(i).gameObject);
+            }
         }
+        currentPreviewModel = null;
 
         CharacterData ch = (database != null) ? database.GetCharacter(characterID) : null;
         string lowName = (ch != null && !string.IsNullOrEmpty(ch.characterName)) ? ch.characterName.ToLower() : "";
-        bool isArcherModel = (characterID == 0) || lowName.Contains("archer") || lowName.Contains("ranger") || lowName.Contains("windwalker");
-        bool isBruteModel = lowName.Contains("brute") || lowName.Contains("berserker") || lowName.Contains("barbarian") || (characterID == 7) || (characterID == 15);
+        bool isArcherModel = (characterID == 0) || lowName.Equals("archer");
+        bool isBruteModel = (characterID == 7) || lowName.Equals("brute") || lowName.Equals("berserker");
 
         GameObject prefab = null;
         if (isBruteModel)
@@ -447,7 +451,8 @@ public class CharacterSelectionUI : MonoBehaviour
         }
 
         // Keep 3D preview model synced with hovered or selected character
-        int activePreviewID = (hoveredCharacterID >= 0) ? hoveredCharacterID : (selectedCharacterID >= 0 ? selectedCharacterID : 0);
+        // Turntable 3D showcase only changes when clicked/selected, never on mouse hover!
+        int activePreviewID = (selectedCharacterID >= 0) ? selectedCharacterID : 0;
         if (activePreviewID != currentPreviewID)
         {
             UpdatePreviewStudioModel(activePreviewID);
@@ -518,7 +523,7 @@ public class CharacterSelectionUI : MonoBehaviour
         float rightW = sw - rightX - 14f;
 
         // Active Display Character
-        int displayID = (hoveredCharacterID >= 0) ? hoveredCharacterID : (selectedCharacterID >= 0 ? selectedCharacterID : 0);
+        int displayID = (selectedCharacterID >= 0) ? selectedCharacterID : 0;
         CharacterData displayChar = (database != null) ? database.GetCharacter(displayID) : null;
         if (displayChar == null && database != null && database.characters != null && database.characters.Length > 0)
             displayChar = database.characters[0];
@@ -837,6 +842,26 @@ public class CharacterSelectionUI : MonoBehaviour
     }
 
     // ==================== LUXURY RPG CHARACTER CARD (IMAGE 2 STYLE) ====================
+    private static Dictionary<int, Texture2D> portraitCache = new Dictionary<int, Texture2D>();
+
+    public static Texture2D GetCharacterPortrait(int charId, string charName)
+    {
+        if (portraitCache.TryGetValue(charId, out Texture2D cached) && cached != null)
+            return cached;
+
+        Texture2D tex = Resources.Load<Texture2D>("Characters/Portraits/Portrait_" + charId);
+        if (tex == null && !string.IsNullOrEmpty(charName))
+        {
+            string cleanName = charName.Replace(" ", "").Trim();
+            tex = Resources.Load<Texture2D>("Characters/Portraits/Portrait_" + cleanName);
+        }
+        if (tex != null)
+        {
+            portraitCache[charId] = tex;
+        }
+        return tex;
+    }
+
     void DrawCharacterCard(Rect rect, CharacterData ch, bool isSelected, bool isHovered, float animT)
     {
         Color roleColor = RoleColors.ContainsKey(ch.role) ? RoleColors[ch.role] : Color.gray;
@@ -861,7 +886,16 @@ public class CharacterSelectionUI : MonoBehaviour
         GUI.DrawTexture(crestRect, gradientTex, ScaleMode.StretchToFill);
         GUI.color = Color.white;
 
-        if (ch.characterIcon != null && ch.characterIcon.texture != null)
+        Texture2D portrait = GetCharacterPortrait(ch.characterID, ch.characterName);
+        if (portrait != null)
+        {
+            GUI.DrawTexture(crestRect, portrait, ScaleMode.ScaleAndCrop);
+            // Dramatic rim lighting & inner vignette
+            GUI.color = new Color(0f, 0f, 0f, 0.25f);
+            DrawBorder(crestRect, new Color(roleColor.r, roleColor.g, roleColor.b, 0.45f), 1f);
+            GUI.color = Color.white;
+        }
+        else if (ch.characterIcon != null && ch.characterIcon.texture != null)
         {
             GUI.DrawTexture(crestRect, ch.characterIcon.texture, ScaleMode.ScaleToFit);
         }

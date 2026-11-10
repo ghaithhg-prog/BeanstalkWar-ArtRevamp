@@ -137,8 +137,7 @@ public class CharacterVisualAnimator : MonoBehaviour
 
         isBruteModel = myName.Contains("brute") || parentName.Contains("brute") ||
                        myName.Contains("berserker") || parentName.Contains("berserker") ||
-                       myName.Contains("barbarian") || parentName.Contains("barbarian") ||
-                       (playerMovement != null && (playerMovement.selectedCharacterID.Value == 7 || playerMovement.selectedCharacterID.Value == 15));
+                       (playerMovement != null && playerMovement.selectedCharacterID.Value == 7);
 
         if (!isBruteModel)
         {

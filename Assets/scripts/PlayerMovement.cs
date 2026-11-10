@@ -636,12 +636,24 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (target == null) return null;
 
-        Transform existing = target.transform.Find("Character_3D_Mesh");
-        if (existing != null)
+        // Remove ALL existing character models and weapons on this target completely
+        for (int i = target.transform.childCount - 1; i >= 0; i--)
         {
-            existing.name = "Character_3D_Mesh_Old";
-            existing.gameObject.SetActive(false);
-            Destroy(existing.gameObject);
+            Transform child = target.transform.GetChild(i);
+            string cn = child.name.ToLower();
+            if (cn.StartsWith("character_3d_mesh") || 
+                cn.Contains("erika") || 
+                cn.Contains("brute") || 
+                cn.Contains("warrior") || 
+                cn.Contains("akai") || 
+                cn.Contains("bow") || 
+                cn.Contains("axe") || 
+                cn.Contains("preview_champion"))
+            {
+                child.name = "Destroying_Mesh_" + i;
+                child.gameObject.SetActive(false);
+                Destroy(child.gameObject);
+            }
         }
 
         // Model Selection: Erika Archer for Archer, and Warrior_Medieval for other classes
@@ -649,11 +661,11 @@ public class PlayerMovement : NetworkBehaviour
         bool isArcher = (data != null && (data.characterName.Equals("Archer", System.StringComparison.OrdinalIgnoreCase) || data.characterName.Equals("Ranger", System.StringComparison.OrdinalIgnoreCase)))
                         || (data == null && target.name.ToLower().Contains("archer"));
 
-        bool isBrute = (data != null && (data.characterName.IndexOf("Brute", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                         data.characterName.Equals("Berserker", System.StringComparison.OrdinalIgnoreCase) ||
-                                         data.characterName.Equals("Barbarian", System.StringComparison.OrdinalIgnoreCase) ||
-                                         data.characterID == 7 || data.characterID == 15))
-                        || (data == null && (target.name.ToLower().Contains("brute") || target.name.ToLower().Contains("berserker") || target.name.ToLower().Contains("barbarian")));
+        // ONLY Berserker / Brute (ID 7) is Brute! Barbarian (ID 15) is a separate champion!
+        bool isBrute = (data != null && (data.characterID == 7 ||
+                                         data.characterName.IndexOf("Brute", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                         data.characterName.Equals("Berserker", System.StringComparison.OrdinalIgnoreCase)))
+                        || (data == null && (target.name.ToLower().Contains("brute") || target.name.ToLower().Contains("berserker")));
 
         if (isBrute)
         {
@@ -898,19 +910,9 @@ public class PlayerMovement : NetworkBehaviour
                     if (mat.HasProperty("_BumpMap")) mat.SetTexture("_BumpMap", norm);
                 }
 
-                if (tintPants)
-                {
-                    Color tinted = Color.Lerp(Color.white, teamTint, 0.45f);
-                    mat.color = tinted;
-                    if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", tinted);
-                    if (mat.HasProperty("_Color")) mat.SetColor("_Color", tinted);
-                }
-                else
-                {
-                    mat.color = Color.white;
-                    if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
-                    if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
-                }
+                mat.color = Color.white;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+                if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
             }
         }
     }
@@ -1106,8 +1108,6 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (skin == null || skin.skinColor == Color.white) return;
 
-        Transform meshRoot = transform.Find("Character_3D_Mesh");
-
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
         foreach (Renderer r in renderers)
         {
@@ -1116,8 +1116,23 @@ public class PlayerMovement : NetworkBehaviour
                 continue;
 
             string rn = r.name.ToLower();
-            if (rn.Contains("erika") || rn.Contains("teamfootaura") || (meshRoot != null && r.transform.IsChildOf(meshRoot)))
+            // Never tint real imported PBR character models (Brute or Erika) with solid procedural skin colors!
+            if (rn.Contains("erika") || rn.Contains("brute") || rn.Contains("malebrute") || rn.Contains("axe") || rn.Contains("teamfootaura"))
                 continue;
+
+            Transform cur = r.transform;
+            bool isCustomRig = false;
+            while (cur != null && cur != transform)
+            {
+                string cn = cur.name.ToLower();
+                if (cn.Contains("brute") || cn.Contains("erika") || cn.Contains("character_3d_mesh"))
+                {
+                    isCustomRig = true;
+                    break;
+                }
+                cur = cur.parent;
+            }
+            if (isCustomRig) continue;
 
             r.material.color = skin.skinColor;
             if (skin.emissionColor != Color.black)
