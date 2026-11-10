@@ -758,10 +758,10 @@ public class GameIntroBriefingUI : MonoBehaviour
     {
         switch (slide)
         {
-            case 0: return 440f;
+            case 0: return 460f;
             case 1: return 490f;
             case 2: return 560f;
-            case 3: return 440f;
+            case 3: return 540f;
             default: return 450f;
         }
     }
@@ -821,29 +821,59 @@ public class GameIntroBriefingUI : MonoBehaviour
         // Card 2: The Sacred Tree & 3 Levels
         Rect tRect = new Rect(area.x + cardW + 12f, cy, cardW, cardH);
         EnchantedNatureGUI.DrawLeafPlaque(tRect, new Color(0.08f, 0.20f, 0.10f, 0.95f), new Color(0.35f, 0.95f, 0.45f));
-        string treeTitle = LanguageSelectionUI.Localize("🌲 THE 3 TREE LEVELS");
+        string treeTitle = LanguageSelectionUI.Localize("🌲 THE 3 TREE LEVELS", ar: "🌲 مستويات الشجرة الـ 3", ru: "🌲 3 УРОВНЯ ДЕРЕВА", es: "🌲 LOS 3 NIVELES DEL ÁRBOL", fr: "🌲 LES 3 NIVEAUX DE L'ARBRE");
         GUI.Label(new Rect(tRect.x + 8f, tRect.y + 12f, tRect.width - 16f, 26f), treeTitle, CreateHeadingStyle(14, new Color(0.45f, 1f, 0.55f), TextAnchor.MiddleCenter));
 
         float animGrowth = 0.35f + Mathf.PingPong(Time.time * 0.25f, 0.65f);
-        float barX = tRect.x + 20f;
-        float barY = tRect.y + 48f;
-        float barH = cardH - 64f;
+        float barX = tRect.x + 14f;
+        float barY = tRect.y + 44f;
+        float barH = cardH - 56f;
+        float barW = 16f;
         GUI.color = new Color(0.15f, 0.12f, 0.08f, 0.9f);
-        GUI.DrawTexture(new Rect(barX, barY, 22f, barH), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(barX, barY, barW, barH), Texture2D.whiteTexture);
         GUI.color = new Color(0.28f, 0.88f, 0.38f, 0.95f);
         float fillH = barH * animGrowth;
-        GUI.DrawTexture(new Rect(barX, barY + (barH - fillH), 22f, fillH), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(barX, barY + (barH - fillH), barW, fillH), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        string lblTop = LanguageSelectionUI.Localize("💎 TOP: Crystal Unsealed (After 3 Bosses Die)");
-        string lblLv3 = LanguageSelectionUI.Localize("👑 LEVEL 3: Ancient Overlord (300% Power)");
-        string lblLv2 = LanguageSelectionUI.Localize("👑 LEVEL 2: Inferno Titan (220% Power)");
-        string lblLv1 = LanguageSelectionUI.Localize("👑 LEVEL 1: Forest Goliath (150% Power)");
+        float labelX = barX + barW + 10f;
+        float labelW = tRect.x + tRect.width - labelX - 10f;
 
-        GUI.Label(new Rect(barX + 30f, barY, tRect.width - 60f, 34f), lblTop, CreateBodyStyle(12, new Color(0.4f, 0.95f, 1f)));
-        GUI.Label(new Rect(barX + 30f, barY + barH * 0.28f, tRect.width - 60f, 34f), lblLv3, CreateBodyStyle(12, new Color(1f, 0.85f, 0.3f)));
-        GUI.Label(new Rect(barX + 30f, barY + barH * 0.55f, tRect.width - 60f, 34f), lblLv2, CreateBodyStyle(12, new Color(1f, 0.55f, 0.25f)));
-        GUI.Label(new Rect(barX + 30f, barY + barH * 0.80f, tRect.width - 60f, 34f), lblLv1, CreateBodyStyle(12, new Color(0.45f, 0.95f, 0.45f)));
+        // Level Top: Sacred Crystal
+        float slot0Y = barY;
+        GUI.Label(new Rect(labelX, slot0Y, labelW, 20f),
+            LanguageSelectionUI.Localize("💎 TOP: Sacred Crystal", ar: "💎 القمة: الكريستالة المقدسة", ru: "💎 ВЕРШИНА: Священный Кристалл", es: "💎 CIMA: Cristal Sagrado", fr: "💎 SOMMET : Cristal Sacré", fa: "💎 اوج: بلور مقدس"),
+            CreateHeadingStyle(11, new Color(0.4f, 0.95f, 1f)));
+        GUI.Label(new Rect(labelX, slot0Y + 20f, labelW, 36f),
+            LanguageSelectionUI.Localize("• Unsealed after 3 Bosses die\n• Carry to Altar to WIN!", ar: "• تفك أختامها بعد موت الـ 3 زعماء\n• احملوها للمذبح لتحقيق الفوز!", ru: "• Открывается после гибели 3 Боссов\n• Отнесите к Алтарю для победы!", es: "• Se libera tras vencer a los 3 Jefes\n• ¡Llévalo al Altar para ganar!", fr: "• Descellé après la mort des 3 Boss\n• Portez à l'Autel pour gagner !", fa: "• پس از مرگ ۳ غول آزاد می‌شود\n• برای پیروزی به محراب برسانید!"),
+            CreateBodyStyle(10, new Color(0.85f, 0.95f, 1f)));
+
+        // Level 3: Ancient Overlord
+        float slot3Y = barY + barH * 0.27f;
+        GUI.Label(new Rect(labelX, slot3Y, labelW, 20f),
+            LanguageSelectionUI.Localize("👑 LEVEL 3: Ancient Overlord", ar: "👑 المستوى 3: الحاكم القديم", ru: "👑 УРОВЕНЬ 3: Древний Владыка", es: "👑 NIVEL 3: Soberano Antiguo", fr: "👑 NIVEAU 3 : Seigneur Ancien", fa: "👑 طبقه ۳: فرمانروای باستانی"),
+            CreateHeadingStyle(11, new Color(1f, 0.85f, 0.3f)));
+        GUI.Label(new Rect(labelX, slot3Y + 20f, labelW, 36f),
+            LanguageSelectionUI.Localize("• 300% Height Damage Power!\n• Final Seal Guardian Boss", ar: "• 300% قوة ضرر مضاعفة بالقمة!\n• زعيم الختم الأخير والحاسم", ru: "• 300% урона с высоты!\n• Босс последней Печати", es: "• ¡300% Daño desde la cima!\n• Jefe del Sello Final", fr: "• 300% Dégâts depuis le sommet !\n• Boss du Sceau Final", fa: "• ۳۰۰٪ آسیب قدرتمند از اوج!\n• نگهبان آخرین مهر بلور"),
+            CreateBodyStyle(10, new Color(1f, 0.92f, 0.65f)));
+
+        // Level 2: Inferno Titan
+        float slot2Y = barY + barH * 0.53f;
+        GUI.Label(new Rect(labelX, slot2Y, labelW, 20f),
+            LanguageSelectionUI.Localize("👑 LEVEL 2: Inferno Titan", ar: "👑 المستوى 2: عملاق الجحيم", ru: "👑 УРОВЕНЬ 2: Титан Преисподней", es: "👑 NIVEL 2: Titán Infernal", fr: "👑 NIVEAU 2 : Titan Infernal", fa: "👑 طبقه ۲: تایتان جهنمی"),
+            CreateHeadingStyle(11, new Color(1f, 0.55f, 0.25f)));
+        GUI.Label(new Rect(labelX, slot2Y + 20f, labelW, 36f),
+            LanguageSelectionUI.Localize("• 220% Height Damage Power\n• Unlocks at 42% Tree Growth", ar: "• 220% قوة ضرر مضاعفة\n• يفتح عند نمو الشجرة لـ 42%", ru: "• 220% урона с высоты\n• Открывается при 42% роста", es: "• 220% Daño desde altura\n• Se abre al 42% de crecimiento", fr: "• 220% Dégâts d'élévation\n• S'ouvre à 42% de croissance", fa: "• ۲۲۰٪ قدرت آسیب ارتفاع\n• در ۴۲٪ رشد درخت باز می‌شود"),
+            CreateBodyStyle(10, new Color(1f, 0.82f, 0.65f)));
+
+        // Level 1: Forest Goliath
+        float slot1Y = barY + barH * 0.79f;
+        GUI.Label(new Rect(labelX, slot1Y, labelW, 20f),
+            LanguageSelectionUI.Localize("👑 LEVEL 1: Forest Goliath", ar: "👑 المستوى 1: جالوت الغابة", ru: "👑 УРОВЕНЬ 1: Лесной Голиаф", es: "👑 NIVEL 1: Goliat del Bosque", fr: "👑 NIVEAU 1 : Goliath de la Forêt", fa: "👑 طبقه ۱: جالوت جنگل"),
+            CreateHeadingStyle(11, new Color(0.45f, 0.95f, 0.45f)));
+        GUI.Label(new Rect(labelX, slot1Y + 20f, labelW, 36f),
+            LanguageSelectionUI.Localize("• 150% Height Damage Power\n• Active from match start!", ar: "• 150% قوة ضرر مضاعفة\n• متاح منذ بداية المباراة!", ru: "• 150% урона с высоты\n• Активен со старта матча!", es: "• 150% Daño desde altura\n• ¡Activo desde el inicio!", fr: "• 150% Dégâts d'élévation\n• Actif dès le début !", fa: "• ۱۵۰٪ قدرت آسیب ارتفاع\n• از آغاز نبرد فعال است!"),
+            CreateBodyStyle(10, new Color(0.75f, 0.95f, 0.75f)));
 
         // Card 3: Destroyers
         Rect dRect = new Rect(area.x + (cardW + 12f) * 2f, cy, cardW, cardH);
@@ -1069,21 +1099,14 @@ public class GameIntroBriefingUI : MonoBehaviour
         GUI.Label(new Rect(c1.x + 14f, c1.y + 12f, c1.width - 28f, 26f), kbTitle, CreateHeadingStyle(14, new Color(1f, 0.88f, 0.35f)));
 
         string controlsText = LanguageSelectionUI.Localize(
-            "• [W, A, S, D] : Move Character\n\n• [Hold Left Shift] : Sprint / Fast Run\n\n• [Space (1x)] : Jump & Ascend\n\n• [Space (2x in Air)] : Double Jump!\n\n• [Left Mouse Click / F] : Fire Bow / Attack\n\n• [E] (Crystal Carrier) : Shockwave Blast\n\n• [Q] (Crystal Carrier) : Drop Crystal\n\n• [B] : Open Emporium Shop  |  [H / V] : Guide / Video",
-            ar: "• [W, A, S, D] : تحريك الشخصية\n\n• [Shift الأيسر] : الجري السريع\n\n• [مسافة (مرة واحدة)] : القفز والصعود\n\n• [مسافة (مرتين في الهواء)] : قفز مزدوج!\n\n• [زر الفأرة الأيسر / F] : رمي السهام / الهجوم\n\n• [E] (لحامل الكريستال) : إطلاق موجة صدمة\n\n• [Q] (لحامل الكريستال) : إسقاط الكريستال\n\n• [B] : متجر الأسلحة  |  [H / V] : الدليل / الفيديو",
-            fa: "• [W, A, S, D] : حرکت شخصیت\n\n• [نگه‌داشتن Shift چپ] : دویدن سریع\n\n• [Space (۱ بار)] : پرش و صعود\n\n• [Space (۲ بار در هوا)] : پرش دوگانه!\n\n• [کلیک چپ / F] : شلیک تیروکمان / حمله\n\n• [E] (حامل بلور) : شلیک موج ضربه‌ای\n\n• [Q] (حامل بلور) : انداختن بلور\n\n• [B] : باز کردن فروشگاه  |  [H / V] : راهنما / ویدئو",
-            de: "• [W, A, S, D] : Charakter bewegen\n\n• [Shift links halten] : Sprinten\n\n• [Leertaste (1x)] : Springen & Klettern\n\n• [Leertaste (2x in Luft)] : Doppelsprung!\n\n• [Linksklick / F] : Bogen / Angriff\n\n• [E] (Kristallträger) : Schockwelle\n\n• [Q] (Kristallträger) : Kristall ablegen\n\n• [B] : Basar-Shop  |  [H / V] : Leitfaden / Video",
-            it: "• [W, A, S, D] : Muovi personaggio\n\n• [Tieni premuto Shift] : Scatto / Corsa rapida\n\n• [Spazio (1x)] : Salto e salita\n\n• [Spazio (2x in aria)] : Doppio salto!\n\n• [Clic sinistro / F] : Arco / Attacco\n\n• [E] (Portatore Cristallo) : Onda d'urto\n\n• [Q] (Portatore Cristallo) : Lascia Cristallo\n\n• [B] : Negozio Emporio  |  [H / V] : Guida / Video",
-            tr: "• [W, A, S, D] : Karakteri Hareket Ettir\n\n• [Sol Shift Basılı Tut] : Depar / Hızlı Koşu\n\n• [Boşluk (1x)] : Zıpla ve Tırman\n\n• [Boşluk (Havada 2x)] : Çift Zıplama!\n\n• [Sol Tık / F] : Yay Fırlat / Saldır\n\n• [E] (Kristal Taşıyıcı) : Şok Dalgası Patlaması\n\n• [Q] (Kristal Taşıyıcı) : Kristali Bırak\n\n• [B] : Mağaza Aç  |  [H / V] : Rehber / Video",
-            ru: "• [W, A, S, D] : Перемещение героя\n\n• [Удерживать Shift] : Быстрый бег / спринт\n\n• [Пробел (1x)] : Прыжок и подъем\n\n• [Пробел (2x в воздухе)] : Двойной прыжок!\n\n• [ЛКМ / F] : Стрельба из лука / Атака\n\n• [E] (Носитель кристалла) : Ударная волна\n\n• [Q] (Носитель кристалла) : Бросить кристалл\n\n• [B] : Магазин  |  [H / V] : Руководство / Видео",
-            es: "• [W, A, S, D] : Mover personaje\n\n• [Mantener Shift] : Correr rápido\n\n• [Espacio (1x)] : Saltar y elevarse\n\n• [Espacio (2x en el aire)] : ¡Doble salto!\n\n• [Clic Izquierdo / F] : Disparar arco / Atacar\n\n• [E] (Portador del cristal) : Onda expansiva\n\n• [Q] (Portador del cristal) : Soltar cristal\n\n• [B] : Tienda  |  [H / V] : Guía / Vídeo",
-            fr: "• [W, A, S, D] : Déplacer le personnage\n\n• [Maintenir Shift] : Sprint / Course rapide\n\n• [Espace (1x)] : Sauter et s'élever\n\n• [Espace (2x en l'air)] : Double saut !\n\n• [Clic Gauche / F] : Tirer à l'arc / Attaque\n\n• [E] (Porteur du cristal) : Onde de choc\n\n• [Q] (Porteur du cristal) : Lâcher le cristal\n\n• [B] : Boutique  |  [H / V] : Guide / Vidéo",
-            zh: "• [W, A, S, D] : 移动英雄走位\n\n• [按住左Shift] : 极限疾跑冲刺\n\n• [空格键 (1次)] : 跳跃腾空攀登\n\n• [空格键 (空中2次)] : 二段轻灵飞跃！\n\n• [鼠标左键 / F] : 远程射箭 / 近战挥击\n\n• [E] (水晶持有者) : 释放范围神圣震荡波\n\n• [Q] (水晶持有者) : 主动投掷放下水晶\n\n• [B] : 开启军备商城  |  [H / V] : 战术指南 / 视频",
-            ja: "• [W, A, S, D] : キャラクター移動\n\n• [左Shift長押し] : 高速ダッシュ\n\n• [スペース (1回)] : ジャンプと上昇\n\n• [スペース (空中で2回)] : 空中2段ジャンプ！\n\n• [左クリック / F] : 弓撃・近接攻撃\n\n• [E] (水晶運搬者) : 全方位衝撃波ブラスト\n\n• [Q] (水晶運搬者) : 水晶を足元にドロップ\n\n• [B] : 交易所ショップ  |  [H / V] : ガイド / 動画",
-            hi: "• [W, A, S, D] : पात्र को चलाएं\n\n• [बायां Shift दबाए रखें] : तेज दौड़\n\n• [Space (1x)] : कूदें और चढ़ें\n\n• [Space (हवा में 2x)] : दोहरी छलांग!\n\n• [बायां माउस क्लिक / F] : धनुष / हमला\n\n• [E] (क्रिस्टल वाहक) : शॉकवेव विस्फोट\n\n• [Q] (क्रिस्टल वाहक) : क्रिस्टल छोड़ें\n\n• [B] : दुकान  |  [H / V] : गाइड / वीडियो",
-            pt: "• [W, A, S, D] : Mover personagem\n\n• [Segurar Shift Esq.] : Correr rápido\n\n• [Espaço (1x)] : Pular e subir\n\n• [Espaço (2x no ar)] : Pulo duplo!\n\n• [Clique Esq. / F] : Disparar arco / Atacar\n\n• [E] (Portador do cristal) : Onda de choque\n\n• [Q] (Portador do cristal) : Largar cristal\n\n• [B] : Abrir Empório  |  [H / V] : Guia / Vídeo"
+            "• [W, A, S, D] : Move Character  |  [Hold Shift] : Sprint / Fast Run\n\n• [Space (1x)] : Jump & Climb  |  [Space (2x)] : Double Jump!\n\n• [Left Click / F] : Attack / Fire Arrow  |  [R] : Ultimate Ability (Lv 5)\n\n• [E] : Shockwave Blast (Carrier)  |  [Q] : Drop Crystal\n\n• [Enter / C] : In-Game Team Chat (Send Message)\n\n• [Tab] : Match Scoreboard & Live Statistics\n\n• [B] : Open Emporium Arsenal Shop  |  [L] : Language Selection\n\n• [Esc / P] : Pause Menu & Settings  |  [H / V] : Guide / Video",
+            ar: "• [W, A, S, D] : تحريك الشخصية  |  [Shift الأيسر] : الجري السريع\n\n• [مسافة (1x)] : القفز والصعود  |  [مسافة (2x)] : قفز مزدوج في الهواء!\n\n• [زر الفأرة الأيسر / F] : الهجوم ورمي السهام  |  [R] : القدرة الخارقة (مستوى 5)\n\n• [E] (لحامل الكريستالة) : موجة الصدمة  |  [Q] : إسقاط الكريستالة\n\n• [Enter / C] : الدردشة ومحادثة الفريق التكتيكية\n\n• [Tab] : لوحة نتائج المباراة والإحصائيات المباشرة\n\n• [B] : متجر الأسلحة والعتاد  |  [L] : تغيير لغة اللعبة\n\n• [Esc / P] : إيقاف مؤقت وقائمة الإعدادات  |  [H / V] : الدليل / الفيديو",
+            ru: "• [W, A, S, D] : Движение  |  [Shift] : Спринт / Быстрый бег\n\n• [Пробел (1x)] : Прыжок  |  [Пробел (2x)] : Двойной прыжок!\n\n• [ЛКМ / F] : Атака / Стрельба  |  [R] : Суперспособность (Ур 5)\n\n• [E] : Ударная волна  |  [Q] : Сбросить кристалл\n\n• [Enter / C] : Командный чат (Отправка сообщений)\n\n• [Tab] : Таблица счета и статистика\n\n• [B] : Магазин оружия  |  [L] : Смена языка\n\n• [Esc / P] : Пауза и настройки  |  [H / V] : Гид / Видео",
+            es: "• [W, A, S, D] : Mover  |  [Shift] : Esprintar\n\n• [Espacio (1x)] : Saltar  |  [Espacio (2x)] : ¡Doble salto!\n\n• [Clic Izq. / F] : Atacar / Disparar  |  [R] : Habilidad Definitiva (Niv 5)\n\n• [E] : Onda expansiva  |  [Q] : Soltar cristal\n\n• [Enter / C] : Chat de equipo en partida\n\n• [Tab] : Marcador y estadísticas en vivo\n\n• [B] : Tienda de armas  |  [L] : Cambiar idioma\n\n• [Esc / P] : Pausa y ajustes  |  [H / V] : Guía / Vídeo",
+            fr: "• [W, A, S, D] : Déplacement  |  [Shift] : Sprint\n\n• [Espace (1x)] : Saut  |  [Espace (2x)] : Double saut !\n\n• [Clic Gauche / F] : Attaque / Tir  |  [R] : Capacité Ultime (Niv 5)\n\n• [E] : Onde de choc  |  [Q] : Lâcher cristal\n\n• [Enter / C] : Chat d'équipe en jeu\n\n• [Tab] : Tableau des scores & stats\n\n• [B] : Boutique d'armes  |  [L] : Changer de langue\n\n• [Esc / P] : Menu pause & options  |  [H / V] : Guide / Vidéo",
+            fa: "• [W, A, S, D] : حرکت  |  [Shift] : دویدن سریع\n\n• [Space (۱ بار)] : پرش  |  [Space (۲ بار)] : پرش دوگانه!\n\n• [کلیک چپ / F] : حمله / تیراندازی  |  [R] : قدرت نهایی آلتیمیت (سطح ۵)\n\n• [E] : موج ضربه‌ای  |  [Q] : انداختن بلور\n\n• [Enter / C] : چت و گفتگوی تیمی در بازی\n\n• [Tab] : جدول نتایج و آمار زنده مسابقه\n\n• [B] : فروشگاه مهمات  |  [L] : تغییر زبان\n\n• [Esc / P] : توقف و تنظیمات  |  [H / V] : راهنما / ویدئو"
         );
-        GUI.Label(new Rect(c1.x + 16f, c1.y + 46f, c1.width - 32f, c1.height - 56f), controlsText, CreateBodyStyle(12, Color.white));
+        GUI.Label(new Rect(c1.x + 16f, c1.y + 46f, c1.width - 32f, c1.height - 56f), controlsText, CreateBodyStyle(11, Color.white));
 
         EnchantedNatureGUI.DrawLeafPlaque(c2, new Color(0.08f, 0.14f, 0.11f, 0.95f), new Color(0.95f, 0.78f, 0.25f));
         string proTipsTitle = LanguageSelectionUI.Localize("💡 VETERAN PRO TIPS");
@@ -1105,6 +1128,31 @@ public class GameIntroBriefingUI : MonoBehaviour
             pt: "1. MULTIPLICADOR POR ALTURA:\nAtaques ou cura na Árvore escalam com a altitude:\n   • Chão: 15% (muito fraco)  |  Nível 1: 35% (leve)\n   • Nível 2: 60% (médio)  |  Nível 3 e Topo: 100% de efeito máximo total!\n\n2. DANO DE QUEDA E QUEDA SUAVE:\nCair >6m causa 12-38 de dano. O portador do Cristal ganha Queda Suave (0 dano!) + 35% de velocidade!\n\n3. CONTAGEM DE 10S DO ESCUDO DIVINO:\nQuando o Chefe 3 cai, uma contagem de 10s pisca no escudo da Árvore antes da destruição total!"
         );
         GUI.Label(new Rect(c2.x + 16f, c2.y + 46f, c2.width - 32f, c2.height - 56f), proTipsText, CreateBodyStyle(12, Color.white));
+
+        // Full-Width Plaque: Mobile & Tablet Touch Interface Notice
+        float mobY = area.y + cardH + 46f;
+        Rect mobRect = new Rect(area.x, mobY, area.width, 76f);
+        EnchantedNatureGUI.DrawWoodPlate(mobRect, new Color(0.04f, 0.08f, 0.07f, 0.98f), new Color(0.35f, 0.92f, 0.55f, 0.9f));
+
+        string mobHeader = LanguageSelectionUI.Localize(
+            "📱 NOTICE FOR MOBILE & TABLET PLAYERS (TOUCH CONTROLS)",
+            ar: "📱 تنبيه لمستخدمي الهواتف والأجهزة اللوحية (التحكم باللمس)",
+            ru: "📱 ДЛЯ ИГРОКОВ НА СМАРТФОНАХ И ПЛАНШЕТАХ (СЕНСОР)",
+            es: "📱 AVISO PARA MÓVILES Y TABLETS (CONTROLES TÁCTILES)",
+            fr: "📱 JOUEURS SUR MOBILE & TABLETTE (COMMANDES TACTILES)",
+            fa: "📱 نکته برای بازیکنان موبایل و تبلت (کنترل‌های لمسی)"
+        );
+        GUI.Label(new Rect(mobRect.x + 12f, mobRect.y + 6f, mobRect.width - 24f, 22f), mobHeader, CreateHeadingStyle(13, new Color(0.45f, 1f, 0.65f), TextAnchor.MiddleCenter));
+
+        string mobBody = LanguageSelectionUI.Localize(
+            "• Keyboard & mouse shortcuts above apply when playing on PC / Computer.\n• On Mobile Devices & Tablets, all actions (joystick movement, attack, jump, ultimate, team chat, emporium shop, and pause menu) are fully available as dedicated touch buttons directly on your screen!",
+            ar: "• الأزرار واختصارات لوحة المفاتيح المذكورة أعلاه خاصة بمستخدمي أجهزة الكمبيوتر والحاسوب (PC).\n• أما إذا كنت تلعب عبر الهاتف المحمول أو التابلت، فستجد جميع أدوات التحكم (عصا الحركة، الهجوم، القفز، المهارة الخارقة، زر الدردشة، المتجر، والقائمة) متوفرة بالكامل كأزرار لمس مريحة ومباشرة على سطح شاشة هاتفك!",
+            ru: "• Горячие клавиши выше предназначены для игры на ПК / Компьютере.\n• На смартфонах и планшетах все действия (джойстик движения, атака, прыжок, ультимейт, чат, магазин и пауза) доступны в виде сенсорных кнопок прямо на экране!",
+            es: "• Los atajos de teclado y ratón anteriores son para jugar en PC / Ordenador.\n• ¡En móviles y tablets, todas las acciones (joystick, ataque, salto, definitiva, chat, tienda y pausa) están disponibles como botones táctiles en pantalla!",
+            fr: "• Les raccourcis clavier et souris ci-dessus concernent le jeu sur PC.\n• Sur mobile et tablette, toutes les actions (joystick, attaque, saut, ultime, chat, boutique et pause) sont directement accessibles via les boutons tactiles à l'écran !",
+            fa: "• کلیدهای فوق برای رایانه (PC) است.\n• در موبایل و تبلت، کلیه دکمه‌ها (جوستیک حرکت، حمله، پرش، آلتیمیت، چت، فروشگاه و منو) به صورت دکمه‌های لمسی روی صفحه در دسترس هستند!"
+        );
+        GUI.Label(new Rect(mobRect.x + 14f, mobRect.y + 28f, mobRect.width - 28f, 44f), mobBody, CreateBodyStyle(11, Color.white));
     }
 
     // =========================================================================================

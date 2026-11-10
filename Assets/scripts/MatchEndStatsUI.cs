@@ -421,35 +421,39 @@ public class MatchEndStatsUI : MonoBehaviour
             bannerColor = new Color(1f, 0.35f, 0.2f);
         }
 
-        Rect titleRect = new Rect(startX + 20f, startY + 34f, boxWidth - 40f, 32f);
+        Rect titleRect = new Rect(startX + 20f, startY + 38f, boxWidth - 40f, 30f);
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.021f), 14, 18),
+            fontSize = Mathf.Clamp(Mathf.RoundToInt(boxWidth * 0.021f), 13, 17),
             fontStyle = FontStyle.Bold,
-            clipping = TextClipping.Overflow
+            wordWrap = false,
+            clipping = TextClipping.Clip
         };
         titleStyle.normal.textColor = bannerColor;
         GUI.Label(titleRect, titleText, titleStyle);
 
-        Rect subRect = new Rect(startX + 20f, startY + 68f, boxWidth - 40f, 26f);
+        Rect subRect = new Rect(startX + 20f, startY + 70f, boxWidth - 40f, 26f);
         GUIStyle subStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
-            fontSize = 15,
+            fontSize = 14,
             fontStyle = FontStyle.Bold,
-            clipping = TextClipping.Overflow
+            wordWrap = false,
+            clipping = TextClipping.Clip
         };
         subStyle.normal.textColor = isDraw ? new Color(0.85f, 0.95f, 1f) : new Color(1f, 0.88f, 0.35f);
         GUI.Label(subRect, subtitleText, subStyle);
 
         // Match Stakes & Rewards Banner with Rating Score & 10-Tier info
-        Rect rewardRect = new Rect(startX + 20f, startY + 96f, boxWidth - 40f, 22f);
+        Rect rewardRect = new Rect(startX + 20f, startY + 98f, boxWidth - 40f, 22f);
         GUIStyle rewardStyle = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
             fontSize = 12,
-            fontStyle = FontStyle.Italic
+            fontStyle = FontStyle.Italic,
+            wordWrap = false,
+            clipping = TextClipping.Clip
         };
         rewardStyle.normal.textColor = isDraw 
             ? new Color(0.95f, 0.95f, 1f)
@@ -527,27 +531,28 @@ public class MatchEndStatsUI : MonoBehaviour
         {
             fontSize = 11,
             fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleLeft
+            alignment = TextAnchor.MiddleLeft,
+            wordWrap = false
         };
         colHeaderStyle.normal.textColor = new Color(1f, 0.9f, 0.6f);
 
         float colX = headerRect.x + 8f;
-        GUI.Label(new Rect(colX, tableY + 4f, 175f, 20f), LanguageSelectionUI.Localize("HERO & CLASS", "البطل والفئة", "ГЕРОЙ И КЛАСС", "HÉROE Y CLASE", "HÉROS & CLASSE", "HELD & KLASSE", "नायक और वर्ग", "英雄与职业", "英雄とクラス", "HERÓI E CLASSE"), colHeaderStyle);
-        colX += 180f;
+        GUI.Label(new Rect(colX, tableY + 4f, 185f, 20f), LanguageSelectionUI.Localize("HERO & CLASS", "البطل والفئة", "ГЕРОЙ И КЛАСС", "HÉROE Y CLASE", "HÉROS & CLASSE", "HELD & KLASSE", "नायक और वर्ग", "英雄与职业", "英雄とクラス", "HERÓI E CLASSE"), colHeaderStyle);
+        colX += 190f;
         GUI.Label(new Rect(colX, tableY + 4f, 80f, 20f), LanguageSelectionUI.Localize("TEAM", "الفريق", "КОМАНДА", "EQUIPO", "ÉQUIPE", "TEAM", "दल", "队伍", "チーム", "EQUIPE"), colHeaderStyle);
         colX += 85f;
         GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("KILLS", "قتلى", "УБИЙСТВА", "BAJAS", "ÉLIMINATIONS", "KILLS", "हताहत", "击杀", "キル", "ABATES"), colHeaderStyle);
         colX += 52f;
-        GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("DEATHS", "وفيات", "СМЕРТИ", "MUERTES", "MORTS", "TODE", "मृत्यु", "死亡", "デス", "MORTES"), colHeaderStyle);
-        colX += 62f;
+        GUI.Label(new Rect(colX, tableY + 4f, 64f, 20f), LanguageSelectionUI.Localize("DEATHS", "وفيات", "СМЕРТИ", "MUERTES", "MORTS", "TODE", "मृत्यु", "死亡", "デス", "MORTES"), colHeaderStyle);
+        colX += 66f;
         GUI.Label(new Rect(colX, tableY + 4f, 65f, 20f), LanguageSelectionUI.Localize("DAMAGE", "ضرر", "УРОН", "DAÑO", "DÉGÂTS", "SCHADEN", "क्षति", "伤害", "ダメージ", "DANO"), colHeaderStyle);
         colX += 68f;
         GUI.Label(new Rect(colX, tableY + 4f, 48f, 20f), LanguageSelectionUI.Localize("BOSS", "زعيم", "БОСС", "JEFE", "BOSS", "BOSS", "बॉस", "首领", "ボス", "CHEFE"), colHeaderStyle);
         colX += 52f;
         GUI.Label(new Rect(colX, tableY + 4f, 62f, 20f), LanguageSelectionUI.Localize("CRYSTAL", "كريستال", "КРИСТАЛЛ", "CRISTAL", "CRISTAL", "KRISTALL", "क्रिस्टल", "水晶", "クリスタル", "CRISTAL"), colHeaderStyle);
         colX += 66f;
-        GUI.Label(new Rect(colX, tableY + 4f, 58f, 20f), LanguageSelectionUI.Localize("SCORE", "نقاط", "СЧЕТ", "PUNTOS", "SCORE", "PUNKTE", "स्कोर", "积分", "スコア", "PONTUAÇÃO"), colHeaderStyle);
-        colX += 62f;
+        GUI.Label(new Rect(colX, tableY + 4f, 64f, 20f), LanguageSelectionUI.Localize("SCORE", "نقاط", "СЧЕТ", "PUNTOS", "SCORE", "PUNKTE", "स्कोर", "积分", "スコア", "PONTUAÇÃO"), colHeaderStyle);
+        colX += 66f;
         GUI.Label(new Rect(colX, tableY + 4f, 40f, 20f), "+👤", colHeaderStyle);
 
         // 4. Scrollable Stats Rows (Strictly 10 Players & Bots - Bosses Excluded)
@@ -581,7 +586,9 @@ public class MatchEndStatsUI : MonoBehaviour
             {
                 fontSize = 11,
                 fontStyle = s.isLocalPlayer ? FontStyle.Bold : FontStyle.Normal,
-                alignment = TextAnchor.MiddleLeft
+                alignment = TextAnchor.MiddleLeft,
+                wordWrap = false,
+                clipping = TextClipping.Clip
             };
             rowTextStyle.normal.textColor = s.isLocalPlayer ? Color.white : new Color(0.9f, 0.9f, 0.9f);
 
@@ -592,8 +599,8 @@ public class MatchEndStatsUI : MonoBehaviour
             {
                 heroDisplay += $" ({s.characterClass})";
             }
-            GUI.Label(new Rect(rX, currRowY + 4f, 175f, 20f), heroDisplay, rowTextStyle);
-            rX += 180f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 185f, 20f), heroDisplay, rowTextStyle);
+            rX += 190f;
 
             Color tCol = (s.team == PlayerMovement.TeamType.Protector) ? new Color(0.3f, 0.85f, 1f) : new Color(1f, 0.4f, 0.2f);
             GUIStyle teamStyle = new GUIStyle(rowTextStyle);
@@ -606,8 +613,8 @@ public class MatchEndStatsUI : MonoBehaviour
 
             GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.kills.ToString(), rowTextStyle);
             rX += 52f;
-            GUI.Label(new Rect(rX, currRowY + 4f, 58f, 20f), s.deaths.ToString(), rowTextStyle);
-            rX += 62f;
+            GUI.Label(new Rect(rX, currRowY + 4f, 64f, 20f), s.deaths.ToString(), rowTextStyle);
+            rX += 66f;
             GUI.Label(new Rect(rX, currRowY + 4f, 65f, 20f), ((int)s.damageDealt).ToString(), rowTextStyle);
             rX += 68f;
             GUI.Label(new Rect(rX, currRowY + 4f, 48f, 20f), s.bossesKilled > 0 ? $"⚔️{s.bossesKilled}" : "-", rowTextStyle);
