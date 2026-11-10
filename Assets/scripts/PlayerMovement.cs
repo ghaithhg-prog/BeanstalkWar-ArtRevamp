@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 
 public class PlayerMovement : NetworkBehaviour
@@ -646,10 +646,21 @@ public class PlayerMovement : NetworkBehaviour
 
         // Model Selection: Erika Archer for Archer, and Warrior_Medieval for other classes
         GameObject prefab = null;
-        bool isArcher = (data != null && data.characterName.Equals("Archer", System.StringComparison.OrdinalIgnoreCase))
+        bool isArcher = (data != null && (data.characterName.Equals("Archer", System.StringComparison.OrdinalIgnoreCase) || data.characterName.Equals("Ranger", System.StringComparison.OrdinalIgnoreCase)))
                         || (data == null && target.name.ToLower().Contains("archer"));
 
-        if (isArcher)
+        bool isBrute = (data != null && (data.characterName.IndexOf("Brute", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                         data.characterName.Equals("Berserker", System.StringComparison.OrdinalIgnoreCase) ||
+                                         data.characterName.Equals("Barbarian", System.StringComparison.OrdinalIgnoreCase) ||
+                                         data.characterID == 7 || data.characterID == 15))
+                        || (data == null && (target.name.ToLower().Contains("brute") || target.name.ToLower().Contains("berserker") || target.name.ToLower().Contains("barbarian")));
+
+        if (isBrute)
+        {
+            prefab = Resources.Load<GameObject>("Models/Brute");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Erika_Archer");
+        }
+        else if (isArcher)
         {
             prefab = Resources.Load<GameObject>("Models/Erika_Archer");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Akai");
@@ -678,6 +689,7 @@ public class PlayerMovement : NetworkBehaviour
                 !r.name.Contains("Warrior") && 
                 !r.name.Contains("Erika") &&
                 !r.name.Contains("Akai") &&
+                !r.name.Contains("Brute") &&
                 !r.name.Contains("Character_3D") && 
                 !r.name.Contains("TeamFootAura") &&
                 !r.name.Contains("BossDecorations") &&
@@ -703,7 +715,7 @@ public class PlayerMovement : NetworkBehaviour
 
         // 5. توليد المجسم ثلاثي الأبعاد الحقيقي
         GameObject model = Instantiate(prefab, target.transform);
-        model.name = "Character_3D_Mesh";
+        model.name = isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : "Character_3D_Mesh");
         model.transform.localPosition = new Vector3(0f, -0.95f, 0f); // وضع الأقدام على الأرض تماماً
         model.transform.localRotation = Quaternion.identity;
         model.transform.localScale = Vector3.one * customScale;
@@ -720,7 +732,7 @@ public class PlayerMovement : NetworkBehaviour
         foreach (Animator anim in model.GetComponentsInChildren<Animator>())
         {
             anim.applyRootMotion = false;
-            if (isArcher)
+            if (isArcher || isBrute)
             {
                 anim.enabled = true;
                 anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -732,7 +744,11 @@ public class PlayerMovement : NetworkBehaviour
         }
 
         // 6. تطبيق الخامات والألوان (Erika Archer لها خامات أصلية طبيعية، وبقية الشخصيات تلون حسب الرتبة)
-        if (isArcher || prefab.name.Contains("Erika") || prefab.name.Contains("Akai"))
+        if (isBrute || prefab.name.Contains("Brute"))
+        {
+            ApplyBruteMaterials(model, team);
+        }
+        else if (isArcher || prefab.name.Contains("Erika") || prefab.name.Contains("Akai"))
         {
             ApplyErikaArcherMaterials(model, team);
         }
@@ -801,6 +817,102 @@ public class PlayerMovement : NetworkBehaviour
 
         Debug.Log($"⚔️ Attached animated 3D model ({prefab.name}) for {target.name} | Champion: {data?.characterName} (ID: {characterID}) Team: {team}");
         return model;
+    }
+
+    public static void ApplyBruteMaterials(GameObject model, TeamType team = TeamType.Protector)
+    {
+        if (model == null) return;
+
+        Texture2D texBody = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Body_diffuse");
+        Texture2D texBodyNM = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_StdNM");
+        Texture2D texBottom = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Bottom_diffuse1");
+        Texture2D texBottomNM = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Bottom_normal");
+        Texture2D texShoes = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Shoes_diffuse1");
+        Texture2D texShoesNM = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Shoes_normal");
+        Texture2D texHair = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Hair_diffuse");
+        Texture2D texHairNM = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Hair_normal");
+        Texture2D texMoustache = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Moustache_diffuse");
+        Texture2D texMoustacheNM = Resources.Load<Texture2D>("Models/BruteTextures/MaleBruteA_Moustache_normal");
+        Texture2D texAxe = Resources.Load<Texture2D>("Models/BruteTextures/axe_DIF2");
+        Texture2D texAxeNM = Resources.Load<Texture2D>("Models/BruteTextures/axe_NM2");
+
+        Color teamTint = (team == TeamType.Destroyer)
+            ? new Color(1.0f, 0.45f, 0.35f)
+            : new Color(0.35f, 0.75f, 1.0f);
+
+        foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+        {
+            if (r == null) continue;
+            string rName = r.name.ToLower();
+
+            Texture2D diff = texBody;
+            Texture2D norm = texBodyNM;
+            bool tintPants = false;
+
+            if (rName.Contains("axe"))
+            {
+                diff = texAxe;
+                norm = texAxeNM;
+            }
+            else if (rName.Contains("hair"))
+            {
+                diff = texHair;
+                norm = texHairNM;
+            }
+            else if (rName.Contains("moustache") || rName.Contains("beard"))
+            {
+                diff = texMoustache;
+                norm = texMoustacheNM;
+            }
+            else if (rName.Contains("bottom") || rName.Contains("pants"))
+            {
+                diff = texBottom;
+                norm = texBottomNM;
+                tintPants = true;
+            }
+            else if (rName.Contains("shoes") || rName.Contains("boot"))
+            {
+                diff = texShoes;
+                norm = texShoesNM;
+            }
+            else if (rName.Contains("body"))
+            {
+                diff = texBody;
+                norm = texBodyNM;
+            }
+
+            Material[] mats = r.materials;
+            for (int mIdx = 0; mIdx < mats.Length; mIdx++)
+            {
+                Material mat = mats[mIdx];
+                if (mat == null) continue;
+
+                if (diff != null)
+                {
+                    mat.mainTexture = diff;
+                    if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", diff);
+                    if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", diff);
+                }
+                if (norm != null)
+                {
+                    if (mat.HasProperty("_BumpMap")) mat.SetTexture("_BumpMap", norm);
+                }
+
+                if (tintPants)
+                {
+                    Color tinted = Color.Lerp(Color.white, teamTint, 0.45f);
+                    mat.color = tinted;
+                    if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", tinted);
+                    if (mat.HasProperty("_Color")) mat.SetColor("_Color", tinted);
+                }
+                else
+                {
+                    mat.color = Color.white;
+                    if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+                    if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
+                }
+            }
+        }
     }
 
     public static void ApplyErikaArcherMaterials(GameObject model, TeamType team = TeamType.Protector)

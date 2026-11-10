@@ -257,6 +257,15 @@ public class MatchEndStatsUI : MonoBehaviour
     /// Dynamically converts an active single-winner end screen to a mutual Draw & Peace condition
     /// when the opposing team completes their objective within the simultaneous climax window.
     /// </summary>
+    public bool IsTeamWinner(PlayerMovement.TeamType team)
+    {
+        if (!isGameOver) return false;
+        bool isDraw = winningTeamName.ToLower().Contains("draw") || winningTeamName.ToLower().Contains("tie") || winningTeamName.ToLower().Contains("peace");
+        if (isDraw) return true;
+        bool isProtWin = winningTeamName.ToLower().Contains("protector");
+        return isProtWin ? (team == PlayerMovement.TeamType.Protector) : (team == PlayerMovement.TeamType.Destroyer);
+    }
+
     public void ConvertToDraw()
     {
         if (winningTeamName == "Draw") return;
@@ -285,6 +294,19 @@ public class MatchEndStatsUI : MonoBehaviour
     void OnGUI()
     {
         if (!isGameOver) return;
+
+        float celebrationDuration = 3.2f;
+        float elapsedSinceGameOver = Time.time - gameOverTime;
+
+        if (elapsedSinceGameOver < celebrationDuration)
+        {
+            DrawVictoryCelebrationBanner(elapsedSinceGameOver, celebrationDuration);
+            if (Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Space || Event.current.keyCode == KeyCode.Return))
+            {
+                gameOverTime -= celebrationDuration;
+            }
+            return;
+        }
 
         GUI.depth = -2000;
 
@@ -843,5 +865,82 @@ public class MatchEndStatsUI : MonoBehaviour
     private void RestartMatch(bool autoRestart = false)
     {
         ExecuteCleanGameRestart();
+    }
+
+    private void DrawVictoryCelebrationBanner(float elapsed, float duration)
+    {
+        GUI.depth = -2000;
+
+        float bannerW = Mathf.Min(Screen.width * 0.88f, 740f);
+        float bannerH = 110f;
+        float bannerX = (Screen.width - bannerW) / 2f;
+        float bannerY = 40f;
+
+        bool isDraw = winningTeamName.ToLower().Contains("draw") || winningTeamName.ToLower().Contains("tie") || winningTeamName.ToLower().Contains("peace");
+        bool isProt = winningTeamName.ToLower().Contains("protector");
+
+        string cheerTitle;
+        string cheerSub;
+        Color cheerColor;
+
+        if (isDraw)
+        {
+            cheerTitle = LanguageSelectionUI.Localize("🕊️ SIMULTANEOUS CLIMAX: CELESTIAL PEACE & DRAW! 🕊️", ar: "🕊️ تعادل وحال سلام! احتفال الطرفين بالوئام 🕊️");
+            cheerSub = LanguageSelectionUI.Localize("🌿 Both teams rejoice together in mutual harmony! 🌿", ar: "🌿 الطرفان يحتفلان معاً في جو من السلام والوئام! 🌿");
+            cheerColor = new Color(0.95f, 0.95f, 1f);
+        }
+        else if (isProt)
+        {
+            cheerTitle = LanguageSelectionUI.Localize("🌟 PROTECTORS VICTORY CELEBRATION! 🌟", ar: "🌟 فاز الحماة! احتفال النصر العظيم 🌟");
+            cheerSub = LanguageSelectionUI.Localize("🌿 Champions celebrate consecrating the Sacred Crystal! 🌿", ar: "🌿 أبطال الحماة يحتفلون بإنقاذ الشجرة وإيصال الكريستالة! 🌿");
+            cheerColor = new Color(0.25f, 0.95f, 0.45f);
+        }
+        else
+        {
+            cheerTitle = LanguageSelectionUI.Localize("🔥 DESTROYERS VICTORY CELEBRATION! 🔥", ar: "🔥 فاز المدمرون! احتفال النصر الساحق 🔥");
+            cheerSub = LanguageSelectionUI.Localize("⚔️ Conquerors dance in triumphant battle glory! ⚔️", ar: "⚔️ محاربو المدمرين يحتفلون برقصة النصر العارمة! ⚔️");
+            cheerColor = new Color(1.0f, 0.45f, 0.25f);
+        }
+
+        Rect bannerRect = new Rect(bannerX, bannerY, bannerW, bannerH);
+        EnchantedNatureGUI.DrawLeafPlaque(bannerRect, new Color(0.08f, 0.14f, 0.08f, 0.92f), cheerColor);
+
+        GUIStyle titleSt = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 20,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter
+        };
+        titleSt.normal.textColor = cheerColor;
+        GUI.Label(new Rect(bannerX, bannerY + 12f, bannerW, 34f), cheerTitle, titleSt);
+
+        GUIStyle subSt = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 13,
+            fontStyle = FontStyle.Normal,
+            alignment = TextAnchor.MiddleCenter
+        };
+        subSt.normal.textColor = new Color(0.90f, 0.92f, 0.88f);
+        GUI.Label(new Rect(bannerX, bannerY + 48f, bannerW, 26f), cheerSub, subSt);
+
+        float remaining = Mathf.Max(0f, duration - elapsed);
+        string hint = LanguageSelectionUI.Localize(
+            $"[SPACE] or Click to View Scoreboard ({remaining:F1}s)",
+            ar: $"[مسافة] أو انقر لفتح لوحة النتائج ({remaining:F1}ث)"
+        );
+
+        GUIStyle hintSt = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Italic,
+            alignment = TextAnchor.MiddleCenter
+        };
+        hintSt.normal.textColor = new Color(1f, 0.85f, 0.40f, 0.90f);
+        GUI.Label(new Rect(bannerX, bannerY + 76f, bannerW, 22f), hint, hintSt);
+
+        if (Event.current.type == EventType.MouseDown)
+        {
+            gameOverTime -= duration;
+        }
     }
 }

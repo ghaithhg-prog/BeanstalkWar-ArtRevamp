@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Unity.Netcode;
@@ -273,9 +273,15 @@ public class CharacterSelectionUI : MonoBehaviour
         CharacterData ch = (database != null) ? database.GetCharacter(characterID) : null;
         string lowName = (ch != null && !string.IsNullOrEmpty(ch.characterName)) ? ch.characterName.ToLower() : "";
         bool isArcherModel = (characterID == 0) || lowName.Contains("archer") || lowName.Contains("ranger") || lowName.Contains("windwalker");
+        bool isBruteModel = lowName.Contains("brute") || lowName.Contains("berserker") || lowName.Contains("barbarian") || (characterID == 7) || (characterID == 15);
 
         GameObject prefab = null;
-        if (isArcherModel)
+        if (isBruteModel)
+        {
+            prefab = Resources.Load<GameObject>("Models/Brute");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Erika_Archer");
+        }
+        else if (isArcherModel)
         {
             prefab = Resources.Load<GameObject>("Models/Erika_Archer");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Akai");
@@ -288,17 +294,17 @@ public class CharacterSelectionUI : MonoBehaviour
         if (prefab != null)
         {
             currentPreviewModel = Instantiate(prefab, turntable);
-            currentPreviewModel.name = "Preview_Champion_" + characterID;
+            currentPreviewModel.name = isBruteModel ? ("Preview_Champion_Brute_" + characterID) : (isArcherModel ? ("Preview_Champion_Archer_" + characterID) : ("Preview_Champion_" + characterID));
             currentPreviewModel.transform.localPosition = new Vector3(0f, -0.10f, 0f);
             currentPreviewModel.transform.localRotation = Quaternion.identity;
-            currentPreviewModel.transform.localScale = Vector3.one * 0.90f;
+            currentPreviewModel.transform.localScale = Vector3.one * (isBruteModel ? 0.82f : 0.90f);
 
             foreach (Collider c in currentPreviewModel.GetComponentsInChildren<Collider>()) Destroy(c);
             foreach (Rigidbody r in currentPreviewModel.GetComponentsInChildren<Rigidbody>()) Destroy(r);
             foreach (Animator a in currentPreviewModel.GetComponentsInChildren<Animator>())
             {
                 a.applyRootMotion = false;
-                if (isArcherModel)
+                if (isArcherModel || isBruteModel)
                 {
                     a.enabled = true;
                     a.cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -309,7 +315,11 @@ public class CharacterSelectionUI : MonoBehaviour
                 }
             }
 
-            if (isArcherModel)
+            if (isBruteModel)
+            {
+                PlayerMovement.ApplyBruteMaterials(currentPreviewModel, PlayerMovement.TeamType.Protector);
+            }
+            else if (isArcherModel)
             {
                 PlayerMovement.ApplyErikaArcherMaterials(currentPreviewModel, PlayerMovement.TeamType.Protector);
 

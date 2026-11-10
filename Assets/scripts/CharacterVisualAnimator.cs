@@ -94,8 +94,27 @@ public class CharacterVisualAnimator : MonoBehaviour
     private AnimationClip clipShoot;
     private AnimationClip clipDeath;
 
+    // Brute-specific PlayableClips
+    private AnimationClipPlayable playAttack;
+    private AnimationClipPlayable playCombo;
+    private AnimationClipPlayable playRoar;
+    private AnimationClipPlayable playDance;
+
+    private AnimationClip clipAttack;
+    private AnimationClip clipCombo;
+    private AnimationClip clipRoar;
+    private AnimationClip clipDance;
+
     private bool usePlayableGraph = false;
-    private readonly float[] slotWeights = new float[7];
+    private bool isBruteModel = false;
+    private readonly float[] slotWeights = new float[10];
+
+    // Brute idle roar, ultimate combo and victory celebration state
+    private float idleStillTimer = 0f;
+    private bool isRoaring = false;
+    private float roarTimer = 0f;
+    private bool isUltimateCombo = false;
+    private bool isDancing = false;
 
     public bool UsesRealDeathAnimation => usePlayableGraph && clipDeath != null;
 
@@ -112,11 +131,31 @@ public class CharacterVisualAnimator : MonoBehaviour
         parentHealth = rootTarget.GetComponent<Health>();
         parentBot = rootTarget.GetComponent<BotController>();
 
-        // التحقق مما إذا كانت هذه الشخصية هي رامية السهام (Erika Archer / Akai)
-        hasBow = gameObject.name.ToLower().Contains("erika") ||
-                 gameObject.name.ToLower().Contains("akai") ||
-                 (transform.parent != null && transform.parent.name.ToLower().Contains("archer"));
-        if (!hasBow)
+        // 1. التحقق مما إذا كانت الشخصية هي المقاتل الضخم (Brute / Berserker / Barbarian)
+        string myName = gameObject.name.ToLower();
+        string parentName = (transform.parent != null) ? transform.parent.name.ToLower() : "";
+
+        isBruteModel = myName.Contains("brute") || parentName.Contains("brute") ||
+                       myName.Contains("berserker") || parentName.Contains("berserker") ||
+                       myName.Contains("barbarian") || parentName.Contains("barbarian") ||
+                       (playerMovement != null && (playerMovement.selectedCharacterID.Value == 7 || playerMovement.selectedCharacterID.Value == 15));
+
+        if (!isBruteModel)
+        {
+            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            {
+                string tn = t.name.ToLower();
+                if (tn.Contains("brute") || tn.Contains("axe") || tn.Contains("malebrute"))
+                {
+                    isBruteModel = true;
+                    break;
+                }
+            }
+        }
+
+        // 2. التحقق مما إذا كانت الشخصية هي رامية السهام (Erika Archer / Akai)
+        hasBow = myName.Contains("erika") || myName.Contains("akai") || parentName.Contains("archer");
+        if (!hasBow && !isBruteModel)
         {
             foreach (Transform t in GetComponentsInChildren<Transform>(true))
             {
@@ -129,7 +168,11 @@ public class CharacterVisualAnimator : MonoBehaviour
             }
         }
 
-        if (hasBow)
+        if (isBruteModel)
+        {
+            SetupBrutePlayableGraph();
+        }
+        else if (hasBow)
         {
             SetupErikaPlayableGraph();
         }
@@ -147,6 +190,140 @@ public class CharacterVisualAnimator : MonoBehaviour
             }
         }
         return Resources.Load<AnimationClip>(resourcePath);
+    }
+
+    private AnimationClip LoadClipFromModelByName(string modelPath, string partialName)
+    {
+        AnimationClip[] arr = Resources.LoadAll<AnimationClip>(modelPath);
+        if (arr != null)
+        {
+            foreach (AnimationClip c in arr)
+            {
+                if (c == null) continue;
+                string cn = c.name.ToLower();
+                if (cn.Contains("__preview__")) continue;
+                if (cn.Contains(partialName.ToLower())) return c;
+            }
+            foreach (AnimationClip c in arr)
+            {
+                if (c != null && !c.name.ToLower().Contains("__preview__")) return c;
+            }
+        }
+        return null;
+    }
+
+    private void SetupBrutePlayableGraph()
+    {
+        Animator anim = GetComponent<Animator>();
+        if (anim == null) anim = GetComponentInChildren<Animator>();
+        if (anim == null) anim = gameObject.AddComponent<Animator>();
+
+        anim.enabled = true;
+        anim.applyRootMotion = false;
+        anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+        clipIdle = LoadFirstValidClip("Models/Brute_Idle");
+        clipWalk = LoadFirstValidClip("Models/Brute_Walk");
+        clipRun = LoadFirstValidClip("Models/Brute_Run");
+        clipJump = LoadFirstValidClip("Models/Brute_Jump");
+        clipAttack = LoadFirstValidClip("Models/Brute_Attack");
+        clipCombo = LoadFirstValidClip("Models/Brute_Combo");
+        clipRoar = LoadFirstValidClip("Models/Brute_Roar");
+        clipDance = LoadFirstValidClip("Models/Brute_Dance");
+        clipDeath = LoadFirstValidClip("Models/Brute_Death");
+
+        if (clipIdle == null) clipIdle = LoadClipFromModelByName("Models/Brute", "idle");
+        if (clipWalk == null) clipWalk = clipRun != null ? clipRun : clipIdle;
+        if (clipRun == null) clipRun = clipWalk;
+        if (clipAttack == null) clipAttack = clipCombo;
+        if (clipCombo == null) clipCombo = clipAttack;
+
+        if (clipIdle == null && clipWalk == null && clipAttack == null)
+        {
+            Debug.LogWarning("[CharacterVisualAnimator] Could not load Brute clips, falling back to procedural.");
+            return;
+        }
+
+        playableGraph = PlayableGraph.Create("BruteGraph_" + gameObject.GetInstanceID());
+        playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+
+        AnimationPlayableOutput output = AnimationPlayableOutput.Create(playableGraph, "Animation", anim);
+        mixer = AnimationMixerPlayable.Create(playableGraph, 9);
+        output.SetSourcePlayable(mixer);
+
+        // Slot 0: Idle
+        if (clipIdle != null)
+        {
+            playIdle = AnimationClipPlayable.Create(playableGraph, clipIdle);
+            playIdle.SetSpeed(1.0f);
+            playableGraph.Connect(playIdle, 0, mixer, 0);
+        }
+        // Slot 1: Walk
+        if (clipWalk != null)
+        {
+            playWalk = AnimationClipPlayable.Create(playableGraph, clipWalk);
+            playWalk.SetSpeed(1.10f);
+            playableGraph.Connect(playWalk, 0, mixer, 1);
+        }
+        // Slot 2: Run
+        if (clipRun != null)
+        {
+            playRun = AnimationClipPlayable.Create(playableGraph, clipRun);
+            playRun.SetSpeed(1.45f);
+            playableGraph.Connect(playRun, 0, mixer, 2);
+        }
+        // Slot 3: Jump
+        if (clipJump != null)
+        {
+            playJump = AnimationClipPlayable.Create(playableGraph, clipJump);
+            playJump.SetSpeed(1.15f);
+            playableGraph.Connect(playJump, 0, mixer, 3);
+        }
+        // Slot 4: Normal Melee Attack Downward
+        if (clipAttack != null)
+        {
+            playAttack = AnimationClipPlayable.Create(playableGraph, clipAttack);
+            playAttack.SetSpeed(1.35f);
+            playableGraph.Connect(playAttack, 0, mixer, 4);
+        }
+        // Slot 5: Level 5 Combo Attack
+        if (clipCombo != null)
+        {
+            playCombo = AnimationClipPlayable.Create(playableGraph, clipCombo);
+            playCombo.SetSpeed(1.25f);
+            playableGraph.Connect(playCombo, 0, mixer, 5);
+        }
+        // Slot 6: Battlecry Roar Scream
+        if (clipRoar != null)
+        {
+            playRoar = AnimationClipPlayable.Create(playableGraph, clipRoar);
+            playRoar.SetSpeed(1.0f);
+            playableGraph.Connect(playRoar, 0, mixer, 6);
+        }
+        // Slot 7: Victory Samba Dance
+        if (clipDance != null)
+        {
+            playDance = AnimationClipPlayable.Create(playableGraph, clipDance);
+            playDance.SetSpeed(1.0f);
+            playableGraph.Connect(playDance, 0, mixer, 7);
+        }
+        // Slot 8: Death
+        if (clipDeath != null)
+        {
+            playDeath = AnimationClipPlayable.Create(playableGraph, clipDeath);
+            playDeath.SetSpeed(1.0f);
+            playableGraph.Connect(playDeath, 0, mixer, 8);
+        }
+
+        slotWeights[0] = 1f;
+        for (int i = 0; i < 9; i++)
+        {
+            mixer.SetInputWeight(i, slotWeights[i]);
+        }
+
+        playableGraph.Play();
+        usePlayableGraph = true;
+        isBruteModel = true;
     }
 
     private void SetupErikaPlayableGraph()
@@ -369,7 +546,14 @@ public class CharacterVisualAnimator : MonoBehaviour
         // إذا كانت الشخصية تستخدم PlayableGraph (مثل Erika Archer)، نشغل أنيميشن Mixamo الحقيقي 100% دون أي تدوير إجرائي للعظام
         if (usePlayableGraph && playableGraph.IsValid())
         {
-            UpdatePlayableGraph(currentSpeed, isSprinting);
+            if (isBruteModel)
+            {
+                UpdateBrutePlayableGraph(currentSpeed, isSprinting);
+            }
+            else
+            {
+                UpdatePlayableGraph(currentSpeed, isSprinting);
+            }
             return;
         }
 
@@ -397,6 +581,210 @@ public class CharacterVisualAnimator : MonoBehaviour
         if (t >= clip.length)
         {
             playable.SetTime(t % clip.length);
+        }
+    }
+
+    private void UpdateBrutePlayableGraph(float currentSpeed, bool isSprinting)
+    {
+        // تكرار الحركات المستمرة بسلاسة (الوقوف، المشي، الجري، ورقصة الاحتفال)
+        WrapLoopingPlayable(playIdle, clipIdle);
+        WrapLoopingPlayable(playWalk, clipWalk);
+        WrapLoopingPlayable(playRun, clipRun);
+        WrapLoopingPlayable(playDance, clipDance);
+
+        // التحقق من حالة الموت والعودة للحياة
+        bool healthDead = (parentHealth != null && parentHealth.isDead);
+        if (healthDead && !isDeadState)
+        {
+            TriggerDeathAnimation();
+        }
+        else if (!healthDead && isDeadState && parentHealth != null)
+        {
+            ResetAfterRespawn();
+        }
+
+        // التحقق من احتفال النصر عند نهاية المباراة لفريق البطل
+        if (MatchEndStatsUI.IsGameOverActive && !isDeadState)
+        {
+            PlayerMovement.TeamType myTeam = PlayerMovement.TeamType.Protector;
+            if (playerMovement != null) myTeam = playerMovement.team;
+            else if (parentBot != null) myTeam = parentBot.team;
+
+            if (MatchEndStatsUI.Instance != null && MatchEndStatsUI.Instance.IsTeamWinner(myTeam))
+            {
+                if (!isDancing)
+                {
+                    TriggerVictoryDance();
+                }
+            }
+        }
+
+        // كشف وضع عدم لمس المفاتيح (Idle) لإطلاق صرخة الحماسة (Battlecry Roar) بعد ~1.6 ثانية
+        bool isLocalHuman = (parentBot == null) && (playerMovement == null || playerMovement.IsOwner);
+        if (isLocalHuman)
+        {
+            bool anyInput = Input.anyKey ||
+                            Mathf.Abs(Input.GetAxisRaw("Horizontal")) > 0.05f ||
+                            Mathf.Abs(Input.GetAxisRaw("Vertical")) > 0.05f ||
+                            Input.GetMouseButton(0) || Input.GetMouseButton(1) ||
+                            PlayerMovement.MobileSprintActive;
+
+            if (anyInput || currentSpeed > 0.25f || isAttacking || isDeadState || jumpGestureTimer > 0f || isDancing)
+            {
+                idleStillTimer = 0f;
+                if (isRoaring) isRoaring = false; // أي إدخال من اللاعب يقاطع الصراخ فوراً!
+            }
+            else
+            {
+                idleStillTimer += Time.deltaTime;
+                if (idleStillTimer >= 1.6f && !isRoaring)
+                {
+                    isRoaring = true;
+                    roarTimer = 0f;
+                    if (playRoar.IsValid())
+                    {
+                        playRoar.SetTime(0);
+                        playRoar.SetSpeed(1.0f);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // للبوتات أو اللاعبين عن بعد
+            if (currentSpeed > 0.25f || isAttacking || isDeadState || jumpGestureTimer > 0f || isDancing)
+            {
+                idleStillTimer = 0f;
+                if (isRoaring) isRoaring = false;
+            }
+            else
+            {
+                idleStillTimer += Time.deltaTime;
+                if (idleStillTimer >= 2.2f && !isRoaring)
+                {
+                    isRoaring = true;
+                    roarTimer = 0f;
+                    if (playRoar.IsValid())
+                    {
+                        playRoar.SetTime(0);
+                        playRoar.SetSpeed(1.0f);
+                    }
+                }
+            }
+        }
+
+        if (isRoaring)
+        {
+            roarTimer += Time.deltaTime;
+            float maxRoarDuration = (clipRoar != null && clipRoar.length > 0.1f) ? clipRoar.length : 2.2f;
+            if (roarTimer >= maxRoarDuration)
+            {
+                isRoaring = false;
+                idleStillTimer = -4.0f; // استراحة 4 ثوانٍ قبل تكرار الصراخ إذا بقي واقفاً
+            }
+        }
+
+        int activeSlot = 0; // 0:Idle, 1:Walk, 2:Run, 3:Jump, 4:Attack, 5:Combo, 6:Roar, 7:Dance, 8:Death
+        float blendRate = 12f;
+
+        if (isDeadState)
+        {
+            activeSlot = 8;
+            blendRate = 16f;
+            if (playDeath.IsValid() && clipDeath != null)
+            {
+                double dt = playDeath.GetTime();
+                double maxTime = Mathf.Max(0.05f, clipDeath.length - 0.04f);
+                if (dt >= maxTime)
+                {
+                    playDeath.SetTime(maxTime);
+                    playDeath.SetSpeed(0f);
+                }
+            }
+        }
+        else if (isDancing)
+        {
+            activeSlot = 7; // رقصة الاحتفال بالسامبا عند الفوز
+            blendRate = 14f;
+        }
+        else if (isAttacking)
+        {
+            blendRate = 18f;
+            if (isUltimateCombo && playCombo.IsValid())
+            {
+                activeSlot = 5; // هجوم الكومبو الساحق عند المستوى الخامس
+            }
+            else if (playAttack.IsValid())
+            {
+                activeSlot = 4; // الهجوم العادي بضربة الفأس للأسفل
+            }
+            else
+            {
+                activeSlot = 0;
+            }
+        }
+        else if (jumpGestureTimer > 0f && playJump.IsValid() && clipJump != null)
+        {
+            activeSlot = 3; // القفز
+            blendRate = 22f;
+            double jt = playJump.GetTime();
+            double maxJumpTime = Mathf.Clamp(clipJump.length * 0.60f, 0.45f, Mathf.Max(0.50f, clipJump.length - 0.15f));
+            if (jt >= maxJumpTime)
+            {
+                playJump.SetTime(maxJumpTime);
+            }
+        }
+        else if (currentSpeed > 0.35f)
+        {
+            isRoaring = false;
+            idleStillTimer = 0f;
+
+            if (isSprinting && playRun.IsValid())
+            {
+                activeSlot = 2; // الجري السريع
+                playRun.SetSpeed(1.45f);
+                blendRate = 16f;
+            }
+            else if (playWalk.IsValid())
+            {
+                activeSlot = 1; // المشي العادي
+                playWalk.SetSpeed(1.10f);
+            }
+            else if (playRun.IsValid())
+            {
+                activeSlot = 2;
+            }
+        }
+        else if (isRoaring && playRoar.IsValid())
+        {
+            activeSlot = 6; // صرخة الحماسة أثناء الوقوف دون لمس أي زر
+            blendRate = 16f;
+        }
+        else
+        {
+            activeSlot = 0; // الوقوف العادي
+        }
+
+        float weightSum = 0f;
+        for (int i = 0; i < 9; i++)
+        {
+            float targetW = (i == activeSlot) ? 1f : 0f;
+            slotWeights[i] = Mathf.MoveTowards(slotWeights[i], targetW, Time.deltaTime * blendRate);
+            weightSum += slotWeights[i];
+        }
+
+        if (weightSum > 0.0001f)
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                mixer.SetInputWeight(i, slotWeights[i] / weightSum);
+            }
+        }
+
+        // تثبيت الحوض محلياً لمنع القفز الزائد في الهواء
+        if (!isDeadState && hips != null && initHipsPos.sqrMagnitude > 0.0001f)
+        {
+            hips.localPosition = initHipsPos;
         }
     }
 
@@ -757,23 +1145,79 @@ public class CharacterVisualAnimator : MonoBehaviour
         }
     }
 
+    public void TriggerUltimateGesture()
+    {
+        if (isDeadState) return;
+        isRoaring = false;
+        idleStillTimer = 0f;
+
+        if (isBruteModel)
+        {
+            isUltimateCombo = true;
+            attackGestureDuration = (clipCombo != null && clipCombo.length > 0.1f) ? Mathf.Min(clipCombo.length, 1.8f) : 1.4f;
+            attackGestureTimer = attackGestureDuration;
+
+            if (playCombo.IsValid())
+            {
+                playCombo.SetTime(0);
+                playCombo.SetSpeed(1.25f);
+            }
+        }
+        else
+        {
+            TriggerAttackGesture();
+        }
+    }
+
+    public void TriggerVictoryDance()
+    {
+        if (isDeadState) return;
+        isDancing = true;
+        isRoaring = false;
+        attackGestureTimer = 0f;
+
+        if (playDance.IsValid())
+        {
+            playDance.SetTime(0);
+            playDance.SetSpeed(1.0f);
+        }
+    }
+
     public void TriggerAttackGesture()
     {
         if (isDeadState) return;
-        attackGestureDuration = 0.48f;
-        attackGestureTimer = attackGestureDuration;
+        isRoaring = false;
+        idleStillTimer = 0f;
+        isUltimateCombo = false;
 
-        if (usePlayableGraph && playableGraph.IsValid())
+        if (isBruteModel)
         {
-            if (playDraw.IsValid())
+            attackGestureDuration = (clipAttack != null && clipAttack.length > 0.1f) ? Mathf.Min(clipAttack.length, 0.75f) : 0.65f;
+            attackGestureTimer = attackGestureDuration;
+
+            if (playAttack.IsValid())
             {
-                playDraw.SetTime(0);
-                playDraw.SetSpeed(2.4f);
+                playAttack.SetTime(0);
+                playAttack.SetSpeed(1.35f);
             }
-            if (playRecoil.IsValid())
+        }
+        else
+        {
+            attackGestureDuration = 0.48f;
+            attackGestureTimer = attackGestureDuration;
+
+            if (usePlayableGraph && playableGraph.IsValid())
             {
-                playRecoil.SetTime(0);
-                playRecoil.SetSpeed(1.8f);
+                if (playDraw.IsValid())
+                {
+                    playDraw.SetTime(0);
+                    playDraw.SetSpeed(2.4f);
+                }
+                if (playRecoil.IsValid())
+                {
+                    playRecoil.SetTime(0);
+                    playRecoil.SetSpeed(1.8f);
+                }
             }
         }
     }
@@ -785,6 +1229,8 @@ public class CharacterVisualAnimator : MonoBehaviour
         if (isDeadState || (Time.time - lastJumpGestureTime < 0.12f)) return;
         lastJumpGestureTime = Time.time;
         jumpGestureTimer = 0.55f;
+        isRoaring = false;
+        idleStillTimer = 0f;
 
         if (usePlayableGraph && playableGraph.IsValid() && playJump.IsValid())
         {
@@ -812,6 +1258,9 @@ public class CharacterVisualAnimator : MonoBehaviour
     public void ResetAfterRespawn()
     {
         isDeadState = false;
+        isDancing = false;
+        isRoaring = false;
+        idleStillTimer = 0f;
         attackGestureTimer = 0f;
         jumpGestureTimer = 0f;
 
@@ -823,7 +1272,8 @@ public class CharacterVisualAnimator : MonoBehaviour
                 playDeath.SetTime(0);
                 playDeath.SetSpeed(1.0f);
             }
-            for (int i = 0; i < 7; i++)
+            int totalSlots = isBruteModel ? 9 : 7;
+            for (int i = 0; i < totalSlots; i++)
             {
                 slotWeights[i] = (i == 0) ? 1f : 0f;
                 mixer.SetInputWeight(i, slotWeights[i]);

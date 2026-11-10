@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 
 /// <summary>
@@ -310,6 +310,12 @@ public class PlayerXP : NetworkBehaviour
         if (currentLevel.Value < 5) return false;
         if (Time.time < nextUltimateTime) return false;
 
+        CharacterVisualAnimator visualAnim = GetComponentInChildren<CharacterVisualAnimator>();
+        if (visualAnim != null)
+        {
+            visualAnim.TriggerUltimateGesture();
+        }
+
         nextUltimateTime = Time.time + ultimateCooldown;
         RequestUltimateRpc();
         return true;
@@ -417,7 +423,12 @@ public class PlayerXP : NetworkBehaviour
     [Rpc(SendTo.ClientsAndHost)]
     void PlayUltimateFxRpc(Vector3 position)
     {
-        // تأثير بصري بسيط للضربة الساحقة
+        // تأثير بصري وحركي للضربة الساحقة (كومبو المستوى الخامس للبروت وبقية الأبطال)
+        CharacterVisualAnimator visualAnim = GetComponentInChildren<CharacterVisualAnimator>();
+        if (visualAnim != null)
+        {
+            visualAnim.TriggerUltimateGesture();
+        }
         Debug.Log("ULTIMATE BLAST at " + position);
     }
 

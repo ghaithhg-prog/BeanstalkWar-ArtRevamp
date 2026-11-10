@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: BerserkerData
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   characterID: 7
-  characterName: Berserker
-  description: 
+  characterName: Brute
+  description: A colossal barbarian wielding a crushing battle axe. Smashes foes with downward strikes and unleashes a ferocious combo barrage at Level 5!
   characterIcon: {fileID: 0}
   role: 1
   maxPerTeam: 2
