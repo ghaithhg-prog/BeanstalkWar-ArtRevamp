@@ -644,10 +644,12 @@ public class PlayerMovement : NetworkBehaviour
             if (cn.StartsWith("character_3d_mesh") || 
                 cn.Contains("erika") || 
                 cn.Contains("brute") || 
+                cn.Contains("maria") || 
                 cn.Contains("warrior") || 
                 cn.Contains("akai") || 
                 cn.Contains("bow") || 
                 cn.Contains("axe") || 
+                cn.Contains("sword") || 
                 cn.Contains("preview_champion"))
             {
                 child.name = "Destroying_Mesh_" + i;
@@ -656,7 +658,7 @@ public class PlayerMovement : NetworkBehaviour
             }
         }
 
-        // Model Selection: Erika Archer for Archer, and Warrior_Medieval for other classes
+        // Model Selection: Erika Archer for Archer, Brute for Berserker, Maria for Warrior, and Warrior_Medieval for other classes
         GameObject prefab = null;
         bool isArcher = (data != null && (data.characterName.Equals("Archer", System.StringComparison.OrdinalIgnoreCase) || data.characterName.Equals("Ranger", System.StringComparison.OrdinalIgnoreCase)))
                         || (data == null && target.name.ToLower().Contains("archer"));
@@ -667,7 +669,18 @@ public class PlayerMovement : NetworkBehaviour
                                          data.characterName.Equals("Berserker", System.StringComparison.OrdinalIgnoreCase)))
                         || (data == null && (target.name.ToLower().Contains("brute") || target.name.ToLower().Contains("berserker")));
 
-        if (isBrute)
+        // Maria, The Greatsword Champion (ID 5 / Warrior)
+        bool isMaria = (data != null && (data.characterID == 5 ||
+                                         data.characterName.IndexOf("Maria", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                         data.characterName.Equals("Warrior", System.StringComparison.OrdinalIgnoreCase)))
+                        || (data == null && (target.name.ToLower().Contains("maria") || target.name.ToLower().Contains("warrior")));
+
+        if (isMaria)
+        {
+            prefab = Resources.Load<GameObject>("Models/Maria");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Warrior_Medieval");
+        }
+        else if (isBrute)
         {
             prefab = Resources.Load<GameObject>("Models/Brute");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Erika_Archer");
@@ -685,6 +698,7 @@ public class PlayerMovement : NetworkBehaviour
         if (prefab == null)
         {
             prefab = Resources.Load<GameObject>("Models/Warrior_Medieval");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Maria");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Erika_Archer");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Akai");
         }
@@ -702,6 +716,7 @@ public class PlayerMovement : NetworkBehaviour
                 !r.name.Contains("Erika") &&
                 !r.name.Contains("Akai") &&
                 !r.name.Contains("Brute") &&
+                !r.name.Contains("Maria") &&
                 !r.name.Contains("Character_3D") && 
                 !r.name.Contains("TeamFootAura") &&
                 !r.name.Contains("BossDecorations") &&
@@ -727,7 +742,7 @@ public class PlayerMovement : NetworkBehaviour
 
         // 5. توليد المجسم ثلاثي الأبعاد الحقيقي
         GameObject model = Instantiate(prefab, target.transform);
-        model.name = isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : "Character_3D_Mesh");
+        model.name = isMaria ? "Character_3D_Mesh_Maria" : (isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : "Character_3D_Mesh"));
         model.transform.localPosition = new Vector3(0f, -0.95f, 0f); // وضع الأقدام على الأرض تماماً
         model.transform.localRotation = Quaternion.identity;
         model.transform.localScale = Vector3.one * customScale;
@@ -744,7 +759,7 @@ public class PlayerMovement : NetworkBehaviour
         foreach (Animator anim in model.GetComponentsInChildren<Animator>())
         {
             anim.applyRootMotion = false;
-            if (isArcher || isBrute)
+            if (isArcher || isBrute || isMaria)
             {
                 anim.enabled = true;
                 anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -755,8 +770,12 @@ public class PlayerMovement : NetworkBehaviour
             }
         }
 
-        // 6. تطبيق الخامات والألوان (Erika Archer لها خامات أصلية طبيعية، وبقية الشخصيات تلون حسب الرتبة)
-        if (isBrute || prefab.name.Contains("Brute"))
+        // 6. تطبيق الخامات والألوان (Maria, Brute, Erika Archer لها خامات أصلية طبيعية، وبقية الشخصيات تلون حسب الرتبة)
+        if (isMaria || prefab.name.Contains("Maria"))
+        {
+            ApplyMariaMaterials(model, team);
+        }
+        else if (isBrute || prefab.name.Contains("Brute"))
         {
             ApplyBruteMaterials(model, team);
         }
@@ -829,6 +848,62 @@ public class PlayerMovement : NetworkBehaviour
 
         Debug.Log($"⚔️ Attached animated 3D model ({prefab.name}) for {target.name} | Champion: {data?.characterName} (ID: {characterID}) Team: {team}");
         return model;
+    }
+
+    public static void ApplyMariaMaterials(GameObject model, TeamType team = TeamType.Protector)
+    {
+        if (model == null) return;
+
+        Texture2D texDiff = Resources.Load<Texture2D>("Models/MariaTextures/maria_diffuse");
+        Texture2D texNorm = Resources.Load<Texture2D>("Models/MariaTextures/maria_normal");
+        Texture2D texSpec = Resources.Load<Texture2D>("Models/MariaTextures/maria_specular");
+
+        Shader bestShader = Shader.Find("Universal Render Pipeline/Lit");
+        if (bestShader == null) bestShader = Shader.Find("Standard");
+        if (bestShader == null) bestShader = Shader.Find("Mobile/Bumped Specular");
+        if (bestShader == null) bestShader = Shader.Find("Mobile/Diffuse");
+
+        foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+        {
+            if (r == null) continue;
+
+            Material[] mats = r.materials;
+            if (mats == null || mats.Length == 0) mats = r.sharedMaterials;
+            if (mats == null || mats.Length == 0) continue;
+
+            for (int i = 0; i < mats.Length; i++)
+            {
+                Material m = mats[i];
+                if (m == null)
+                {
+                    m = new Material(bestShader);
+                    mats[i] = m;
+                }
+                else if (bestShader != null && (m.shader == null || m.shader.name.Contains("Error") || m.shader.name.Contains("InternalError")))
+                {
+                    m.shader = bestShader;
+                }
+
+                if (texDiff != null)
+                {
+                    if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", texDiff);
+                    if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", texDiff);
+                }
+                if (texNorm != null)
+                {
+                    if (m.HasProperty("_BumpMap")) m.SetTexture("_BumpMap", texNorm);
+                }
+                if (texSpec != null)
+                {
+                    if (m.HasProperty("_SpecGlossMap")) m.SetTexture("_SpecGlossMap", texSpec);
+                    if (m.HasProperty("_MetallicGlossMap")) m.SetTexture("_MetallicGlossMap", texSpec);
+                }
+
+                if (m.HasProperty("_Color")) m.SetColor("_Color", Color.white);
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white);
+            }
+            r.materials = mats;
+        }
     }
 
     public static void ApplyBruteMaterials(GameObject model, TeamType team = TeamType.Protector)
@@ -1116,8 +1191,8 @@ public class PlayerMovement : NetworkBehaviour
                 continue;
 
             string rn = r.name.ToLower();
-            // Never tint real imported PBR character models (Brute or Erika) with solid procedural skin colors!
-            if (rn.Contains("erika") || rn.Contains("brute") || rn.Contains("malebrute") || rn.Contains("axe") || rn.Contains("teamfootaura"))
+            // Never tint real imported PBR character models (Maria, Brute, or Erika) with solid procedural skin colors!
+            if (rn.Contains("maria") || rn.Contains("erika") || rn.Contains("brute") || rn.Contains("malebrute") || rn.Contains("axe") || rn.Contains("sword") || rn.Contains("teamfootaura"))
                 continue;
 
             Transform cur = r.transform;
@@ -1125,7 +1200,7 @@ public class PlayerMovement : NetworkBehaviour
             while (cur != null && cur != transform)
             {
                 string cn = cur.name.ToLower();
-                if (cn.Contains("brute") || cn.Contains("erika") || cn.Contains("character_3d_mesh"))
+                if (cn.Contains("maria") || cn.Contains("brute") || cn.Contains("erika") || cn.Contains("character_3d_mesh"))
                 {
                     isCustomRig = true;
                     break;

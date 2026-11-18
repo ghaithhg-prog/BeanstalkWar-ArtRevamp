@@ -107,9 +107,10 @@ public class CharacterVisualAnimator : MonoBehaviour
 
     private bool usePlayableGraph = false;
     private bool isBruteModel = false;
+    private bool isMariaModel = false;
     private readonly float[] slotWeights = new float[10];
 
-    // Brute idle roar, ultimate combo and victory celebration state
+    // Brute & Maria idle taunt/roar, ultimate combo and victory celebration state
     private float idleStillTimer = 0f;
     private bool isRoaring = false;
     private float roarTimer = 0f;
@@ -131,30 +132,50 @@ public class CharacterVisualAnimator : MonoBehaviour
         parentHealth = rootTarget.GetComponent<Health>();
         parentBot = rootTarget.GetComponent<BotController>();
 
-        // 1. التحقق مما إذا كانت الشخصية هي المقاتل الضخم (Brute / Berserker / Barbarian)
         string myName = gameObject.name.ToLower();
         string parentName = (transform.parent != null) ? transform.parent.name.ToLower() : "";
 
-        isBruteModel = myName.Contains("brute") || parentName.Contains("brute") ||
-                       myName.Contains("berserker") || parentName.Contains("berserker") ||
-                       (playerMovement != null && playerMovement.selectedCharacterID.Value == 7);
+        // 1. التحقق مما إذا كانت الشخصية هي ماريا (Maria / Greatsword Champion - ID 5)
+        isMariaModel = myName.Contains("maria") || parentName.Contains("maria") ||
+                       (playerMovement != null && playerMovement.selectedCharacterID.Value == 5);
 
-        if (!isBruteModel)
+        if (!isMariaModel)
         {
             foreach (Transform t in GetComponentsInChildren<Transform>(true))
             {
                 string tn = t.name.ToLower();
-                if (tn.Contains("brute") || tn.Contains("axe") || tn.Contains("malebrute"))
+                if (tn.Contains("maria") || tn.Contains("maria_sword") || tn.Contains("maria_j_j_ong"))
                 {
-                    isBruteModel = true;
+                    isMariaModel = true;
                     break;
                 }
             }
         }
 
-        // 2. التحقق مما إذا كانت الشخصية هي رامية السهام (Erika Archer / Akai)
+        // 2. التحقق مما إذا كانت الشخصية هي المقاتل الضخم (Brute / Berserker - ID 7)
+        if (!isMariaModel)
+        {
+            isBruteModel = myName.Contains("brute") || parentName.Contains("brute") ||
+                           myName.Contains("berserker") || parentName.Contains("berserker") ||
+                           (playerMovement != null && playerMovement.selectedCharacterID.Value == 7);
+
+            if (!isBruteModel)
+            {
+                foreach (Transform t in GetComponentsInChildren<Transform>(true))
+                {
+                    string tn = t.name.ToLower();
+                    if (tn.Contains("brute") || tn.Contains("axe") || tn.Contains("malebrute"))
+                    {
+                        isBruteModel = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 3. التحقق مما إذا كانت الشخصية هي رامية السهام (Erika Archer / Akai)
         hasBow = myName.Contains("erika") || myName.Contains("akai") || parentName.Contains("archer");
-        if (!hasBow && !isBruteModel)
+        if (!hasBow && !isBruteModel && !isMariaModel)
         {
             foreach (Transform t in GetComponentsInChildren<Transform>(true))
             {
@@ -167,7 +188,11 @@ public class CharacterVisualAnimator : MonoBehaviour
             }
         }
 
-        if (isBruteModel)
+        if (isMariaModel)
+        {
+            SetupMariaPlayableGraph();
+        }
+        else if (isBruteModel)
         {
             SetupBrutePlayableGraph();
         }
@@ -323,6 +348,120 @@ public class CharacterVisualAnimator : MonoBehaviour
         playableGraph.Play();
         usePlayableGraph = true;
         isBruteModel = true;
+    }
+
+    private void SetupMariaPlayableGraph()
+    {
+        Animator anim = GetComponent<Animator>();
+        if (anim == null) anim = GetComponentInChildren<Animator>();
+        if (anim == null) anim = gameObject.AddComponent<Animator>();
+
+        anim.enabled = true;
+        anim.applyRootMotion = false;
+        anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+        clipIdle = LoadFirstValidClip("Models/Maria_Idle");
+        clipWalk = LoadFirstValidClip("Models/Maria_Walk");
+        clipRun = LoadFirstValidClip("Models/Maria_Run");
+        clipJump = LoadFirstValidClip("Models/Maria_Jump");
+        clipAttack = LoadFirstValidClip("Models/Maria_Attack");
+        clipCombo = LoadFirstValidClip("Models/Maria_Combo");
+        clipRoar = LoadFirstValidClip("Models/Maria_Taunt"); // Crouch Taunt when idle > 1.6s
+        clipDance = LoadFirstValidClip("Models/Maria_Dance");
+        clipDeath = LoadFirstValidClip("Models/Maria_Death");
+
+        if (clipIdle == null) clipIdle = LoadClipFromModelByName("Models/Maria", "idle");
+        if (clipWalk == null) clipWalk = clipRun != null ? clipRun : clipIdle;
+        if (clipRun == null) clipRun = clipWalk;
+        if (clipAttack == null) clipAttack = clipCombo;
+        if (clipCombo == null) clipCombo = clipAttack;
+
+        if (clipIdle == null && clipWalk == null && clipAttack == null)
+        {
+            Debug.LogWarning("[CharacterVisualAnimator] Could not load Maria clips, falling back to procedural.");
+            return;
+        }
+
+        playableGraph = PlayableGraph.Create("MariaGraph_" + gameObject.GetInstanceID());
+        playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+
+        AnimationPlayableOutput output = AnimationPlayableOutput.Create(playableGraph, "Animation", anim);
+        mixer = AnimationMixerPlayable.Create(playableGraph, 9);
+        output.SetSourcePlayable(mixer);
+
+        // Slot 0: Great Sword Idle
+        if (clipIdle != null)
+        {
+            playIdle = AnimationClipPlayable.Create(playableGraph, clipIdle);
+            playIdle.SetSpeed(1.0f);
+            playableGraph.Connect(playIdle, 0, mixer, 0);
+        }
+        // Slot 1: Great Sword Walk
+        if (clipWalk != null)
+        {
+            playWalk = AnimationClipPlayable.Create(playableGraph, clipWalk);
+            playWalk.SetSpeed(1.0f);
+            playableGraph.Connect(playWalk, 0, mixer, 1);
+        }
+        // Slot 2: Great Sword Run
+        if (clipRun != null)
+        {
+            playRun = AnimationClipPlayable.Create(playableGraph, clipRun);
+            playRun.SetSpeed(1.0f);
+            playableGraph.Connect(playRun, 0, mixer, 2);
+        }
+        // Slot 3: Great Sword Jump
+        if (clipJump != null)
+        {
+            playJump = AnimationClipPlayable.Create(playableGraph, clipJump);
+            playJump.SetSpeed(1.0f);
+            playableGraph.Connect(playJump, 0, mixer, 3);
+        }
+        // Slot 4: Great Sword Slash (Normal Attack)
+        if (clipAttack != null)
+        {
+            playAttack = AnimationClipPlayable.Create(playableGraph, clipAttack);
+            playAttack.SetSpeed(1.25f);
+            playableGraph.Connect(playAttack, 0, mixer, 4);
+        }
+        // Slot 5: Great Sword Special Attack (Ultimate / Level 5)
+        if (clipCombo != null)
+        {
+            playCombo = AnimationClipPlayable.Create(playableGraph, clipCombo);
+            playCombo.SetSpeed(1.15f);
+            playableGraph.Connect(playCombo, 0, mixer, 5);
+        }
+        // Slot 6: Crouch Taunt (Idle > 1.6s)
+        if (clipRoar != null)
+        {
+            playRoar = AnimationClipPlayable.Create(playableGraph, clipRoar);
+            playRoar.SetSpeed(1.0f);
+            playableGraph.Connect(playRoar, 0, mixer, 6);
+        }
+        // Slot 7: Northern Dance (Victory celebration)
+        if (clipDance != null)
+        {
+            playDance = AnimationClipPlayable.Create(playableGraph, clipDance);
+            playDance.SetSpeed(1.0f);
+            playableGraph.Connect(playDance, 0, mixer, 7);
+        }
+        // Slot 8: Two Handed Sword Death
+        if (clipDeath != null)
+        {
+            playDeath = AnimationClipPlayable.Create(playableGraph, clipDeath);
+            playDeath.SetSpeed(1.0f);
+            playableGraph.Connect(playDeath, 0, mixer, 8);
+        }
+
+        slotWeights[0] = 1f;
+        for (int i = 0; i < 9; i++)
+        {
+            mixer.SetInputWeight(i, slotWeights[i]);
+        }
+
+        playableGraph.Play();
+        usePlayableGraph = true;
+        isMariaModel = true;
     }
 
     private void SetupErikaPlayableGraph()
@@ -542,10 +681,14 @@ public class CharacterVisualAnimator : MonoBehaviour
             jumpGestureTimer -= Time.deltaTime;
         }
 
-        // إذا كانت الشخصية تستخدم PlayableGraph (مثل Erika Archer)، نشغل أنيميشن Mixamo الحقيقي 100% دون أي تدوير إجرائي للعظام
+        // إذا كانت الشخصية تستخدم PlayableGraph (مثل Erika Archer أو Brute أو Maria)، نشغل أنيميشن Mixamo الحقيقي 100% دون أي تدوير إجرائي للعظام
         if (usePlayableGraph && playableGraph.IsValid())
         {
-            if (isBruteModel)
+            if (isMariaModel)
+            {
+                UpdateMariaPlayableGraph(currentSpeed, isSprinting);
+            }
+            else if (isBruteModel)
             {
                 UpdateBrutePlayableGraph(currentSpeed, isSprinting);
             }
@@ -580,6 +723,208 @@ public class CharacterVisualAnimator : MonoBehaviour
         if (t >= clip.length)
         {
             playable.SetTime(t % clip.length);
+        }
+    }
+
+    private void UpdateMariaPlayableGraph(float currentSpeed, bool isSprinting)
+    {
+        // Smoothly loop looping clips (Idle, Walk, Run, Dance)
+        WrapLoopingPlayable(playIdle, clipIdle);
+        WrapLoopingPlayable(playWalk, clipWalk);
+        WrapLoopingPlayable(playRun, clipRun);
+        WrapLoopingPlayable(playDance, clipDance);
+
+        // Check health & death
+        bool healthDead = (parentHealth != null && parentHealth.isDead);
+        if (healthDead && !isDeadState)
+        {
+            TriggerDeathAnimation();
+        }
+        else if (!healthDead && isDeadState && parentHealth != null)
+        {
+            ResetAfterRespawn();
+        }
+
+        // Match victory celebration
+        if (MatchEndStatsUI.IsGameOverActive && !isDeadState)
+        {
+            PlayerMovement.TeamType myTeam = PlayerMovement.TeamType.Protector;
+            if (playerMovement != null) myTeam = playerMovement.team;
+            else if (parentBot != null) myTeam = parentBot.team;
+
+            if (MatchEndStatsUI.Instance != null && MatchEndStatsUI.Instance.IsTeamWinner(myTeam))
+            {
+                if (!isDancing)
+                {
+                    TriggerVictoryDance();
+                }
+            }
+        }
+
+        // Crouch Taunt when idle > 1.6s
+        bool isLocalHuman = (parentBot == null) && (playerMovement == null || playerMovement.IsOwner);
+        if (isLocalHuman)
+        {
+            bool anyInput = Input.anyKey ||
+                            Mathf.Abs(Input.GetAxisRaw("Horizontal")) > 0.05f ||
+                            Mathf.Abs(Input.GetAxisRaw("Vertical")) > 0.05f ||
+                            Input.GetMouseButton(0) || Input.GetMouseButton(1) ||
+                            PlayerMovement.MobileSprintActive;
+
+            if (anyInput || currentSpeed > 0.25f || isAttacking || isDeadState || jumpGestureTimer > 0f || isDancing)
+            {
+                idleStillTimer = 0f;
+                if (isRoaring) isRoaring = false; // Immediately interrupt crouch taunt on any input
+            }
+            else
+            {
+                idleStillTimer += Time.deltaTime;
+                if (idleStillTimer >= 1.6f && !isRoaring)
+                {
+                    isRoaring = true;
+                    roarTimer = 0f;
+                    if (playRoar.IsValid())
+                    {
+                        playRoar.SetTime(0);
+                        playRoar.SetSpeed(1.0f);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (currentSpeed > 0.25f || isAttacking || isDeadState || jumpGestureTimer > 0f || isDancing)
+            {
+                idleStillTimer = 0f;
+                if (isRoaring) isRoaring = false;
+            }
+            else
+            {
+                idleStillTimer += Time.deltaTime;
+                if (idleStillTimer >= 2.2f && !isRoaring)
+                {
+                    isRoaring = true;
+                    roarTimer = 0f;
+                    if (playRoar.IsValid())
+                    {
+                        playRoar.SetTime(0);
+                        playRoar.SetSpeed(1.0f);
+                    }
+                }
+            }
+        }
+
+        if (isRoaring)
+        {
+            roarTimer += Time.deltaTime;
+            float maxTauntDuration = (clipRoar != null && clipRoar.length > 0.1f) ? clipRoar.length : 2.5f;
+            if (roarTimer >= maxTauntDuration)
+            {
+                isRoaring = false;
+                idleStillTimer = -4.0f; // 4s cooldown
+            }
+        }
+
+        int activeSlot = 0; // 0:Idle, 1:Walk, 2:Run, 3:Jump, 4:Attack, 5:Combo, 6:Taunt, 7:Dance, 8:Death
+        float blendRate = 12f;
+
+        if (isDeadState)
+        {
+            activeSlot = 8;
+            blendRate = 16f;
+            if (playDeath.IsValid() && clipDeath != null)
+            {
+                double dt = playDeath.GetTime();
+                double maxTime = Mathf.Max(0.05f, clipDeath.length - 0.04f);
+                if (dt >= maxTime)
+                {
+                    playDeath.SetTime(maxTime);
+                    playDeath.SetSpeed(0f);
+                }
+            }
+        }
+        else if (isDancing)
+        {
+            activeSlot = 7;
+            blendRate = 14f;
+        }
+        else if (isAttacking)
+        {
+            blendRate = 18f;
+            if (isUltimateCombo && playCombo.IsValid())
+            {
+                activeSlot = 5; // Great Sword Special Attack (Level 5 Ultimate)
+            }
+            else if (playAttack.IsValid())
+            {
+                activeSlot = 4; // Great Sword Slash (Normal Attack)
+            }
+            else
+            {
+                activeSlot = 0;
+            }
+        }
+        else if (jumpGestureTimer > 0f && playJump.IsValid() && clipJump != null)
+        {
+            activeSlot = 3; // Great Sword Jump
+            blendRate = 22f;
+            double jt = playJump.GetTime();
+            double maxJumpTime = Mathf.Clamp(clipJump.length * 0.60f, 0.45f, Mathf.Max(0.50f, clipJump.length - 0.15f));
+            if (jt >= maxJumpTime)
+            {
+                playJump.SetTime(maxJumpTime);
+            }
+        }
+        else if (currentSpeed > 0.35f)
+        {
+            isRoaring = false;
+            idleStillTimer = 0f;
+
+            if (isSprinting && playRun.IsValid())
+            {
+                activeSlot = 2; // Great Sword Run
+                playRun.SetSpeed(1.30f);
+                blendRate = 16f;
+            }
+            else if (playWalk.IsValid())
+            {
+                activeSlot = 1; // Great Sword Walk
+                playWalk.SetSpeed(1.10f);
+            }
+            else if (playRun.IsValid())
+            {
+                activeSlot = 2;
+            }
+        }
+        else if (isRoaring && playRoar.IsValid())
+        {
+            activeSlot = 6; // Crouch Taunt when idle > 1.6s
+            blendRate = 14f;
+        }
+        else
+        {
+            activeSlot = 0; // Great Sword Idle
+        }
+
+        float weightSum = 0f;
+        for (int i = 0; i < 9; i++)
+        {
+            float targetW = (i == activeSlot) ? 1f : 0f;
+            slotWeights[i] = Mathf.MoveTowards(slotWeights[i], targetW, Time.deltaTime * blendRate);
+            weightSum += slotWeights[i];
+        }
+
+        if (weightSum > 0.0001f)
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                mixer.SetInputWeight(i, slotWeights[i] / weightSum);
+            }
+        }
+
+        if (!isDeadState && hips != null && initHipsPos.sqrMagnitude > 0.0001f)
+        {
+            hips.localPosition = initHipsPos;
         }
     }
 
@@ -1150,7 +1495,19 @@ public class CharacterVisualAnimator : MonoBehaviour
         isRoaring = false;
         idleStillTimer = 0f;
 
-        if (isBruteModel)
+        if (isMariaModel)
+        {
+            isUltimateCombo = true;
+            attackGestureDuration = (clipCombo != null && clipCombo.length > 0.1f) ? Mathf.Min(clipCombo.length, 2.0f) : 1.4f;
+            attackGestureTimer = attackGestureDuration;
+
+            if (playCombo.IsValid())
+            {
+                playCombo.SetTime(0);
+                playCombo.SetSpeed(1.20f);
+            }
+        }
+        else if (isBruteModel)
         {
             isUltimateCombo = true;
             attackGestureDuration = (clipCombo != null && clipCombo.length > 0.1f) ? Mathf.Min(clipCombo.length, 1.8f) : 1.4f;
@@ -1189,7 +1546,18 @@ public class CharacterVisualAnimator : MonoBehaviour
         idleStillTimer = 0f;
         isUltimateCombo = false;
 
-        if (isBruteModel)
+        if (isMariaModel)
+        {
+            attackGestureDuration = (clipAttack != null && clipAttack.length > 0.1f) ? Mathf.Min(clipAttack.length, 0.75f) : 0.65f;
+            attackGestureTimer = attackGestureDuration;
+
+            if (playAttack.IsValid())
+            {
+                playAttack.SetTime(0);
+                playAttack.SetSpeed(1.30f);
+            }
+        }
+        else if (isBruteModel)
         {
             attackGestureDuration = (clipAttack != null && clipAttack.length > 0.1f) ? Mathf.Min(clipAttack.length, 0.75f) : 0.65f;
             attackGestureTimer = attackGestureDuration;
@@ -1271,7 +1639,7 @@ public class CharacterVisualAnimator : MonoBehaviour
                 playDeath.SetTime(0);
                 playDeath.SetSpeed(1.0f);
             }
-            int totalSlots = isBruteModel ? 9 : 7;
+            int totalSlots = (isBruteModel || isMariaModel) ? 9 : 7;
             for (int i = 0; i < totalSlots; i++)
             {
                 slotWeights[i] = (i == 0) ? 1f : 0f;

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: WarriorData
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   characterID: 5
-  characterName: Warrior
-  description: 
+  characterName: Maria
+  description: Maria, The Greatsword Champion. Masters heavy slashes, leap strikes, and an overwhelming Level 5 spinning greatsword attack.
   characterIcon: {fileID: 0}
   role: 1
   maxPerTeam: 2

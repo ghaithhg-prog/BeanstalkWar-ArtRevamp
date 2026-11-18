@@ -79,6 +79,8 @@ public class PlayerXP : NetworkBehaviour
     );
 
     private float nextUltimateTime = 0f;
+    private float level5UnlockBannerTimer = 0f;
+    private bool hasTriggeredLevel5Banner = false;
     private CharacterCombat combat;
     private Health health;
     private PlayerMovement movement;
@@ -116,6 +118,11 @@ public class PlayerXP : NetworkBehaviour
     void OnLevelChanged(int previous, int current)
     {
         ApplyLevelBonuses();
+        if (current >= 5 && previous < 5 && IsLocalHumanPlayer && IsOwner)
+        {
+            level5UnlockBannerTimer = 9.0f;
+            hasTriggeredLevel5Banner = true;
+        }
 
         if (current > previous && IsLocalHumanPlayer && IsOwner)
         {
@@ -296,6 +303,16 @@ public class PlayerXP : NetworkBehaviour
     void Update()
     {
         if (!IsLocalHumanPlayer || !IsOwner) return;
+
+        if (currentLevel.Value >= 5 && !hasTriggeredLevel5Banner)
+        {
+            hasTriggeredLevel5Banner = true;
+            level5UnlockBannerTimer = 9.0f;
+        }
+        if (level5UnlockBannerTimer > 0f)
+        {
+            level5UnlockBannerTimer -= Time.deltaTime;
+        }
 
         // القدرة الخاصة - زر R
         if (currentLevel.Value >= 5 && Input.GetKeyDown(KeyCode.R))
@@ -548,5 +565,89 @@ public class PlayerXP : NetworkBehaviour
             fr: $"⚔️+{dmgPct}%  🛡️+{hpPct}%  ⚡+{spdPct}%"
         );
         GUI.Label(new Rect(x + 2f, y + pillH + 1f, pillW + 60f, 14f), statsSummary, subStyle);
+
+        // E. Top-Center Level 5 Ultimate Unlock Celebration Banner
+        if (level5UnlockBannerTimer > 0f)
+        {
+            float bannerW = Mathf.Min(640f, Screen.width * 0.92f);
+            float bannerH = 46f;
+            float bannerX = (Screen.width - bannerW) * 0.5f;
+            float bannerY = 82f;
+            Rect bannerRect = new Rect(bannerX, bannerY, bannerW, bannerH);
+
+            float pulseAlpha = 0.85f + 0.15f * Mathf.Sin(Time.time * 6f);
+            GUI.color = new Color(0.04f, 0.08f, 0.05f, 0.94f);
+            GUI.DrawTexture(bannerRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            Color borderGold = new Color(1.0f, 0.84f, 0.2f, pulseAlpha);
+            EnchantedNatureGUI.DrawCrispBorder(bannerRect, borderGold, 2.0f);
+
+            GUIStyle bannerStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 14,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter
+            };
+            bannerStyle.normal.textColor = new Color(1f, 0.92f, 0.45f);
+
+            string unlockMsg = LanguageSelectionUI.Localize(
+                "⚡ LEVEL 5 REACHED! ULTIMATE ATTACK UNLOCKED! Press [R] to Strike! ⚡",
+                ar: "⚡ تم الوصول إلى المستوى 5! فُتحت الضربة الخارقة! اضغط [R] للتنفيذ ⚡",
+                fa: "⚡ رسیدن به سطح 5! حمله نهایی باز شد! کلید [R] را فشار دهید ⚡",
+                ru: "⚡ ДОСТИГНУТ 5 УРОВЕНЬ! СУПЕРУДАР РАЗБЛОКИРОВАН! Нажмите [R]! ⚡",
+                es: "⚡ ¡NIVEL 5 ALCANZADO! ¡ATAQUE DEFINITIVO DESBLOQUEADO! ¡Presiona [R]! ⚡",
+                fr: "⚡ NIVEAU 5 ATTEINT ! ATTAQUE ULTIME DÉBLOQUÉE ! Appuyez sur [R] ! ⚡"
+            );
+            GUI.Label(bannerRect, unlockMsg, bannerStyle);
+        }
+
+        // F. Permanent Ultimate HUD Pill for Level 5+ on PC / Keyboard
+        if (currentLevel.Value >= 5)
+        {
+            float ultPillW = 215f;
+            float ultPillH = 24f;
+            float ultX = x;
+            float ultY = y + pillH + 18f;
+            Rect ultRect = new Rect(ultX, ultY, ultPillW, ultPillH);
+
+            float rem = GetRemainingUltimateCooldown();
+            bool isReady = rem <= 0.05f;
+
+            Color ultBg = isReady ? new Color(0.04f, 0.12f, 0.08f, 0.90f) : new Color(0.08f, 0.06f, 0.06f, 0.80f);
+            GUI.color = ultBg;
+            GUI.DrawTexture(ultRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float pulseBorder = isReady ? (0.85f + 0.15f * Mathf.Sin(Time.time * 6f)) : 0.6f;
+            Color ultBorder = isReady ? new Color(1.0f, 0.85f, 0.25f, pulseBorder) : new Color(0.55f, 0.55f, 0.55f, 0.60f);
+            EnchantedNatureGUI.DrawCrispBorder(ultRect, ultBorder, isReady ? 1.8f : 1.0f);
+
+            GUIStyle ultStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter
+            };
+            ultStyle.normal.textColor = isReady ? new Color(1f, 0.95f, 0.4f) : new Color(0.85f, 0.85f, 0.85f);
+
+            string ultText = isReady
+                ? LanguageSelectionUI.Localize(
+                    "⚡ [R] ULTIMATE READY TO STRIKE! ⚡",
+                    ar: "⚡ [R] الهجوم الخارق جاهز! اضغط ⚡",
+                    fa: "⚡ [R] حمله نهایی آماده است! ⚡",
+                    ru: "⚡ [R] СУПЕРУДАР ГОТОВ! ⚡",
+                    es: "⚡ [R] ¡DEFINITIVA LISTA! ⚡",
+                    fr: "⚡ [R] ULTIME PRÊTE ! ⚡")
+                : LanguageSelectionUI.Localize(
+                    $"⏳ [R] Ultimate: {rem:F1}s",
+                    ar: $"⏳ [R] الخارق: {rem:F1} ث",
+                    fa: $"⏳ [R] بازنشانی: {rem:F1} ث",
+                    ru: $"⏳ [R] Перезарядка: {rem:F1}с",
+                    es: $"⏳ [R] Definitiva: {rem:F1}s",
+                    fr: $"⏳ [R] Ultime: {rem:F1}s");
+
+            GUI.Label(ultRect, ultText, ultStyle);
+        }
     }
 }

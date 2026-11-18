@@ -786,17 +786,25 @@ public class MobileUI : MonoBehaviour
 
         if (localXP == null)
         {
-            if (ultimateLevelText != null) ultimateLevelText.text = "🔒 Lv 5";
+            ultimateButton.interactable = false;
+            if (ultimateLevelText != null) { ultimateLevelText.gameObject.SetActive(true); ultimateLevelText.text = "🔒 Lv 5"; }
             if (ultimateCooldownOverlay != null) ultimateCooldownOverlay.fillAmount = 1f;
             return;
         }
 
         if (localXP.CurrentLevel < 5)
         {
+            ultimateButton.interactable = false;
+            ultimateButton.transform.localScale = Vector3.one * 0.90f;
+            if (ultimateButton.image != null)
+            {
+                ultimateButton.image.color = new Color(0.40f, 0.40f, 0.40f, 0.55f);
+            }
             if (ultimateLevelText != null)
             {
                 ultimateLevelText.gameObject.SetActive(true);
                 ultimateLevelText.text = "🔒 Lv 5";
+                ultimateLevelText.color = new Color(0.95f, 0.85f, 0.35f);
             }
             if (ultimateCooldownOverlay != null) ultimateCooldownOverlay.fillAmount = 1f;
         }
@@ -805,10 +813,17 @@ public class MobileUI : MonoBehaviour
             float remaining = localXP.GetRemainingUltimateCooldown();
             if (remaining > 0.05f)
             {
+                ultimateButton.interactable = false;
+                ultimateButton.transform.localScale = Vector3.one;
+                if (ultimateButton.image != null)
+                {
+                    ultimateButton.image.color = new Color(0.75f, 0.75f, 0.75f, 0.85f);
+                }
                 if (ultimateLevelText != null)
                 {
                     ultimateLevelText.gameObject.SetActive(true);
                     ultimateLevelText.text = remaining.ToString("F1") + "s";
+                    ultimateLevelText.color = new Color(1f, 0.85f, 0.2f);
                 }
                 if (ultimateCooldownOverlay != null)
                 {
@@ -817,7 +832,19 @@ public class MobileUI : MonoBehaviour
             }
             else
             {
-                if (ultimateLevelText != null) ultimateLevelText.gameObject.SetActive(false);
+                ultimateButton.interactable = true;
+                float pulse = 0.88f + 0.12f * Mathf.Sin(Time.time * 5f);
+                ultimateButton.transform.localScale = Vector3.one * (1.0f + 0.07f * Mathf.Sin(Time.time * 5f));
+                if (ultimateButton.image != null)
+                {
+                    ultimateButton.image.color = new Color(1f, 0.92f * pulse, 0.35f, 1f);
+                }
+                if (ultimateLevelText != null)
+                {
+                    ultimateLevelText.gameObject.SetActive(true);
+                    ultimateLevelText.text = "⚡ READY";
+                    ultimateLevelText.color = Color.white;
+                }
                 if (ultimateCooldownOverlay != null) ultimateCooldownOverlay.fillAmount = 0f;
             }
         }

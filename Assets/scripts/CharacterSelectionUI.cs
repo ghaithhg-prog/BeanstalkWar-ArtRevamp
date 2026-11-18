@@ -278,9 +278,15 @@ public class CharacterSelectionUI : MonoBehaviour
         string lowName = (ch != null && !string.IsNullOrEmpty(ch.characterName)) ? ch.characterName.ToLower() : "";
         bool isArcherModel = (characterID == 0) || lowName.Equals("archer");
         bool isBruteModel = (characterID == 7) || lowName.Equals("brute") || lowName.Equals("berserker");
+        bool isMariaModel = (characterID == 5) || lowName.Equals("maria") || lowName.Equals("warrior");
 
         GameObject prefab = null;
-        if (isBruteModel)
+        if (isMariaModel)
+        {
+            prefab = Resources.Load<GameObject>("Models/Maria");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Warrior_Medieval");
+        }
+        else if (isBruteModel)
         {
             prefab = Resources.Load<GameObject>("Models/Brute");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Erika_Archer");
@@ -298,17 +304,17 @@ public class CharacterSelectionUI : MonoBehaviour
         if (prefab != null)
         {
             currentPreviewModel = Instantiate(prefab, turntable);
-            currentPreviewModel.name = isBruteModel ? ("Preview_Champion_Brute_" + characterID) : (isArcherModel ? ("Preview_Champion_Archer_" + characterID) : ("Preview_Champion_" + characterID));
+            currentPreviewModel.name = isMariaModel ? ("Preview_Champion_Maria_" + characterID) : (isBruteModel ? ("Preview_Champion_Brute_" + characterID) : (isArcherModel ? ("Preview_Champion_Archer_" + characterID) : ("Preview_Champion_" + characterID)));
             currentPreviewModel.transform.localPosition = new Vector3(0f, -0.10f, 0f);
             currentPreviewModel.transform.localRotation = Quaternion.identity;
-            currentPreviewModel.transform.localScale = Vector3.one * (isBruteModel ? 0.82f : 0.90f);
+            currentPreviewModel.transform.localScale = Vector3.one * (isMariaModel ? 0.86f : (isBruteModel ? 0.82f : 0.90f));
 
             foreach (Collider c in currentPreviewModel.GetComponentsInChildren<Collider>()) Destroy(c);
             foreach (Rigidbody r in currentPreviewModel.GetComponentsInChildren<Rigidbody>()) Destroy(r);
             foreach (Animator a in currentPreviewModel.GetComponentsInChildren<Animator>())
             {
                 a.applyRootMotion = false;
-                if (isArcherModel || isBruteModel)
+                if (isArcherModel || isBruteModel || isMariaModel)
                 {
                     a.enabled = true;
                     a.cullingMode = AnimatorCullingMode.AlwaysAnimate;
@@ -319,7 +325,11 @@ public class CharacterSelectionUI : MonoBehaviour
                 }
             }
 
-            if (isBruteModel)
+            if (isMariaModel)
+            {
+                PlayerMovement.ApplyMariaMaterials(currentPreviewModel, PlayerMovement.TeamType.Protector);
+            }
+            else if (isBruteModel)
             {
                 PlayerMovement.ApplyBruteMaterials(currentPreviewModel, PlayerMovement.TeamType.Protector);
             }
