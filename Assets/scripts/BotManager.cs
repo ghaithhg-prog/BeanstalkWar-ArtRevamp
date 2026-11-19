@@ -466,7 +466,7 @@ public class BotManager : MonoBehaviour
 
         if (agent != null)
         {
-            agent.baseOffset = 0.95f;
+            agent.baseOffset = 1.02f;
             agent.enabled = true;
             if (UnityEngine.AI.NavMesh.SamplePosition(position, out UnityEngine.AI.NavMeshHit hit, 6f, UnityEngine.AI.NavMesh.AllAreas))
             {

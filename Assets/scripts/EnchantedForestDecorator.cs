@@ -22,14 +22,15 @@ public class EnchantedForestDecorator : MonoBehaviour
     public static EnchantedForestDecorator Instance { get; private set; }
 
     [Header("Environment Colors")]
-    public Color grassColorA = new Color(0.18f, 0.62f, 0.28f);   // Vibrant emerald green
-    public Color grassColorB = new Color(0.28f, 0.78f, 0.38f);   // Fresh spring meadow
+    public Color grassColorA = new Color(0.045f, 0.165f, 0.065f); // Deep lush enchanted emerald green
+    public Color grassColorB = new Color(0.09f, 0.28f, 0.12f);    // Rich radiant forest green
     public Color barkColorA = new Color(0.32f, 0.20f, 0.10f);    // Deep oak brown
     public Color barkColorB = new Color(0.48f, 0.32f, 0.18f);    // Warm wood ridges
     public Color canopyColor = new Color(0.20f, 0.68f, 0.32f);   // Foliage canopy green
     public Color waterColor = new Color(0.15f, 0.78f, 0.95f, 0.85f); // Sparkling turquoise water
 
     private Material grassMaterial;
+    private Material grassClumpMaterial;
     private Material barkMaterial;
     private Material canopyMaterial;
     private Material stoneMaterial;
@@ -182,6 +183,7 @@ public class EnchantedForestDecorator : MonoBehaviour
 
         CreateForestMaterials();
         ReskinSceneMeshes();
+        SpawnVisualGrassMeadow(decorationsRoot.transform);
         BuildDiverseFairytaleForestRing();
         BuildMajesticMountainRing();
         BuildMajesticWaterfall();
@@ -207,12 +209,31 @@ public class EnchantedForestDecorator : MonoBehaviour
     {
         Shader litShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
 
-        // Grass
+        // Grass - Deep lush emerald ground with arches & fractured stone contours
         grassMaterial = new Material(litShader);
         grassMaterial.name = "ForestGrass_Runtime";
-        grassMaterial.mainTexture = GenerateNoiseTexture(256, 256, grassColorA, grassColorB, 18f, true);
-        grassMaterial.mainTextureScale = new Vector2(30f, 30f);
-        if (grassMaterial.HasProperty("_Smoothness")) grassMaterial.SetFloat("_Smoothness", 0.15f);
+        Texture2D groundTex = Resources.Load<Texture2D>("Textures/EnchantedEmeraldGround");
+        if (groundTex == null)
+        {
+            groundTex = GenerateNoiseTexture(256, 256, grassColorA, grassColorB, 18f, true);
+        }
+        grassMaterial.mainTexture = groundTex;
+        grassMaterial.mainTextureScale = new Vector2(48f, 48f);
+        if (grassMaterial.HasProperty("_Smoothness")) grassMaterial.SetFloat("_Smoothness", 0.12f);
+
+        // Grass Clump Material - Pure visual aesthetic blades (No collision)
+        grassClumpMaterial = new Material(litShader);
+        grassClumpMaterial.name = "VisualGrassBlade_Runtime";
+        Texture2D tuftTex = Resources.Load<Texture2D>("Textures/GrassBladeTuft");
+        if (tuftTex != null)
+        {
+            grassClumpMaterial.mainTexture = tuftTex;
+        }
+        if (grassClumpMaterial.HasProperty("_Cutoff")) grassClumpMaterial.SetFloat("_Cutoff", 0.35f);
+        if (grassClumpMaterial.HasProperty("_Cull")) grassClumpMaterial.SetFloat("_Cull", 0f); // Double-sided
+        if (grassClumpMaterial.HasProperty("_Mode")) grassClumpMaterial.SetFloat("_Mode", 1f); // Cutout
+        grassClumpMaterial.EnableKeyword("_ALPHATEST_ON");
+        grassClumpMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
 
         // Bark
         barkMaterial = new Material(litShader);
@@ -3266,7 +3287,7 @@ public class EnchantedForestDecorator : MonoBehaviour
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
         RenderSettings.ambientSkyColor = new Color(0.42f, 0.70f, 0.98f);     // Radiant enchanted azure sky
         RenderSettings.ambientEquatorColor = new Color(0.42f, 0.82f, 0.52f); // Vibrant lush emerald reflection
-        RenderSettings.ambientGroundColor = new Color(0.24f, 0.40f, 0.22f);  // Earth moss tone
+        RenderSettings.ambientGroundColor = new Color(0.10f, 0.24f, 0.12f);  // Deep enchanted forest moss tone
 
         // Soft, dreamy distance aerial perspective (subtle fantasy horizon mist without obscuring combat)
         RenderSettings.fog = true;
@@ -3285,6 +3306,7 @@ public class EnchantedForestDecorator : MonoBehaviour
     void OnDestroy()
     {
         if (grassMaterial != null) { if (grassMaterial.mainTexture != null) Destroy(grassMaterial.mainTexture); Destroy(grassMaterial); }
+        if (grassClumpMaterial != null) { if (grassClumpMaterial.mainTexture != null) Destroy(grassClumpMaterial.mainTexture); Destroy(grassClumpMaterial); }
         if (barkMaterial != null) { if (barkMaterial.mainTexture != null) Destroy(barkMaterial.mainTexture); Destroy(barkMaterial); }
         if (canopyMaterial != null) { if (canopyMaterial.mainTexture != null) Destroy(canopyMaterial.mainTexture); Destroy(canopyMaterial); }
         if (stoneMaterial != null) { if (stoneMaterial.mainTexture != null) Destroy(stoneMaterial.mainTexture); Destroy(stoneMaterial); }
@@ -3397,6 +3419,127 @@ public class EnchantedForestDecorator : MonoBehaviour
         {
             if (Application.isPlaying) Destroy(c);
             else DestroyImmediate(c);
+        }
+    }
+
+    /// <summary>
+    /// توليد حقول عشب ثلاثية الأبعاد جمالية على الأرضية السفلية تضفي حيوية وسحراً استثنائياً
+    /// العشب مجرد مظهر بصري فقط ولا يحتوي على أي كوليدر نهائياً حتى لا يلامس أو يعيق حركة اللاعبين والبوتات
+    /// </summary>
+    private void SpawnVisualGrassMeadow(Transform parent)
+    {
+        if (parent == null) return;
+
+        GameObject meadowObj = new GameObject("VisualGrassMeadow");
+        meadowObj.transform.SetParent(parent, false);
+        meadowObj.transform.position = Vector3.zero;
+
+        DestroyCollider(meadowObj);
+
+        List<Vector3> verts = new List<Vector3>();
+        List<int> tris = new List<int>();
+        List<Vector2> uvs = new List<Vector2>();
+        List<Color> colors = new List<Color>();
+        List<Vector3> normals = new List<Vector3>();
+
+        System.Random rng = new System.Random(427);
+        int clumpCount = 220;
+
+        for (int i = 0; i < clumpCount; i++)
+        {
+            float angle = (float)(rng.NextDouble() * Mathf.PI * 2.0f);
+            float radius = 7.0f + Mathf.Sqrt((float)rng.NextDouble()) * 78.0f;
+            float cx = Mathf.Cos(angle) * radius;
+            float cz = Mathf.Sin(angle) * radius;
+            float cy = 0.02f;
+
+            int gLayer = LayerMask.NameToLayer("Ground");
+            int mask = gLayer >= 0 ? (1 << gLayer) : ~0;
+            if (Physics.Raycast(new Vector3(cx, 10f, cz), Vector3.down, out RaycastHit hit, 20f, mask))
+            {
+                if (hit.point.y < 2.0f)
+                {
+                    cy = hit.point.y + 0.01f;
+                }
+            }
+
+            float clumpWidth = 0.85f + (float)rng.NextDouble() * 0.55f;
+            float clumpHeight = 0.70f + (float)rng.NextDouble() * 0.45f;
+            float baseRot = (float)(rng.NextDouble() * Mathf.PI);
+
+            for (int q = 0; q < 2; q++)
+            {
+                float rot = baseRot + q * (Mathf.PI * 0.5f);
+                float dx = Mathf.Cos(rot) * (clumpWidth * 0.5f);
+                float dz = Mathf.Sin(rot) * (clumpWidth * 0.5f);
+
+                int baseIdx = verts.Count;
+
+                Vector3 p0 = new Vector3(cx - dx, cy, cz - dz);
+                Vector3 p1 = new Vector3(cx + dx, cy, cz + dz);
+                Vector3 p2 = new Vector3(cx - dx, cy + clumpHeight, cz - dz);
+                Vector3 p3 = new Vector3(cx + dx, cy + clumpHeight, cz + dz);
+
+                verts.Add(p0);
+                verts.Add(p1);
+                verts.Add(p2);
+                verts.Add(p3);
+
+                uvs.Add(new Vector2(0f, 0f));
+                uvs.Add(new Vector2(1f, 0f));
+                uvs.Add(new Vector2(0f, 1f));
+                uvs.Add(new Vector2(1f, 1f));
+
+                Color rootColor = new Color(0.04f, 0.16f, 0.06f, 1.0f);
+                Color tipColor = new Color(0.20f, 0.72f, 0.32f, 1.0f);
+                colors.Add(rootColor);
+                colors.Add(rootColor);
+                colors.Add(tipColor);
+                colors.Add(tipColor);
+
+                Vector3 normal = Vector3.up;
+                normals.Add(normal);
+                normals.Add(normal);
+                normals.Add(normal);
+                normals.Add(normal);
+
+                tris.Add(baseIdx + 0);
+                tris.Add(baseIdx + 2);
+                tris.Add(baseIdx + 1);
+
+                tris.Add(baseIdx + 1);
+                tris.Add(baseIdx + 2);
+                tris.Add(baseIdx + 3);
+
+                tris.Add(baseIdx + 0);
+                tris.Add(baseIdx + 1);
+                tris.Add(baseIdx + 2);
+
+                tris.Add(baseIdx + 1);
+                tris.Add(baseIdx + 3);
+                tris.Add(baseIdx + 2);
+            }
+        }
+
+        Mesh mesh = new Mesh();
+        mesh.name = "VisualGrassMeadowMesh";
+        mesh.SetVertices(verts);
+        mesh.SetUVs(0, uvs);
+        mesh.SetColors(colors);
+        mesh.SetNormals(normals);
+        mesh.SetTriangles(tris, 0);
+
+        MeshFilter mf = meadowObj.AddComponent<MeshFilter>();
+        mf.sharedMesh = mesh;
+
+        MeshRenderer mr = meadowObj.AddComponent<MeshRenderer>();
+        mr.sharedMaterial = (grassClumpMaterial != null) ? grassClumpMaterial : grassMaterial;
+        mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        mr.receiveShadows = true;
+
+        foreach (Collider col in meadowObj.GetComponentsInChildren<Collider>(true))
+        {
+            Destroy(col);
         }
     }
 }

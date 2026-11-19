@@ -227,7 +227,7 @@ public class PlayerMovement : NetworkBehaviour
             auraObj = existingAura.gameObject;
         }
 
-        auraObj.transform.localPosition = new Vector3(0f, -0.92f, 0f);
+        auraObj.transform.localPosition = new Vector3(0f, -1.01f, 0f);
         auraObj.transform.localScale = new Vector3(1.35f, 0.010f, 1.35f);
 
         if (auraObj.GetComponent<GroundLockedFootAura>() == null)
@@ -733,17 +733,17 @@ public class PlayerMovement : NetworkBehaviour
             visualTr.gameObject.SetActive(false);
         }
 
-        // 4. ضبط قاعدة الملاحة للبوتات والزعماء حتى لا ينغرس نصفهم في الأرض
+        // 4. ضبط قاعدة الملاحة للبوتات والزعماء حتى لا ينغرس نصفهم في الأرض وتلامس أقدامهم السطح مباشرة
         UnityEngine.AI.NavMeshAgent agent = target.GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null)
         {
-            agent.baseOffset = 0.95f;
+            agent.baseOffset = 1.02f;
         }
 
         // 5. توليد المجسم ثلاثي الأبعاد الحقيقي
         GameObject model = Instantiate(prefab, target.transform);
         model.name = isMaria ? "Character_3D_Mesh_Maria" : (isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : "Character_3D_Mesh"));
-        model.transform.localPosition = new Vector3(0f, -0.95f, 0f); // وضع الأقدام على الأرض تماماً
+        model.transform.localPosition = new Vector3(0f, -1.02f, 0f); // وضع الأقدام على الأرض تماماً دون أي فراغ أو ارتفاع
         model.transform.localRotation = Quaternion.identity;
         model.transform.localScale = Vector3.one * customScale;
 
@@ -1695,7 +1695,7 @@ public class GroundLockedFootAura : MonoBehaviour
 
         if (!initialized)
         {
-            lastGroundY = p.position.y - 0.92f;
+            lastGroundY = p.position.y - 1.01f;
             initialized = true;
         }
 
@@ -1720,7 +1720,7 @@ public class GroundLockedFootAura : MonoBehaviour
 
         if (foundGround)
         {
-            lastGroundY = bestY + 0.03f;
+            lastGroundY = bestY + 0.015f;
         }
 
         // تثبيت الدائرة على الأرض تماماً تحت الشخصية ودوران انسيابي سحري هادئ

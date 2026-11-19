@@ -758,10 +758,10 @@ public class GameIntroBriefingUI : MonoBehaviour
     {
         switch (slide)
         {
-            case 0: return 460f;
-            case 1: return 490f;
-            case 2: return 560f;
-            case 3: return 540f;
+            case 0: return 520f;
+            case 1: return 500f;
+            case 2: return 570f;
+            case 3: return 560f;
             default: return 450f;
         }
     }
@@ -792,7 +792,7 @@ public class GameIntroBriefingUI : MonoBehaviour
         GUI.Label(new Rect(area.x + 8f, area.y + 32f, area.width - 16f, 48f), slide1Intro, bodyStyle);
 
         float cardW = (area.width - 24f) / 3f;
-        float cardH = 345f;
+        float cardH = 385f;
         float cy = area.y + 82f;
 
         // Card 1: Protectors
@@ -840,38 +840,41 @@ public class GameIntroBriefingUI : MonoBehaviour
         float labelW = tRect.x + tRect.width - labelX - 10f;
 
         // Level Top: Sacred Crystal
-        float slot0Y = barY;
-        GUI.Label(new Rect(labelX, slot0Y, labelW, 20f),
+        float slotStep = (barH - 48f) / 3f;
+
+        // Level Top: Sacred Crystal
+        float slot0Y = barY + 2f;
+        GUI.Label(new Rect(labelX, slot0Y, labelW, 18f),
             LanguageSelectionUI.Localize("💎 TOP: Sacred Crystal", ar: "💎 القمة: الكريستالة المقدسة", ru: "💎 ВЕРШИНА: Священный Кристалл", es: "💎 CIMA: Cristal Sagrado", fr: "💎 SOMMET : Cristal Sacré", fa: "💎 اوج: بلور مقدس"),
             CreateHeadingStyle(11, new Color(0.4f, 0.95f, 1f)));
-        GUI.Label(new Rect(labelX, slot0Y + 20f, labelW, 36f),
+        GUI.Label(new Rect(labelX, slot0Y + 18f, labelW, 30f),
             LanguageSelectionUI.Localize("• Unsealed after 3 Bosses die\n• Carry to Altar to WIN!", ar: "• تفك أختامها بعد موت الـ 3 زعماء\n• احملوها للمذبح لتحقيق الفوز!", ru: "• Открывается после гибели 3 Боссов\n• Отнесите к Алтарю для победы!", es: "• Se libera tras vencer a los 3 Jefes\n• ¡Llévalo al Altar para ganar!", fr: "• Descellé après la mort des 3 Boss\n• Portez à l'Autel pour gagner !", fa: "• پس از مرگ ۳ غول آزاد می‌شود\n• برای پیروزی به محراب برسانید!"),
             CreateBodyStyle(10, new Color(0.85f, 0.95f, 1f)));
 
         // Level 3: Ancient Overlord
-        float slot3Y = barY + barH * 0.27f;
-        GUI.Label(new Rect(labelX, slot3Y, labelW, 20f),
+        float slot3Y = barY + 2f + slotStep;
+        GUI.Label(new Rect(labelX, slot3Y, labelW, 18f),
             LanguageSelectionUI.Localize("👑 LEVEL 3: Ancient Overlord", ar: "👑 المستوى 3: الحاكم القديم", ru: "👑 УРОВЕНЬ 3: Древний Владыка", es: "👑 NIVEL 3: Soberano Antiguo", fr: "👑 NIVEAU 3 : Seigneur Ancien", fa: "👑 طبقه ۳: فرمانروای باستانی"),
             CreateHeadingStyle(11, new Color(1f, 0.85f, 0.3f)));
-        GUI.Label(new Rect(labelX, slot3Y + 20f, labelW, 36f),
+        GUI.Label(new Rect(labelX, slot3Y + 18f, labelW, 30f),
             LanguageSelectionUI.Localize("• 300% Height Damage Power!\n• Final Seal Guardian Boss", ar: "• 300% قوة ضرر مضاعفة بالقمة!\n• زعيم الختم الأخير والحاسم", ru: "• 300% урона с высоты!\n• Босс последней Печати", es: "• ¡300% Daño desde la cima!\n• Jefe del Sello Final", fr: "• 300% Dégâts depuis le sommet !\n• Boss du Sceau Final", fa: "• ۳۰۰٪ آسیب قدرتمند از اوج!\n• نگهبان آخرین مهر بلور"),
             CreateBodyStyle(10, new Color(1f, 0.92f, 0.65f)));
 
         // Level 2: Inferno Titan
-        float slot2Y = barY + barH * 0.53f;
-        GUI.Label(new Rect(labelX, slot2Y, labelW, 20f),
+        float slot2Y = barY + 2f + slotStep * 2f;
+        GUI.Label(new Rect(labelX, slot2Y, labelW, 18f),
             LanguageSelectionUI.Localize("👑 LEVEL 2: Inferno Titan", ar: "👑 المستوى 2: عملاق الجحيم", ru: "👑 УРОВЕНЬ 2: Титан Преисподней", es: "👑 NIVEL 2: Titán Infernal", fr: "👑 NIVEAU 2 : Titan Infernal", fa: "👑 طبقه ۲: تایتان جهنمی"),
             CreateHeadingStyle(11, new Color(1f, 0.55f, 0.25f)));
-        GUI.Label(new Rect(labelX, slot2Y + 20f, labelW, 36f),
+        GUI.Label(new Rect(labelX, slot2Y + 18f, labelW, 30f),
             LanguageSelectionUI.Localize("• 220% Height Damage Power\n• Unlocks at 42% Tree Growth", ar: "• 220% قوة ضرر مضاعفة\n• يفتح عند نمو الشجرة لـ 42%", ru: "• 220% урона с высоты\n• Открывается при 42% роста", es: "• 220% Daño desde altura\n• Se abre al 42% de crecimiento", fr: "• 220% Dégâts d'élévation\n• S'ouvre à 42% de croissance", fa: "• ۲۲۰٪ قدرت آسیب ارتفاع\n• در ۴۲٪ رشد درخت باز می‌شود"),
             CreateBodyStyle(10, new Color(1f, 0.82f, 0.65f)));
 
         // Level 1: Forest Goliath
-        float slot1Y = barY + barH * 0.79f;
-        GUI.Label(new Rect(labelX, slot1Y, labelW, 20f),
+        float slot1Y = barY + 2f + slotStep * 3f;
+        GUI.Label(new Rect(labelX, slot1Y, labelW, 18f),
             LanguageSelectionUI.Localize("👑 LEVEL 1: Forest Goliath", ar: "👑 المستوى 1: جالوت الغابة", ru: "👑 УРОВЕНЬ 1: Лесной Голиаф", es: "👑 NIVEL 1: Goliat del Bosque", fr: "👑 NIVEAU 1 : Goliath de la Forêt", fa: "👑 طبقه ۱: جالوت جنگل"),
             CreateHeadingStyle(11, new Color(0.45f, 0.95f, 0.45f)));
-        GUI.Label(new Rect(labelX, slot1Y + 20f, labelW, 36f),
+        GUI.Label(new Rect(labelX, slot1Y + 18f, labelW, 30f),
             LanguageSelectionUI.Localize("• 150% Height Damage Power\n• Active from match start!", ar: "• 150% قوة ضرر مضاعفة\n• متاح منذ بداية المباراة!", ru: "• 150% урона с высоты\n• Активен со старта матча!", es: "• 150% Daño desde altura\n• ¡Activo desde el inicio!", fr: "• 150% Dégâts d'élévation\n• Actif dès le début !", fa: "• ۱۵۰٪ قدرت آسیب ارتفاع\n• از آغاز نبرد فعال است!"),
             CreateBodyStyle(10, new Color(0.75f, 0.95f, 0.75f)));
 

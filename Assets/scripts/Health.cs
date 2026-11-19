@@ -244,7 +244,7 @@ public class Health : MonoBehaviour
             {
                 visualAnim.TriggerDeathAnimation();
                 meshTr.localRotation = Quaternion.identity;
-                meshTr.localPosition = new Vector3(0f, -0.95f, 0f);
+                meshTr.localPosition = new Vector3(0f, -1.02f, 0f);
             }
             else
             {
@@ -341,7 +341,7 @@ public class Health : MonoBehaviour
         if (meshTr != null)
         {
             meshTr.localRotation = Quaternion.identity;
-            meshTr.localPosition = new Vector3(0f, -0.95f, 0f);
+            meshTr.localPosition = new Vector3(0f, -1.02f, 0f);
             CharacterVisualAnimator visualAnim = meshTr.GetComponent<CharacterVisualAnimator>();
             if (visualAnim != null)
             {

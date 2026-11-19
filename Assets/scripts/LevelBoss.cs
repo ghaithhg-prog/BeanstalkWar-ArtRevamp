@@ -38,7 +38,7 @@ public class LevelBoss : NetworkBehaviour
     public float GetExpectedLevelY()
     {
         float scaleMult = Mathf.Min(bossScale, 1.4f);
-        float baseOff = (agent != null) ? agent.baseOffset : (0.95f * scaleMult);
+        float baseOff = (agent != null) ? agent.baseOffset : (1.02f * scaleMult);
 
         GameObject pObj = myPlatformObject;
         if (pObj == null) pObj = GameObject.Find($"Level_{levelNumber}");
@@ -118,7 +118,7 @@ public class LevelBoss : NetworkBehaviour
             float clampedScale = Mathf.Min(bossScale, 1.4f);
             if (agent != null)
             {
-                agent.baseOffset = 0.95f * clampedScale;
+                agent.baseOffset = 1.02f * clampedScale;
             }
 
             float yPos = GetExpectedLevelY();
@@ -253,7 +253,7 @@ public class LevelBoss : NetworkBehaviour
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
         {
-            agent.baseOffset = 0.95f * clampedScale;
+            agent.baseOffset = 1.02f * clampedScale;
             agent.speed = 4.5f;
             agent.stoppingDistance = 2.5f;
         }
@@ -303,7 +303,7 @@ public class LevelBoss : NetworkBehaviour
         if (existing != null)
         {
             model = existing.gameObject;
-            model.transform.localPosition = new Vector3(0f, -0.95f, 0f);
+            model.transform.localPosition = new Vector3(0f, -1.02f, 0f);
             model.transform.localRotation = Quaternion.identity;
         }
         else
@@ -314,7 +314,7 @@ public class LevelBoss : NetworkBehaviour
             {
                 model = Instantiate(prefab, transform);
                 model.name = "Character_3D_Mesh";
-                model.transform.localPosition = new Vector3(0f, -0.95f, 0f);
+                model.transform.localPosition = new Vector3(0f, -1.02f, 0f);
                 model.transform.localRotation = Quaternion.identity;
                 model.transform.localScale = Vector3.one * 1.25f;
 
@@ -630,7 +630,7 @@ public class LevelBoss : NetworkBehaviour
 
         // حماية قطعية: تثبيت ارتفاع الزعيم على طابقه المخصص بدقة ومنع أي غوص في الأرض إطلاقاً
         float clampedScale = Mathf.Min(bossScale, 1.4f);
-        float targetBaseOffset = 0.95f * clampedScale;
+        float targetBaseOffset = 1.02f * clampedScale;
         if (agent != null && Mathf.Abs(agent.baseOffset - targetBaseOffset) > 0.02f)
         {
             agent.baseOffset = targetBaseOffset;

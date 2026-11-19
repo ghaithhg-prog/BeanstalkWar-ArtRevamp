@@ -74,7 +74,7 @@ public class BotController : NetworkBehaviour
     private float nextStrafeTime = 0f;
     private float currentStrafeSign = 1f;
     private float nextRepathTime = 0f;
-    public const float DefaultNavMeshBaseOffset = 0.95f;
+    public const float DefaultNavMeshBaseOffset = 1.02f;
     private float lastBotJumpTime = -10f;
     private float botJumpCooldown = 2.8f;
     private float nextTraversalHopTime = 0f;
