@@ -666,7 +666,7 @@ public class CharacterCombat : NetworkBehaviour
 
     void RangedAttack()
     {
-        // 1. اتجاه وموقع إطلاق السهم نحو النقطة التي يصوب عليها الكروس إير بدقة متناهية
+        // 1. اتجاه وموقع إطلاق السهم أو القذيفة نحو النقطة التي يصوب عليها الكروس إير بدقة متناهية
         Vector3 spawnPos = firePoint != null 
             ? firePoint.position 
             : transform.position + Vector3.up * 1.35f + transform.forward * 0.45f;
@@ -681,6 +681,18 @@ public class CharacterCombat : NetworkBehaviour
             flightDir = (CurrentAimTargetPoint - spawnPos).sqrMagnitude > 0.01f 
                 ? (CurrentAimTargetPoint - spawnPos).normalized 
                 : ((lastAttackDirection.sqrMagnitude > 0.01f) ? lastAttackDirection.normalized : transform.forward);
+        }
+
+        // فحص هل الشخصية هي الساحر زارفون (Zarvon / Mage - ID 3)
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        int charId = (pm != null) ? pm.selectedCharacterID.Value : -1;
+        bool isZarvon = (charId == 3) || gameObject.name.ToLower().Contains("zarvon") || gameObject.name.ToLower().Contains("mage");
+
+        if (isZarvon)
+        {
+            // بناء وإطلاق قذيفة الأركين الكروية المتفجرة لزارفون مع تأثير AoE
+            BuildZarvonArcaneOrb(spawnPos, flightDir);
+            return;
         }
 
         // 2. تحميل مجسم السهم الحقيقي الخاص بـ Erika Archer أولاً
@@ -929,5 +941,75 @@ public class CharacterCombat : NetworkBehaviour
         AudioClip clip = AudioClip.Create("Bow_Twang", sampleCount, 1, sampleRate, false);
         clip.SetData(samples, 0);
         return clip;
+    }
+
+    /// <summary>
+    /// بناء قذيفة الأركين الكروية المتفجرة لساحر الأركين زارفون (Zarvon)
+    /// تطلق كرة طاقة مضيئة ذات ذيل سحري وتنفجر بموجة صدمة جماعية (AoE) فور اصطدامها
+    /// </summary>
+    GameObject BuildZarvonArcaneOrb(Vector3 pos, Vector3 dir)
+    {
+        GameObject orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        orb.name = "Zarvon_Arcane_Orb";
+        orb.transform.position = pos;
+        orb.transform.rotation = Quaternion.LookRotation(dir);
+        orb.transform.localScale = Vector3.one * 0.70f;
+
+        Color arcaneColor = (team == PlayerMovement.TeamType.Destroyer)
+            ? new Color(1.0f, 0.35f, 0.15f)   // نار قرمزية متقدة للمدمرين
+            : new Color(0.25f, 0.78f, 1.0f);   // نور أركين سماوي ساطع للحماة
+
+        // 1. خامة الطاقة المتوهجة
+        Renderer rend = orb.GetComponent<Renderer>();
+        if (rend != null)
+        {
+            Shader s = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Material mat = new Material(s);
+            mat.color = arcaneColor;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", arcaneColor);
+            mat.EnableKeyword("_EMISSION");
+            if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", arcaneColor * 3.5f);
+            rend.material = mat;
+        }
+
+        // 2. ضوء كروي يضيء البيئة أثناء طيران القذيفة
+        Light orbLight = orb.AddComponent<Light>();
+        orbLight.type = LightType.Point;
+        orbLight.color = arcaneColor;
+        orbLight.range = 7f;
+        orbLight.intensity = 3.5f;
+
+        // 3. أثر وميض سحري وذيل مذنب متوهج (Trail Renderer)
+        TrailRenderer trail = orb.AddComponent<TrailRenderer>();
+        trail.time = 0.35f;
+        trail.startWidth = 0.55f;
+        trail.endWidth = 0.05f;
+        if (rend != null) trail.material = rend.material;
+        trail.startColor = arcaneColor;
+        trail.endColor = new Color(arcaneColor.r, arcaneColor.g, arcaneColor.b, 0f);
+
+        // 4. كوليدر التصادم
+        SphereCollider sc = orb.GetComponent<SphereCollider>();
+        if (sc == null) sc = orb.AddComponent<SphereCollider>();
+        sc.isTrigger = true;
+        sc.radius = 0.5f;
+
+        // 5. Rigidbody حركي لمنع الاختراق
+        Rigidbody rb = orb.AddComponent<Rigidbody>();
+        rb.isKinematic = true;
+        rb.useGravity = false;
+
+        // 6. مكون المقذوف المتفجر
+        Projectile proj = orb.AddComponent<Projectile>();
+        proj.damage = attackDamage;
+        proj.team = team;
+        proj.speed = 26f;
+        proj.owner = gameObject;
+        proj.isExplosive = true;
+        proj.aoeRadius = 4.8f;
+        proj.splashDamageMultiplier = 0.85f;
+        proj.explosionColor = arcaneColor;
+
+        return orb;
     }
 }

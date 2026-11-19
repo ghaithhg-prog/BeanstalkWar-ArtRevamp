@@ -276,6 +276,7 @@ public class LanguageSelectionUI : MonoBehaviour
         // --- All 25 Character Names ---
         Add("Warrior", "المحارب", "Воин", "Guerrier", "Guerrero", "Krieger", "योद्धा", "战士", "戦士", "Guerreiro");
         Add("Mage", "الساحر", "Маг", "Mage", "Mago", "Magier", "जादूगर", "法师", "魔法使い", "Mago");
+        Add("Zarvon", "زارفون", "Зарвон", "Zarvon", "Zarvon", "Zarvon", "जार्वोन", "扎尔冯", "ザルヴォン", "Zarvon");
         Add("Archer", "الرامي", "Лучник", "Archer", "Arquero", "Bogenschütze", "धनुर्धर", "弓箭手", "弓兵", "Arqueiro");
         Add("Tank", "المدرع", "Танк", "Tank", "Tanque", "Tank", "टैंक", "坦克", "タンク", "Tanque");
         Add("Assassin", "السفاح", "Ассасин", "Assassin", "Asesino", "Attentäter", "हत्यारा", "刺客", "暗殺者", "Assassino");
@@ -385,6 +386,7 @@ public class LanguageSelectionUI : MonoBehaviour
 
         SetLang("Warrior", "Guerriero", "Savaşçı");
         SetLang("Mage", "Mago", "Büyücü");
+        SetLang("Zarvon", "Zarvon", "Zarvon");
         SetLang("Archer", "Arciere", "Okçu");
         SetLang("Tank", "Corazzato", "Tank");
         SetLang("Assassin", "Assassino", "Suikastçı");
@@ -492,6 +494,7 @@ public class LanguageSelectionUI : MonoBehaviour
 
         SetLangFa("Warrior", "جنگجو");
         SetLangFa("Mage", "جادوگر");
+        SetLangFa("Zarvon", "زاروون");
         SetLangFa("Archer", "کماندار");
         SetLangFa("Tank", "زره‌پوش");
         SetLangFa("Assassin", "قاتل");

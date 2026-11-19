@@ -1487,6 +1487,7 @@ public class CharacterSelectionUI : MonoBehaviour
     string GetHeroEpithet(string charName)
     {
         string low = charName != null ? charName.ToLower() : "";
+        if (low.Contains("zarvon") || low.Contains("mage")) return LanguageSelectionUI.Localize("the Grand Archmage", "ساحر الأركين العظيم", "Великий Архимаг", "Le Grand Archimage", "El Gran Archimago", "Der Große Erzmagier", "महान महाजादूगर", "至高大法师", "大魔導士", "O Grande Arquimago", "استاد بزرگ جادو");
         if (low.Contains("archer")) return LanguageSelectionUI.Localize("the Forest Warden", "حارسة الغابة", "Страж Леса", "Gardienne des Bois", "Guardiana del Bosque", "Waldhüterin", "वन संरक्षक", "森林守卫", "森の番人", "Guardiã da Floresta", "نگهبان جنگل");
         if (low.Contains("paladin")) return LanguageSelectionUI.Localize("the Dawnpiercer", "قاهرة الظلام", "Пронзающая Рассвет", "Perce-Aube", "Perforaalbas", "Dämmerungsbrecherin", "भोर-वेधक", "破晓之刃", "暁の穿ち手", "Perfuradora da Alvorada", "شکافنده سپیده‌دم");
         if (low.Contains("warrior")) return LanguageSelectionUI.Localize("the Barkwarden", "حامي اللحاء", "Страж Коры", "Garde-Écorce", "Guardián de la Corteza", "Rindenwächter", "छाल संरक्षक", "树皮守卫", "樹皮の番人", "Guardião da Casca", "نگهبان پوست درخت");
@@ -1887,8 +1888,24 @@ public class CharacterSelectionUI : MonoBehaviour
             }
         }
 
-        // 4. السحرة ومشعلو العناصر (Mage / Elementalist / Enchantress)
-        if (charId == 3 || charId == 14 || charId == 16 || cName.Contains("mage") || cName.Contains("element") || cName.Contains("enchant"))
+        // 4. شخصية زارفون / ساحر الأركين (Zarvon / The Grand Archmage - ID 3)
+        if (charId == 3 || cName.Contains("zarvon") || cName.Contains("mage"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Archmage Zarvon (Default)", "زارفون - ساحر الأركين (القياسي)", "Архимаг Зарвон (Стандарт)", "Archimago Zarvon (Estándar)", "Archimage Zarvon (Standard)");
+                case 1:
+                    return LanguageSelectionUI.Localize("Verdant Cedar Sage Zarvon", "زارفون - حكيم الأرز الزمردي", "Изумрудный мудрец Зарвон", "Sabio esmeralda Zarvon", "Sage d'émeraude Zarvon");
+                case 2:
+                    return LanguageSelectionUI.Localize("Pyroclast Flamecaster Zarvon", "زارفون - قاهر نيران الحمم", "Огненный чародей Зарвон", "Piroclasta Zarvon", "Zarvon pyroclaste");
+                case 3:
+                    return LanguageSelectionUI.Localize("Netherstorm Sovereign Zarvon", "زارفون - سيد صواعق العاصفة", "Владыка бури Зарвон", "Soberano de tormentas Zarvon", "Souverain des tempêtes Zarvon");
+                default:
+                    return LanguageSelectionUI.Localize("Cosmic Astral Sorcerer Zarvon", "زارفون - ساحر النور الكوني الأسمى", "Космический архимаг Зарвон", "Hechicero astral cósmico Zarvon", "Sorcier astral cosmique Zarvon");
+            }
+        }
+        else if (charId == 14 || charId == 16 || cName.Contains("element") || cName.Contains("enchant"))
         {
             switch (index)
             {
@@ -1992,6 +2009,22 @@ public class CharacterSelectionUI : MonoBehaviour
                     return LanguageSelectionUI.Localize("Royal tempest knight regalia with storm lightning runes: +25% DMG & +35% Speed.", "كسوة فرسان العاصفة الملكية مع رونيات الصواعق المنقوشة: +25% ضرر و +35% سرعة.");
                 default:
                     return LanguageSelectionUI.Localize("Gilded celestial champion armor with holy radiant blade: +40% HP, +40% DMG & +20% Speed.", "درع بطل النور السماوي المذهب مع شفرة مقدسة مضيئة: +40% صحة، +40% ضرر و +20% سرعة.");
+            }
+        }
+        else if (charId == 3 || cName.Contains("zarvon") || cName.Contains("mage"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Arcane battle robes and ancient runic wizard staff, channeling explosive AoE magic.", "رداء الأركين القياسي وعصا الرونيات السحرية، متخصص في قذائف السحر المتفجرة واسعة التأثير.");
+                case 1:
+                    return LanguageSelectionUI.Localize("Verdant moss-embroidered cedar robes with boosted life force: +20% HP & +10% Speed.", "أردية الأرز الزمردية المطرزة بنسيم الشجرة لتعزيز الحيوية: +20% صحة و +10% سرعة.");
+                case 2:
+                    return LanguageSelectionUI.Localize("Volcanic ember-woven robes amplifying devastating blast damage: +30% Attack Damage & +10% Speed.", "أردية منسوجة بنيران الحمم البركانية لمضاعفة قوة الانفجار: +30% قوة ضرر و +10% سرعة.");
+                case 3:
+                    return LanguageSelectionUI.Localize("Storm-lightning woven robes granting high magical haste: +25% DMG & +35% Speed.", "أردية الصواعق الكحلية المشحونة برعد الجبال لتسريع الحركة: +25% ضرر و +35% سرعة ركض.");
+                default:
+                    return LanguageSelectionUI.Localize("Celestial astral ivory robes radiating supreme starlight divinity: +40% HP, +40% DMG & +20% Speed.", "أردية النور الكوني الإمبراطورية العاجية المشعة بسحر النجوم: +40% صحة، +40% ضرر و +20% سرعة.");
             }
         }
         else if (charId == 0 || charId == 9 || cName.Contains("archer") || cName.Contains("ranger"))

@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: MageData
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   characterID: 3
-  characterName: Mage
-  description: 
+  characterName: Zarvon
+  description: "زارفون - ساحر الأركين العظيم. يطلق قذائف سحرية متفجرة تخترق المسار وتحدث انفجاراً جماعياً (AoE) يسحق الهدف وجميع الأعداء المحيطين به."
   characterIcon: {fileID: 0}
-  role: 3
+  role: 1
   maxPerTeam: 2
-  maxHealth: 200
-  attackDamage: 20
-  attackCooldown: 0.68
-  attackRange: 2.5
-  moveSpeed: 6
-  jumpForce: 7
+  maxHealth: 220
+  attackDamage: 38
+  attackCooldown: 0.85
+  attackRange: 16
+  moveSpeed: 5.8
+  jumpForce: 7.2
   canDoubleJump: 0
-  attackType: 0
+  attackType: 1

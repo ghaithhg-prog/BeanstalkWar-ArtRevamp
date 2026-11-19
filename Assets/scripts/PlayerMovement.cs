@@ -675,6 +675,12 @@ public class PlayerMovement : NetworkBehaviour
                                          data.characterName.Equals("Warrior", System.StringComparison.OrdinalIgnoreCase)))
                         || (data == null && (target.name.ToLower().Contains("maria") || target.name.ToLower().Contains("warrior")));
 
+        // Zarvon, The Grand Archmage (ID 3 / Mage)
+        bool isZarvon = (data != null && (data.characterID == 3 ||
+                                          data.characterName.IndexOf("Zarvon", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                          data.characterName.Equals("Mage", System.StringComparison.OrdinalIgnoreCase)))
+                        || (data == null && (target.name.ToLower().Contains("zarvon") || target.name.ToLower().Contains("mage")));
+
         if (isMaria)
         {
             prefab = Resources.Load<GameObject>("Models/Maria");
@@ -689,6 +695,12 @@ public class PlayerMovement : NetworkBehaviour
         {
             prefab = Resources.Load<GameObject>("Models/Erika_Archer");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Akai");
+        }
+        else if (isZarvon)
+        {
+            prefab = Resources.Load<GameObject>("Models/Zarvon");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Mage");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Warrior_Medieval");
         }
         else
         {
@@ -742,7 +754,7 @@ public class PlayerMovement : NetworkBehaviour
 
         // 5. توليد المجسم ثلاثي الأبعاد الحقيقي
         GameObject model = Instantiate(prefab, target.transform);
-        model.name = isMaria ? "Character_3D_Mesh_Maria" : (isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : "Character_3D_Mesh"));
+        model.name = isMaria ? "Character_3D_Mesh_Maria" : (isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : (isZarvon ? "Character_3D_Mesh_Zarvon" : "Character_3D_Mesh")));
         model.transform.localPosition = new Vector3(0f, -1.02f, 0f); // وضع الأقدام على الأرض تماماً دون أي فراغ أو ارتفاع
         model.transform.localRotation = Quaternion.identity;
         model.transform.localScale = Vector3.one * customScale;
@@ -783,6 +795,10 @@ public class PlayerMovement : NetworkBehaviour
         {
             ApplyErikaArcherMaterials(model, team);
         }
+        else if (isZarvon)
+        {
+            StyleModelForZarvon(model, team, skin);
+        }
         else if (data != null)
         {
             StyleModelForCharacter(model, data, skin);
@@ -795,7 +811,47 @@ public class PlayerMovement : NetworkBehaviour
             visualAnim = model.AddComponent<CharacterVisualAnimator>();
         }
 
-        // 8. ربط أو إنشاء القوس في يد رامي السهام (Left Hand)
+        // 8. ربط أو إنشاء عصا السحر الكريستالية في يد الساحر زارفون (Right Hand)
+        if (isZarvon)
+        {
+            Transform staffTr = null;
+            foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.Contains("Zarvon_Staff") || t.name.Contains("StaffOrbCrystal"))
+                {
+                    staffTr = t;
+                    break;
+                }
+            }
+
+            if (staffTr == null)
+            {
+                Transform rightHand = null;
+                foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+                {
+                    string tn = t.name.ToLower();
+                    if (tn.Contains("righthand") || tn.Contains("hand.r") || tn.Contains("wrist_r") || tn.Contains("weapon_r"))
+                    {
+                        rightHand = t;
+                        break;
+                    }
+                }
+
+                if (rightHand != null)
+                {
+                    GameObject staffObj = BuildWizardStaff(rightHand, team);
+                    staffTr = staffObj.transform;
+                }
+            }
+
+            CharacterCombat combat = target.GetComponent<CharacterCombat>();
+            if (combat != null && staffTr != null)
+            {
+                combat.firePoint = staffTr;
+            }
+        }
+
+        // 9. ربط أو إنشاء القوس في يد رامي السهام (Left Hand)
         if (isArcher)
         {
             Transform bowTr = null;
@@ -1186,6 +1242,129 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
+    /// <summary>
+    /// تطبيق المظهر الملكي لساحر الأركين زارفون (Zarvon):
+    /// أردية ملكية باللون الأزرق الياقوتي العميق والأسود الأوبسيديان مع تطريزات ذهبية
+    /// </summary>
+    public static void StyleModelForZarvon(GameObject model, TeamType team, CharacterSkin skin = null)
+    {
+        if (model == null) return;
+
+        Color robeColor = (team == TeamType.Destroyer)
+            ? new Color(0.38f, 0.10f, 0.12f)   // رداء قرمزي داكن للمدمرين
+            : new Color(0.12f, 0.14f, 0.32f);  // رداء ياقوتي أركيني عميق للحماة
+
+        Color trimColor = new Color(0.96f, 0.82f, 0.32f); // تطريزات ذهبية ملكية
+
+        if (skin != null && skin.skinColor != Color.white)
+        {
+            robeColor = skin.skinColor;
+        }
+
+        foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+        {
+            if (r == null) continue;
+            string n = r.gameObject.name.ToLower();
+            if (n.Contains("staff") || n.Contains("orb") || n.Contains("crystal")) continue;
+
+            Material mat = r.material;
+            if (mat == null) continue;
+
+            if (n.Contains("face") || n.Contains("head") || n.Contains("skin") || n.Contains("eye") || n.Contains("hair") || n.Contains("teamfootaura"))
+                continue;
+
+            if (n.Contains("cuirass") || n.Contains("cloth") || n.Contains("gambeson") || n.Contains("tunic") || n.Contains("body"))
+            {
+                mat.color = robeColor;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", robeColor);
+            }
+            else if (n.Contains("belt") || n.Contains("trim") || n.Contains("buckle") || n.Contains("crest"))
+            {
+                mat.color = trimColor;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", trimColor);
+            }
+        }
+    }
+
+    /// <summary>
+    /// بناء وتثبيت عصا السحر الأركينية الرونية في يد الساحر زارفون
+    /// </summary>
+    public static GameObject BuildWizardStaff(Transform parent, TeamType team)
+    {
+        GameObject staffRoot = new GameObject("Zarvon_WizardStaff");
+        staffRoot.transform.SetParent(parent, false);
+        staffRoot.transform.localPosition = new Vector3(0.06f, 0.05f, 0f);
+        staffRoot.transform.localRotation = Quaternion.Euler(0f, 90f, 90f);
+        staffRoot.transform.localScale = Vector3.one * (parent.lossyScale.x < 0.1f ? 100f : 1f);
+
+        // 1. عمود العصا الخشبي العتيق
+        GameObject shaft = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        shaft.name = "StaffShaft";
+        shaft.transform.SetParent(staffRoot.transform, false);
+        shaft.transform.localPosition = new Vector3(0f, 0f, 0f);
+        shaft.transform.localScale = new Vector3(0.042f, 0.85f, 0.042f);
+        Collider sc = shaft.GetComponent<Collider>();
+        if (sc != null) Destroy(sc);
+
+        Renderer sRend = shaft.GetComponent<Renderer>();
+        if (sRend != null)
+        {
+            Material sMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
+            sMat.color = new Color(0.32f, 0.18f, 0.08f);
+            sRend.material = sMat;
+        }
+
+        // 2. تاج العصا الذهبي
+        GameObject head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        head.name = "StaffHeadGold";
+        head.transform.SetParent(staffRoot.transform, false);
+        head.transform.localPosition = new Vector3(0f, 0.85f, 0f);
+        head.transform.localScale = new Vector3(0.12f, 0.16f, 0.12f);
+        Collider hc = head.GetComponent<Collider>();
+        if (hc != null) Destroy(hc);
+
+        Renderer hRend = head.GetComponent<Renderer>();
+        if (hRend != null)
+        {
+            Material hMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
+            hMat.color = new Color(0.96f, 0.80f, 0.25f);
+            hRend.material = hMat;
+        }
+
+        // 3. جوهرة الطاقة السحرية الكريستالية المشعة
+        Color orbColor = (team == TeamType.Destroyer)
+            ? new Color(1.0f, 0.35f, 0.15f)
+            : new Color(0.25f, 0.78f, 1.0f);
+
+        GameObject orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        orb.name = "StaffOrbCrystal";
+        orb.transform.SetParent(staffRoot.transform, false);
+        orb.transform.localPosition = new Vector3(0f, 0.98f, 0f);
+        orb.transform.localScale = new Vector3(0.19f, 0.19f, 0.19f);
+        Collider oc = orb.GetComponent<Collider>();
+        if (oc != null) Destroy(oc);
+
+        Renderer oRend = orb.GetComponent<Renderer>();
+        if (oRend != null)
+        {
+            Material oMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
+            oMat.color = orbColor;
+            if (oMat.HasProperty("_BaseColor")) oMat.SetColor("_BaseColor", orbColor);
+            oMat.EnableKeyword("_EMISSION");
+            if (oMat.HasProperty("_EmissionColor")) oMat.SetColor("_EmissionColor", orbColor * 4.0f);
+            oRend.material = oMat;
+        }
+
+        // 4. ضوء الجوهرة المتوهج
+        Light orbLight = orb.AddComponent<Light>();
+        orbLight.type = LightType.Point;
+        orbLight.color = orbColor;
+        orbLight.range = 3.5f;
+        orbLight.intensity = 2.0f;
+
+        return orb;
+    }
+
     public void ApplySkinVisuals(CharacterSkin skin)
     {
         int charId = selectedCharacterID.Value;
@@ -1215,6 +1394,7 @@ public class PlayerMovement : NetworkBehaviour
         bool isBrute = (charId == 7) || lowName.Contains("brute") || lowName.Contains("berserker");
         bool isMaria = (charId == 5) || lowName.Contains("maria") || lowName.Contains("warrior");
         bool isArcher = (charId == 0 || charId == 9) || lowName.Contains("archer") || lowName.Contains("ranger");
+        bool isZarvon = (charId == 3) || lowName.Contains("zarvon") || lowName.Contains("mage");
 
         // 1. إعادة ضبط الخامات فوراً إلى مظهرها الطبيعي الأصلي بالكامل وإلغاء أي إشعاع قديم متبقي
         if (isBrute)
@@ -1228,6 +1408,10 @@ public class PlayerMovement : NetworkBehaviour
         else if (isArcher)
         {
             ApplyErikaArcherMaterials(root, team);
+        }
+        else if (isZarvon)
+        {
+            StyleModelForZarvon(root, team);
         }
         else
         {
@@ -1402,6 +1586,40 @@ public class PlayerMovement : NetworkBehaviour
                         if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", m.color);
                         m.EnableKeyword("_EMISSION");
                         if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow * 1.8f);
+                    }
+                }
+            }
+        }
+        else if (isZarvon)
+        {
+            // شخصية زارفون (ساحر الأركين العظيم):
+            // تلوين الأردية وتوهج الجوهرة الكريستالية في قمة عصاه بحسب السكن
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == null) continue;
+                string rn = r.name.ToLower();
+
+                if (rn.Contains("stafforb") || rn.Contains("crystal"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.color = themeColor;
+                        m.EnableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", themeColor * 4.0f);
+                    }
+                }
+                else if (rn.Contains("face") || rn.Contains("head") || rn.Contains("skin") || rn.Contains("eye") || rn.Contains("hair") || rn.Contains("teamfootaura"))
+                {
+                    continue;
+                }
+                else
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.color = Color.Lerp(Color.white, themeColor, 0.70f);
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", m.color);
                     }
                 }
             }
