@@ -886,12 +886,14 @@ public class PlayerMovement : NetworkBehaviour
 
                 if (texDiff != null)
                 {
+                    m.mainTexture = texDiff;
                     if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", texDiff);
                     if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", texDiff);
                 }
                 if (texNorm != null)
                 {
                     if (m.HasProperty("_BumpMap")) m.SetTexture("_BumpMap", texNorm);
+                    if (m.HasProperty("_BumpScale")) m.SetFloat("_BumpScale", 1.0f);
                 }
                 if (texSpec != null)
                 {
@@ -901,6 +903,11 @@ public class PlayerMovement : NetworkBehaviour
 
                 if (m.HasProperty("_Color")) m.SetColor("_Color", Color.white);
                 if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white);
+                if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", 0.25f);
+                if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.25f);
+
+                m.DisableKeyword("_EMISSION");
+                if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", Color.black);
             }
             r.materials = mats;
         }
@@ -1252,14 +1259,39 @@ public class PlayerMovement : NetworkBehaviour
 
         if (isBrute)
         {
-            // شخصية بروت: تغيير لون السروال فقط، وإضافة إشعاع أنيق هادئ على شفرة الفأس
-            // بشرة الجسد والوجه والشعر تبقى طبيعية 100% دون أي تشويه أو طلاء
+            // شخصية بروت (الهائج):
+            // 1. تلوين كل الملابس السفلية (السروال + الحذاء الطويل الذي يصل للركبة) بلون السكن المختار
+            // 2. تلوين الشعر واللحية بلون متناسق أسطوري مع السكن
+            // 3. إضافة هالة سحرية وإشعاع أنيق متوهج على شفرة فأس المعركة
+            // بشرة الجسد والوجه تبقى طبيعية 100%
+
+            Color bruteHairColor;
+            switch (skinIndex)
+            {
+                case 1: // عملاق الأدغال الزمردي
+                    bruteHairColor = new Color(0.20f, 0.45f, 0.25f); // شعر زمردي بري داكن
+                    break;
+                case 2: // غضب البركان المتفجر
+                    bruteHairColor = new Color(0.85f, 0.28f, 0.12f); // شعر ناري متقد
+                    break;
+                case 3: // تايتان الرعد الجبلي
+                    bruteHairColor = new Color(0.35f, 0.32f, 0.65f); // شعر عاصف ليلي
+                    break;
+                case 4: // الهائج الذهبي الأسطوري
+                    bruteHairColor = new Color(0.95f, 0.82f, 0.35f); // شعر أشقر ذهبي أسطوري
+                    break;
+                default:
+                    bruteHairColor = Color.white;
+                    break;
+            }
+
             foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
             {
                 if (r == null) continue;
                 string rn = r.name.ToLower();
 
-                if (rn.Contains("bottom") || rn.Contains("pants"))
+                // السروال + الحذاء الطويل كلاهما يتلونان بلون السكن
+                if (rn.Contains("bottom") || rn.Contains("pants") || rn.Contains("shoes") || rn.Contains("boot"))
                 {
                     foreach (Material m in r.materials)
                     {
@@ -1269,48 +1301,75 @@ public class PlayerMovement : NetworkBehaviour
                         if (m.HasProperty("_Color")) m.SetColor("_Color", themeColor);
                     }
                 }
+                // تلوين شعر الرأس والشارب/اللحية
+                else if (rn.Contains("hair") || rn.Contains("moustache") || rn.Contains("beard"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.color = bruteHairColor;
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", bruteHairColor);
+                        if (m.HasProperty("_Color")) m.SetColor("_Color", bruteHairColor);
+                    }
+                }
+                // فأس المعركة مع توهج سحري
                 else if (rn.Contains("axe"))
                 {
                     foreach (Material m in r.materials)
                     {
                         if (m == null) continue;
+                        m.color = Color.Lerp(Color.white, themeColor, 0.60f);
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", m.color);
                         m.EnableKeyword("_EMISSION");
-                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow * 1.5f);
                     }
                 }
             }
         }
         else if (isMaria)
         {
-            // شخصية ماريا: الوجه والبشرة والشعر طبيعي تماماً، والتأثير على وشاح الفارس وتوهج سيفها العظيم
+            // شخصية ماريا (المحاربة):
+            // استخدام الخامات المخصصة فائقة الدقة لكل سكين:
+            // الملابس والدروع والأوشحة والأحذية والسيف تتغير بالكامل حسب السكن، بينما الوجه والبشرة والعيون طبيعية 100% بنسبة نقاء تامة
+            Texture2D mariaSkinTex = Resources.Load<Texture2D>($"Models/MariaTextures/maria_diffuse_skin{skinIndex}");
+
             foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
             {
                 if (r == null) continue;
                 string rn = r.name.ToLower();
 
-                if (rn.Contains("sword") || rn.Contains("blade") || rn.Contains("cross"))
+                foreach (Material m in r.materials)
                 {
-                    foreach (Material m in r.materials)
+                    if (m == null) continue;
+                    if (mariaSkinTex != null)
                     {
-                        if (m == null) continue;
-                        m.EnableKeyword("_EMISSION");
-                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                        m.mainTexture = mariaSkinTex;
+                        if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", mariaSkinTex);
+                        if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", mariaSkinTex);
                     }
-                }
-                else if (rn.Contains("cape") || rn.Contains("mantle") || rn.Contains("sash"))
-                {
-                    foreach (Material m in r.materials)
+                    m.color = Color.white;
+                    if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white);
+                    if (m.HasProperty("_Color")) m.SetColor("_Color", Color.white);
+
+                    if (rn.Contains("sword") || rn.Contains("blade"))
                     {
-                        if (m == null) continue;
-                        m.color = themeColor;
-                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", themeColor);
+                        m.EnableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow * 1.8f);
+                    }
+                    else
+                    {
+                        m.DisableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", Color.black);
                     }
                 }
             }
         }
         else if (isArcher)
         {
-            // شخصية رامي السهام: الوجه والبشرة بلونهم الطبيعي، والملابس وقوس الرماية بتدرج السكن المختار
+            // شخصية رامي السهام / إريكا:
+            // تطبيق خامة الملابس المخصصة للسكن، وتلوين القوس مع إشعاع متوهج، مع بقاء الوجه والبشرة طبيعيين تماماً
+            Texture2D erikaClothesSkinTex = Resources.Load<Texture2D>($"Models/ErikaTextures/Erika_Archer_Clothes_skin{skinIndex}");
+
             foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
             {
                 if (r == null) continue;
@@ -1321,8 +1380,17 @@ public class PlayerMovement : NetworkBehaviour
                     foreach (Material m in r.materials)
                     {
                         if (m == null) continue;
-                        m.color = themeColor;
-                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", themeColor);
+                        if (erikaClothesSkinTex != null)
+                        {
+                            m.mainTexture = erikaClothesSkinTex;
+                            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", erikaClothesSkinTex);
+                            if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", erikaClothesSkinTex);
+                        }
+                        m.color = Color.white;
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white);
+                        if (m.HasProperty("_Color")) m.SetColor("_Color", Color.white);
+                        m.EnableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow * 0.45f);
                     }
                 }
                 else if (rn.Contains("bow"))
@@ -1330,8 +1398,10 @@ public class PlayerMovement : NetworkBehaviour
                     foreach (Material m in r.materials)
                     {
                         if (m == null) continue;
+                        m.color = Color.Lerp(Color.white, themeColor, 0.70f);
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", m.color);
                         m.EnableKeyword("_EMISSION");
-                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow * 1.8f);
                     }
                 }
             }
