@@ -1351,6 +1351,15 @@ public class CharacterSelectionUI : MonoBehaviour
                 DrawBorder(cardR, borderCol, isEquipped ? 2f : 1f);
                 GUI.color = Color.white;
 
+                // النقر على البطاقة لمعاينة السكن فوراً وتجربته على المجسم الدوار
+                if (Event.current.type == EventType.MouseDown && cardR.Contains(Event.current.mousePosition))
+                {
+                    currentSkinIndex = s;
+                    currentSkin = availableSkins[s];
+                    ApplySkinToPreviewModel(ch, currentSkin);
+                    Event.current.Use();
+                }
+
                 // Skin Title & Lore
                 GUIStyle skinNameStyle = new GUIStyle(GUI.skin.label)
                 {
@@ -1359,7 +1368,7 @@ public class CharacterSelectionUI : MonoBehaviour
                     alignment = TextAnchor.MiddleLeft,
                     normal = { textColor = isEquipped ? new Color(0.40f, 1f, 0.60f) : (isPreviewing ? new Color(1f, 0.90f, 0.40f) : new Color(0.90f, 0.92f, 0.85f)) }
                 };
-                string sName = GetLocalizedSkinName(skin.skinName, s);
+                string sName = GetLocalizedSkinName(ch, skin.skinName, s);
                 GUI.Label(new Rect(cardR.x + 8f, cardR.y + 4f, cardR.width * 0.62f, 18f), sName, skinNameStyle);
 
                 GUIStyle skinDescStyle = new GUIStyle(GUI.skin.label)
@@ -1369,7 +1378,7 @@ public class CharacterSelectionUI : MonoBehaviour
                     alignment = TextAnchor.UpperLeft,
                     normal = { textColor = new Color(0.70f, 0.85f, 0.75f, 0.85f) }
                 };
-                string sDesc = GetLocalizedSkinDescription(skin.description, s);
+                string sDesc = GetLocalizedSkinDescription(ch, skin.description, s);
                 GUI.Label(new Rect(cardR.x + 8f, cardR.y + 22f, cardR.width * 0.62f, 44f), sDesc, skinDescStyle);
 
                 // Right Action Button (Equip / Preview / Buy)
@@ -1544,18 +1553,19 @@ public class CharacterSelectionUI : MonoBehaviour
             localPlayer.ApplyCharacter(ch.characterID);
         }
 
+        string localizedName = GetLocalizedSkinName(ch, currentSkin.skinName, currentSkinIndex);
         skinNotification = LanguageSelectionUI.Localize(
-            $"✓ EQUIPPED: {currentSkin.skinName}!",
-            ar: $"✓ تم تجهيز: {currentSkin.skinName}!",
-            ru: $"✓ НАДЕТ ОБЛИК: {currentSkin.skinName}!",
-            es: $"✓ ¡EQUIPADO: {currentSkin.skinName}!",
-            fr: $"✓ ÉQUIPÉ : {currentSkin.skinName}!",
-            de: $"✓ AUSGERÜSTET: {currentSkin.skinName}!",
-            hi: $"✓ सुसज्जित: {currentSkin.skinName}!",
-            zh: $"✓ 已装备: {currentSkin.skinName}!",
-            ja: $"✓ 装備完了: {currentSkin.skinName}!",
-            pt: $"✓ EQUIPADO: {currentSkin.skinName}!",
-            fa: $"✓ مجهز شد: {currentSkin.skinName}!"
+            $"✓ EQUIPPED: {localizedName}!",
+            ar: $"✓ تم تجهيز: {localizedName}!",
+            ru: $"✓ НАДЕТ ОБЛИК: {localizedName}!",
+            es: $"✓ ¡EQUIPADO: {localizedName}!",
+            fr: $"✓ ÉQUIPÉ : {localizedName}!",
+            de: $"✓ AUSGERÜSTET: {localizedName}!",
+            hi: $"✓ सुसज्जित: {localizedName}!",
+            zh: $"✓ 已装备: {localizedName}!",
+            ja: $"✓ 装備完了: {localizedName}!",
+            pt: $"✓ EQUIPADO: {localizedName}!",
+            fa: $"✓ مجهز شد: {localizedName}!"
         );
         skinNotificationTimer = 3f;
     }
@@ -1673,26 +1683,8 @@ public class CharacterSelectionUI : MonoBehaviour
 
     void ApplySkinToPreviewModel(CharacterData ch, CharacterSkin skin)
     {
-        if (currentPreviewModel == null || skin == null) return;
-
-        Renderer[] rends = currentPreviewModel.GetComponentsInChildren<Renderer>(true);
-        foreach (var r in rends)
-        {
-            if (r == null || r.materials == null) continue;
-            foreach (var mat in r.materials)
-            {
-                if (mat == null) continue;
-                if (skin.skinColor != Color.white)
-                {
-                    mat.color = skin.skinColor;
-                }
-                if (skin.emissionColor != Color.black)
-                {
-                    mat.EnableKeyword("_EMISSION");
-                    mat.SetColor("_EmissionColor", skin.emissionColor);
-                }
-            }
-        }
+        if (currentPreviewModel == null) return;
+        PlayerMovement.ApplySkinToModel(currentPreviewModel, ch, currentSkinIndex, skin, PlayerMovement.TeamType.Protector);
     }
 
     // ==================== UTILITY DRAWING METHODS ====================
@@ -1836,33 +1828,203 @@ public class CharacterSelectionUI : MonoBehaviour
         }
     }
 
-    public static string GetLocalizedSkinName(string rawName, int index)
+    public static string GetLocalizedSkinName(CharacterData ch, string rawName, int index)
     {
+        int charId = (ch != null) ? ch.characterID : -1;
+        string cName = (ch != null && !string.IsNullOrEmpty(ch.characterName)) ? ch.characterName.ToLower() : "";
+
+        // 1. شخصية بروت / الهائج (Brute / Berserker)
+        if (charId == 7 || cName.Contains("brute") || cName.Contains("berserker"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Tribal Berserker (Default)", "المحارب القبلي (القياسي)", "Племенной берсерк (Стандарт)", "Berserker tribal (Estándar)", "Berserker tribal (Standard)");
+                case 1:
+                    return LanguageSelectionUI.Localize("Jungle Behemoth", "عملاق الأدغال الزمردي", "Изумрудный гигант джунглей", "Gigante de la selva", "Béhémoth de la jungle");
+                case 2:
+                    return LanguageSelectionUI.Localize("Volcanic Fury", "غضب البركان المتفجر", "Вулканическая ярость", "Furia volcánica", "Fureur volcanique");
+                case 3:
+                    return LanguageSelectionUI.Localize("Mountain Thunder Titan", "تايتان الرعد الجبلي", "Громовой титан гор", "Titán del trueno", "Titan du tonnerre");
+                default:
+                    return LanguageSelectionUI.Localize("Golden Warlord of Legends", "الهائج الذهبي الأسطوري", "Легендарный золотой вождь", "Señor de la guerra dorado", "Seigneur de guerre doré");
+            }
+        }
+
+        // 2. شخصية ماريا / المحاربة (Maria / Warrior)
+        if (charId == 5 || cName.Contains("maria") || cName.Contains("warrior"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Knight Vanguard (Default)", "درع الفارس الفولاذي (القياسي)", "Авангард рыцаря (Стандарт)", "Vanguardia de caballero", "Avant-garde du chevalier");
+                case 1:
+                    return LanguageSelectionUI.Localize("Emerald Cedar Valkyrie", "فارسة الأرز الزمردية", "Изумрудная валькирия", "Valquiria esmeralda", "Valkyrie d'émeraude");
+                case 2:
+                    return LanguageSelectionUI.Localize("Dawn Solar Paladin", "حارسة شمس الفجر", "Паладин рассвета", "Paladín del alba", "Paladin de l'aurore");
+                case 3:
+                    return LanguageSelectionUI.Localize("Tempest Storm Chevalier", "فارسة العواصف النبيلة", "Рыцарь бури", "Caballera de la tempestad", "Chevalière de la tempête");
+                default:
+                    return LanguageSelectionUI.Localize("Celestial Sacred Justiciar", "سيدة النور السماوي الأسمى", "Небесный священный юстициар", "Justiciera celestial", "Justicière céleste");
+            }
+        }
+
+        // 3. رامي السهام / الصياد (Archer / Ranger)
+        if (charId == 0 || charId == 9 || cName.Contains("archer") || cName.Contains("ranger"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Forest Scout (Default)", "رداء القناص القياسي", "Лесной следопыт (Стандарт)", "Explorador del bosque", "Éclaireur de la forêt");
+                case 1:
+                    return LanguageSelectionUI.Localize("Verdant Shadow Ranger", "صيادة الظلال الزمردية", "Изумрудный рейнджер теней", "Guardabosques sombrío", "Rôdeuse d'ombre verdoyante");
+                case 2:
+                    return LanguageSelectionUI.Localize("Flamefletch Huntress", "رامية السهام النارية", "Охотница огненных стрел", "Cazadora de flechas de fuego", "Chasseresse aux flèches de feu");
+                case 3:
+                    return LanguageSelectionUI.Localize("Twilight Windwalker", "سيدة رياح الشفق", "Сумеречная странница ветра", "Caminante del viento crepuscular", "Marcheuse des vents du crépuscule");
+                default:
+                    return LanguageSelectionUI.Localize("Starfall Royal Marksman", "قناصة النجوم الملكية", "Королевский лучник звездопада", "Tiradora real de lluvia de estrellas", "Archère royale d'étoiles filantes");
+            }
+        }
+
+        // 4. السحرة ومشعلو العناصر (Mage / Elementalist / Enchantress)
+        if (charId == 3 || charId == 14 || charId == 16 || cName.Contains("mage") || cName.Contains("element") || cName.Contains("enchant"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Apprentice Robes (Default)", "رداء الساحر المتدرب (القياسي)", "Одеяния ученика (Стандарт)", "Túnica de aprendiz", "Robe d'apprenti");
+                case 1:
+                    return LanguageSelectionUI.Localize("Emerald Archsage", "حكيم الطبيعة الزمردي", "Изумрудный архимаг", "Archimago esmeralda", "Archimage d'émeraude");
+                case 2:
+                    return LanguageSelectionUI.Localize("Pyroclast Flamecaster", "ساحر اللهب الأزلي", "Маг огненной бури", "Mago piroclástico", "Mage pyroclaste");
+                case 3:
+                    return LanguageSelectionUI.Localize("Netherstorm Conjurer", "منادي صواعق العاصفة", "Заклинатель бури", "Conjurador de tormentas", "Invocateur de tempête");
+                default:
+                    return LanguageSelectionUI.Localize("Cosmic Astral Sorcerer", "ساحر النور الكوني الأسمى", "Космический чародей", "Hechicero astral cósmico", "Sorcier astral cosmique");
+            }
+        }
+
+        // 5. السفاحون والمحاربون السريون (Assassin / Rogue / Shadowblade)
+        if (charId == 1 || charId == 12 || charId == 22 || cName.Contains("assassin") || cName.Contains("rogue") || cName.Contains("shadow"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Shadow Infiltrator (Default)", "متسلل الظلال (القياسي)", "Теневой лазутчик (Стандарт)", "Infiltrador de sombras", "Infiltré des ombres");
+                case 1:
+                    return LanguageSelectionUI.Localize("Silent Canopy Stalker", "شبح الغابة الصامت", "Бесшумный охотник крон", "Acechador silencioso", "Traqueur silencieux");
+                case 2:
+                    return LanguageSelectionUI.Localize("Crimson Nightblade", "خنجر الليل القرمزي", "Багровый клинок ночи", "Hoja nocturna carmesí", "Lame nocturne cramoisie");
+                case 3:
+                    return LanguageSelectionUI.Localize("Phantom of the Dusk", "شبح الشفق البنفسجي", "Призрак сумерек", "Fantasma del anochecer", "Fantôme du crépuscule");
+                default:
+                    return LanguageSelectionUI.Localize("Gilded Shadow Assassin", "شبح الظلال الذهبية الأسطوري", "Золотой убийца теней", "Asesino dorado de sombras", "Assassin des ombres dorées");
+            }
+        }
+
+        // 6. المدافعون والمدرعون (Tank / Paladin / Ironclad)
+        if (charId == 4 || charId == 8 || charId == 24 || cName.Contains("tank") || cName.Contains("paladin") || cName.Contains("iron"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Iron Bulwark (Default)", "حصن الحديد (القياسي)", "Железный оплот (Стандарт)", "Baluarte de hierro", "Rempart de fer");
+                case 1:
+                    return LanguageSelectionUI.Localize("Living Moss Colossus", "عملاق الصخر والطحالب", "Колосс живого мха", "Coloso de musgo vivo", "Colosse de mousse vivante");
+                case 2:
+                    return LanguageSelectionUI.Localize("Magma-Forged Juggernaut", "حامي الجمر والحديد المنصهر", "Магматический джаггернаут", "Juggernaut de magma", "Juggernaut de magma");
+                case 3:
+                    return LanguageSelectionUI.Localize("Thunderclap Citadel", "قلعة صواعق الجبال", "Громовая цитадель", "Ciudadela del trueno", "Citadelle du tonnerre");
+                default:
+                    return LanguageSelectionUI.Localize("Divine Solar Fortress", "الحصن الإلهي الشمسي الأسمى", "Божественная солнечная крепость", "Fortaleza solar divina", "Forteresse solaire divine");
+            }
+        }
+
+        // 7. النمط العام لبقية الأبطال
         switch (index)
         {
             case 0:
-                return LanguageSelectionUI.Localize("Standard Attire", "الزي القياسي", "Стандартный наряд", "Atuendo estándar", "Tenue standard", "Standard-Gewand", "मानक पोशाक", "标准战袍", "標準装束", "Traje Padrão", it: "Veste Standard", tr: "Standart Kıyafet", fa: "لباس استاندارد");
+                return LanguageSelectionUI.Localize("Standard Battle Attire", "الزي القتالي القياسي", "Стандартное боевое облачение", "Atuendo de batalla estándar", "Tenue de combat standard");
             case 1:
-                return LanguageSelectionUI.Localize("Grove Champion", "بطل الغابة", "Чемпион рощи", "Campeón del bosque", "Champion du bosquet", "Hain-Champion", "ग्रोव चैंपियन", "丛林勇士", "聖森の勇者", "Campeão do Bosque", it: "Campione del Bosco", tr: "Koru Şampiyonu", fa: "قهرمان بیشه");
+                return LanguageSelectionUI.Localize("Grove Guardian Garb", "كسوة حارس الغابة الزمردي", "Одеяние стража рощи", "Ropaje del guardián del bosque", "Tenue du gardien du bosquet");
             case 2:
-                return LanguageSelectionUI.Localize("Solar Inferno", "جحيم الشمس", "Солнечное пламя", "Infierno solar", "Flamme solaire", "Sonnen-Inferno", "सौर ज्वाला", "烈日炽焰", "烈日の炎", "Inferno Solar", it: "Inferno Solare", tr: "Güneş Cehennemi", fa: "آتش خورشیدی");
+                return LanguageSelectionUI.Localize("Sunfire War Mantle", "وشاح شمس المعركة المتوهج", "Мантия солнечного огня", "Manto de guerra solar", "Manteau de guerre solaire");
             case 3:
-                return LanguageSelectionUI.Localize("Storm Sovereign", "حاكم العاصفة", "Владыка бури", "Soberano de tormenta", "Souverain de tempête", "Sturmsouverän", "तूफान शासक", "风暴君王", "嵐の君主", "Soberano da Tempestade", it: "Sovrano della Tempesta", tr: "Fırtına Hükümdarı", fa: "فرمانروای توفان");
+                return LanguageSelectionUI.Localize("Stormborn Regalia", "حلة سيد العواصف والصواعق", "Регалии рожденного бурей", "Regalía nacida de la tormenta", "Parure née de la tempête");
             default:
-                return LanguageSelectionUI.Localize("Apex Celestial", "الكائن السماوي الأسمى", "Небесный владыка", "Celestial supremo", "Céleste suprême", "Himmlischer Herrscher", "सर्वोच्च आकाशीय", "苍穹极光", "天上の支配者", "Celestial Supremo", it: "Celeste Supremo", tr: "Yüce Semavi", fa: "آسمانی برین");
+                return LanguageSelectionUI.Localize("Apex Celestial Divinity", "الحلة السماوية النورانية العظمى", "Облик верховного небожителя", "Divinidad celestial suprema", "Divinité céleste suprême");
         }
     }
 
-    public static string GetLocalizedSkinDescription(string rawDesc, int index)
+    public static string GetLocalizedSkinDescription(CharacterData ch, string rawDesc, int index)
     {
-        switch (index)
+        int charId = (ch != null) ? ch.characterID : -1;
+        string cName = (ch != null && !string.IsNullOrEmpty(ch.characterName)) ? ch.characterName.ToLower() : "";
+
+        if (charId == 7 || cName.Contains("brute") || cName.Contains("berserker"))
         {
-            case 0:
-                return LanguageSelectionUI.Localize("Standard ceremonial attire, balanced for tree defense and scouting.", "الزي الاحتفالي القياسي، متوازن للدفاع عن الشجرة واستكشاف الغابة.", "Стандартное церемониальное облачение для защиты древа.", "Atuendo ceremonial estándar para la defensa del árbol.", "Tenue cérémonielle standard pour la défense de l'arbre.", "Rituelle Standard-Kluft für die Baumverteidigung.", "मानक औपचारिक पोशाक, वृक्ष रक्षा के लिए संतुलित।", "标准礼仪战甲，攻防兼备，专为守护巨树远征打造。", "神木防衛と探索のために調和された標準儀礼装束。", "Traje cerimonial padrão para defender a árvore.", it: "Abito cerimoniale standard, bilanciato per la difesa dell'albero.", tr: "Ağaç savunması ve keşifler için dengelenmiş standart tören kıyafeti.", fa: "لباس تشریفاتی استاندارد، متعادل برای دفاع از درخت کهنسال و گشت‌زنی در بیشه.");
-            case 1:
-                return LanguageSelectionUI.Localize("Tempered armor forged from petrified sacred wood, bestowing boosted vitality.", "درع صلب مصنوع من خشب مقدس متحجر، يمنح حيوية قتالية معززة.", "Закаленные доспехи из священной древесины, увеличивающие здоровье.", "Armadura forjada con madera sagrada que otorga vitalidad.", "Armure forgée dans du bois sacré, conférant une vitalité accrue.", "Gehärtete Rüstung aus versteinertem heiligen Holz für mehr Vitalität.", "पवित्र लकड़ी से बना कवच, जो अतिरिक्त जीवन शक्ति प्रदान करता है।", "由石化神木锻造的强化重铠，赋予更加充沛的战斗生命力。", "石化神木から鍛造された強化鎧。戦闘での生命力を高める。", "Armadura temperada em madeira sagrada, concedendo mais vitalidade.", it: "Armatura temprata in legno sacro pietrificato, che conferisce maggiore vitalità.", tr: "Taşlaşmış kutsal ahşaptan dövülmüş, gelişmiş savaş dayanıklılığı sağlayan zırh.", fa: "زره آبدیده از چوب سنگ‌شده مقدس که استقامت و پایداری جنگی را افزایش می‌دهد.");
-            default:
-                return LanguageSelectionUI.Localize("Enchanted garments radiant with molten ember magic, amplifying offensive devastation.", "رداء مسحور مشع بسحر الحمم والشرار، يضاعف القوة الهجومية التدميرية.", "Одеяние с магией раскаленной лавы, усиливающее урон.", "Prendas encantadas con magia de lava que aumentan el daño.", "Vêtements enchantés aux braises, amplifiant la puissance d'attaque.", "Verzauberte Gewänder aus Glutmagie, die den Angriffsschaden verstärken.", "पिघले हुए अंगारे के जादू से बने वस्त्र, जो घातक हमले को बढ़ाते हैं।", "熔火炎芒附魔的烈焰祭袍，大幅增强每一次进攻的致命杀伤力。", "灼熱の溶岩魔力を宿した装束。攻撃の破壊力を大幅に増幅する。", "Vestes encantadas com magia de brasas, amplificando o dano.", it: "Vesti incantate radianti di magia ardente, che amplificano la distruzione.", tr: "Erimiş kor büyüsüyle parıldayan ve saldırı gücünü artıran efsunlu giysiler.", fa: "جامه‌ای افسون‌شده آکنده از جادوی گدازه‌های سوزان که قدرت تخریب حملات را به اوج می‌رساند.");
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Original tribal warrior shorts and battleaxe. Balanced for raw primal combat.", "سروال المحارب القبلي وفأس المعركة القياسي، متوازن للقتال البري الغاشم.");
+                case 1:
+                    return LanguageSelectionUI.Localize("Jungle camouflage battle shorts with moss-infused axe blade: +20% HP & +10% Speed.", "سروال قتال مموه بلون الأدغال مع فأس معزز بطحالب الشجرة: +20% صحة و +10% سرعة.");
+                case 2:
+                    return LanguageSelectionUI.Localize("Charcoal volcanic pants and glowing molten battleaxe: +30% Attack Damage & +10% Speed.", "سروال بركاني داكن مع فأس بحواف الحمم المتوهجة: +30% قوة ضرر و +10% سرعة.");
+                case 3:
+                    return LanguageSelectionUI.Localize("Midnight storm pants with lightning-imbued axe: +25% DMG & +35% Sprint Speed.", "سروال كحلي عاصف مع فأس مشحون بطاقة الصواعق: +25% ضرر و +35% سرعة ركض.");
+                default:
+                    return LanguageSelectionUI.Localize("Imperial gold trimmed battle shorts and radiant champion aura: +40% HP, +40% DMG & +20% Speed.", "سروال ذهبي إمبراطوري مع هالة المجد الذهبي على سلاح المعركة: +40% صحة، +40% ضرر و +20% سرعة.");
+            }
+        }
+        else if (charId == 5 || cName.Contains("maria") || cName.Contains("warrior"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Full knight gambeson and dignified iron armor. Balanced for frontline clashes.", "قميص الفرسان المبطن ودروع الحديد الساترة المحتشمة، متوازنة للمعارك الأمامية.");
+                case 1:
+                    return LanguageSelectionUI.Localize("Emerald-embroidered tunic with greatsword forest blessing: +20% HP & +10% Speed.", "سترة مطرزة بخيوط الأرز الزمردية مع سيف عظيم ببركة الغابة: +20% صحة و +10% سرعة.");
+                case 2:
+                    return LanguageSelectionUI.Localize("Dawn solar mantle with ember-glowing edge: +30% Attack Damage & +10% Speed.", "وشاح شمس الفجر مع شفرة سيف متوهجة بحرارة الشمس: +30% ضرر و +10% سرعة.");
+                case 3:
+                    return LanguageSelectionUI.Localize("Royal tempest knight regalia with storm lightning runes: +25% DMG & +35% Speed.", "كسوة فرسان العاصفة الملكية مع رونيات الصواعق المنقوشة: +25% ضرر و +35% سرعة.");
+                default:
+                    return LanguageSelectionUI.Localize("Gilded celestial champion armor with holy radiant blade: +40% HP, +40% DMG & +20% Speed.", "درع بطل النور السماوي المذهب مع شفرة مقدسة مضيئة: +40% صحة، +40% ضرر و +20% سرعة.");
+            }
+        }
+        else if (charId == 0 || charId == 9 || cName.Contains("archer") || cName.Contains("ranger"))
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Standard leather scouting tunic and crafted hunting bow.", "رداء القناص الجلدي القياسي مع قوس الصيد المتوازن.");
+                case 1:
+                    return LanguageSelectionUI.Localize("Verdant shadow camo garb and swift cedar arrows: +20% HP & +10% Speed.", "كساء مموه بلون أوراق الشجر وسهام خفيفة وسريعة: +20% صحة و +10% سرعة.");
+                case 2:
+                    return LanguageSelectionUI.Localize("Crimson huntress jacket and flaming arrowtips: +30% Attack Damage & +10% Speed.", "سترة قنص قرمزية وأطراف سهام مشتعلة: +30% قوة ضرر و +10% سرعة.");
+                case 3:
+                    return LanguageSelectionUI.Localize("Twilight wind cloak and gale-piercing recurve: +25% DMG & +35% Speed.", "عباءة الشفق البنفسجية وقوس خارق للرياح: +25% ضرر و +35% سرعة ركض.");
+                default:
+                    return LanguageSelectionUI.Localize("Starfall royal white-gold archery tunic with starlight bow: +40% HP, +40% DMG & +20% Speed.", "سترة رماة النجوم البيضاء المذهبة مع قوس يشع بنور النجوم: +40% صحة، +40% ضرر و +20% سرعة.");
+            }
+        }
+        else
+        {
+            switch (index)
+            {
+                case 0:
+                    return LanguageSelectionUI.Localize("Standard ceremonial combat attire, balanced for tree defense and scouting.", "الزي القتالي القياسي المتوازن للدفاع والمناورة الميدانية.");
+                case 1:
+                    return LanguageSelectionUI.Localize("Tempered armor forged from sacred wood, granting enhanced vitality: +20% HP & +10% Speed.", "درع صلب مصنوع من خشب مقدس متحجر، يمنح حيوية معززة: +20% صحة و +10% سرعة.");
+                case 2:
+                    return LanguageSelectionUI.Localize("Enchanted molten armor amplifying offensive devastation: +30% Damage & +10% Speed.", "درع مسحور مشع بسحر الحمم والشرار، يضاعف القوة الهجومية: +30% ضرر و +10% سرعة.");
+                case 3:
+                    return LanguageSelectionUI.Localize("Storm-charged mantle granting lightning quickness: +25% DMG & +35% Speed.", "وشاح مشحون بطاقة العواصف يمنح خفة فائقة: +25% ضرر و +35% سرعة.");
+                default:
+                    return LanguageSelectionUI.Localize("Apex celestial relic armor with divine radiant aura: +40% HP, +40% DMG & +20% Speed.", "درع النخبة السماوي المقدس بهالة نورانية هادئة: +40% صحة، +40% ضرر و +20% سرعة.");
+            }
         }
     }
 

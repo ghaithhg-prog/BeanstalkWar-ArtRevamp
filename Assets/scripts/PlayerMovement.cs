@@ -1181,39 +1181,179 @@ public class PlayerMovement : NetworkBehaviour
 
     public void ApplySkinVisuals(CharacterSkin skin)
     {
-        if (skin == null || skin.skinColor == Color.white) return;
-
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
-        foreach (Renderer r in renderers)
+        int charId = selectedCharacterID.Value;
+        CharacterData cData = (characterDatabase != null) ? characterDatabase.GetCharacter(charId) : null;
+        int skinIdx = 0;
+        if (PlayerProfile.Instance != null)
         {
-            if (r == null) continue;
-            if (r.gameObject.CompareTag("Weapon") || r.gameObject.CompareTag("Crystal"))
-                continue;
+            skinIdx = PlayerProfile.Instance.GetSelectedSkin(charId);
+        }
+        ApplySkinToModel(gameObject, cData, skinIdx, skin, team);
+    }
 
-            string rn = r.name.ToLower();
-            // Never tint real imported PBR character models (Maria, Brute, or Erika) with solid procedural skin colors!
-            if (rn.Contains("maria") || rn.Contains("erika") || rn.Contains("brute") || rn.Contains("malebrute") || rn.Contains("axe") || rn.Contains("sword") || rn.Contains("teamfootaura"))
-                continue;
+    /// <summary>
+    /// تطبيق وتخصيص المظهر والسكن على مجسم الشخصية بشكل احترافي وجمالي:
+    /// - إذا كان السكن هو الزي القياسي (Skin 0)؛ يتم إعادة ضبط المظهر بالكامل إلى حالته الطبيعية النقية وإزالة أي إشعاع عالق.
+    /// - في السكنات الأخرى (1، 2، 3، 4)؛ الحفاظ على ملامح الوجه ولون البشرة الطبيعي 100% دون طمسها بألوان صلبة فاقعة.
+    /// - لشخصية بروت: تغيير لون السروال فقط مع توهج هادئ لشفرة الفأس.
+    /// - لشخصية ماريا: الوجه والبشرة طبيعيان، مع إبراز توهج رونيات سيفها العظيم ووشاح الفارس.
+    /// - لشخصية أرتشر: تغيير لون ملابس القنص وقوس الرماية فقط مع توهج سحري خفيف.
+    /// </summary>
+    public static void ApplySkinToModel(GameObject root, CharacterData ch, int skinIndex, CharacterSkin skin, TeamType team = TeamType.Protector)
+    {
+        if (root == null) return;
 
-            Transform cur = r.transform;
-            bool isCustomRig = false;
-            while (cur != null && cur != transform)
+        int charId = (ch != null) ? ch.characterID : -1;
+        string lowName = (ch != null && !string.IsNullOrEmpty(ch.characterName)) ? ch.characterName.ToLower() : "";
+        bool isBrute = (charId == 7) || lowName.Contains("brute") || lowName.Contains("berserker");
+        bool isMaria = (charId == 5) || lowName.Contains("maria") || lowName.Contains("warrior");
+        bool isArcher = (charId == 0 || charId == 9) || lowName.Contains("archer") || lowName.Contains("ranger");
+
+        // 1. إعادة ضبط الخامات فوراً إلى مظهرها الطبيعي الأصلي بالكامل وإلغاء أي إشعاع قديم متبقي
+        if (isBrute)
+        {
+            ApplyBruteMaterials(root, team);
+        }
+        else if (isMaria)
+        {
+            ApplyMariaMaterials(root, team);
+        }
+        else if (isArcher)
+        {
+            ApplyErikaArcherMaterials(root, team);
+        }
+        else
+        {
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
             {
-                string cn = cur.name.ToLower();
-                if (cn.Contains("maria") || cn.Contains("brute") || cn.Contains("erika") || cn.Contains("character_3d_mesh"))
+                if (r == null || r.materials == null) continue;
+                if (r.name.Contains("TeamFootAura")) continue;
+                foreach (Material m in r.materials)
                 {
-                    isCustomRig = true;
-                    break;
+                    if (m == null) continue;
+                    m.color = Color.white;
+                    if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white);
+                    if (m.HasProperty("_Color")) m.SetColor("_Color", Color.white);
+                    m.DisableKeyword("_EMISSION");
+                    if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", Color.black);
                 }
-                cur = cur.parent;
             }
-            if (isCustomRig) continue;
+        }
 
-            r.material.color = skin.skinColor;
-            if (skin.emissionColor != Color.black)
+        // 2. إذا كان السكن المختار هو الزي القياسي (Skin 0)؛ نكتفي بالشكل الطبيعي الصافي تماماً دون أي إشعاع
+        if (skinIndex == 0 || skin == null || skin.skinColor == Color.white)
+        {
+            return;
+        }
+
+        // 3. تطبيق تخصيص المظاهر الذكي والراقي دون طلاء كامل الجسد بألوان فاقعة
+        Color themeColor = skin.skinColor;
+        Color subtleGlow = skin.emissionColor * 0.35f;
+
+        if (isBrute)
+        {
+            // شخصية بروت: تغيير لون السروال فقط، وإضافة إشعاع أنيق هادئ على شفرة الفأس
+            // بشرة الجسد والوجه والشعر تبقى طبيعية 100% دون أي تشويه أو طلاء
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
             {
-                r.material.EnableKeyword("_EMISSION");
-                r.material.SetColor("_EmissionColor", skin.emissionColor * 0.4f);
+                if (r == null) continue;
+                string rn = r.name.ToLower();
+
+                if (rn.Contains("bottom") || rn.Contains("pants"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.color = themeColor;
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", themeColor);
+                        if (m.HasProperty("_Color")) m.SetColor("_Color", themeColor);
+                    }
+                }
+                else if (rn.Contains("axe"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.EnableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                    }
+                }
+            }
+        }
+        else if (isMaria)
+        {
+            // شخصية ماريا: الوجه والبشرة والشعر طبيعي تماماً، والتأثير على وشاح الفارس وتوهج سيفها العظيم
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == null) continue;
+                string rn = r.name.ToLower();
+
+                if (rn.Contains("sword") || rn.Contains("blade") || rn.Contains("cross"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.EnableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                    }
+                }
+                else if (rn.Contains("cape") || rn.Contains("mantle") || rn.Contains("sash"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.color = themeColor;
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", themeColor);
+                    }
+                }
+            }
+        }
+        else if (isArcher)
+        {
+            // شخصية رامي السهام: الوجه والبشرة بلونهم الطبيعي، والملابس وقوس الرماية بتدرج السكن المختار
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == null) continue;
+                string rn = r.name.ToLower();
+
+                if (rn.Contains("clothes"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.color = themeColor;
+                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", themeColor);
+                    }
+                }
+                else if (rn.Contains("bow"))
+                {
+                    foreach (Material m in r.materials)
+                    {
+                        if (m == null) continue;
+                        m.EnableKeyword("_EMISSION");
+                        if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // بقية الشخصيات العامة: تغيير الدروع والملابس دون طمس الوجه أو الرأس
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == null) continue;
+                string rn = r.name.ToLower();
+                if (rn.Contains("face") || rn.Contains("head") || rn.Contains("skin") || rn.Contains("body") || rn.Contains("eye") || rn.Contains("hair") || rn.Contains("teamfootaura"))
+                    continue;
+
+                foreach (Material m in r.materials)
+                {
+                    if (m == null) continue;
+                    m.color = Color.Lerp(Color.white, themeColor, 0.70f);
+                    if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", m.color);
+                    m.EnableKeyword("_EMISSION");
+                    if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", subtleGlow);
+                }
             }
         }
     }
