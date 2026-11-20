@@ -279,6 +279,7 @@ public class CharacterSelectionUI : MonoBehaviour
         bool isArcherModel = (characterID == 0) || lowName.Equals("archer");
         bool isBruteModel = (characterID == 7) || lowName.Equals("brute") || lowName.Equals("berserker");
         bool isMariaModel = (characterID == 5) || lowName.Equals("maria") || lowName.Equals("warrior");
+        bool isZarvonModel = (characterID == 3) || lowName.Contains("zarvon") || lowName.Contains("mage");
 
         GameObject prefab = null;
         if (isMariaModel)
@@ -296,6 +297,12 @@ public class CharacterSelectionUI : MonoBehaviour
             prefab = Resources.Load<GameObject>("Models/Erika_Archer");
             if (prefab == null) prefab = Resources.Load<GameObject>("Models/Akai");
         }
+        else if (isZarvonModel)
+        {
+            prefab = Resources.Load<GameObject>("Models/Zarvon");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Mage");
+            if (prefab == null) prefab = Resources.Load<GameObject>("Models/Warrior_Medieval");
+        }
         if (prefab == null)
         {
             prefab = Resources.Load<GameObject>("Models/Warrior_Medieval");
@@ -304,9 +311,12 @@ public class CharacterSelectionUI : MonoBehaviour
         if (prefab != null)
         {
             currentPreviewModel = Instantiate(prefab, turntable);
-            currentPreviewModel.name = isMariaModel ? ("Preview_Champion_Maria_" + characterID) : (isBruteModel ? ("Preview_Champion_Brute_" + characterID) : (isArcherModel ? ("Preview_Champion_Archer_" + characterID) : ("Preview_Champion_" + characterID)));
+            currentPreviewModel.name = isMariaModel ? ("Preview_Champion_Maria_" + characterID) : (isBruteModel ? ("Preview_Champion_Brute_" + characterID) : (isArcherModel ? ("Preview_Champion_Archer_" + characterID) : (isZarvonModel ? ("Preview_Champion_Zarvon_" + characterID) : ("Preview_Champion_" + characterID))));
             currentPreviewModel.transform.localPosition = new Vector3(0f, -0.10f, 0f);
-            currentPreviewModel.transform.localRotation = Quaternion.identity;
+            
+            // Warrior_Medieval was modelled facing -Z (backwards). Rotate 180 degrees so he faces the camera!
+            bool isMedieval = prefab.name.Contains("Warrior_Medieval");
+            currentPreviewModel.transform.localRotation = isMedieval ? Quaternion.Euler(0f, 180f, 0f) : Quaternion.identity;
             currentPreviewModel.transform.localScale = Vector3.one * (isMariaModel ? 0.86f : (isBruteModel ? 0.82f : 0.90f));
 
             foreach (Collider c in currentPreviewModel.GetComponentsInChildren<Collider>()) Destroy(c);
@@ -362,6 +372,49 @@ public class CharacterSelectionUI : MonoBehaviour
                             bowInstance.transform.localScale = Vector3.one * (leftHand.lossyScale.x < 0.1f ? 100f : 1f);
                             PlayerMovement.ApplyErikaArcherMaterials(bowInstance, PlayerMovement.TeamType.Protector);
                         }
+                    }
+                }
+            }
+            else if (isZarvonModel)
+            {
+                // HIDE ALL SWORDS, SHIELDS, CRESTS, BLADES - Zarvon is an Archmage, NOT a knight!
+                foreach (Renderer r in currentPreviewModel.GetComponentsInChildren<Renderer>(true))
+                {
+                    string rn = r.gameObject.name.ToLower();
+                    if (rn.Contains("sword") || rn.Contains("blade") || rn.Contains("shield") || rn.Contains("crest") || rn.Contains("pommel") || rn.Contains("crossguard") || rn.Contains("grip"))
+                    {
+                        r.enabled = false;
+                    }
+                }
+
+                // Apply royal arcane robes styling
+                PlayerMovement.StyleModelForZarvon(currentPreviewModel, PlayerMovement.TeamType.Protector, currentSkin);
+
+                // Attach Arcane Staff to right hand if not already present
+                Transform staffTr = null;
+                foreach (Transform t in currentPreviewModel.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name.Contains("Zarvon_WizardStaff") || t.name.Contains("StaffOrbCrystal"))
+                    {
+                        staffTr = t;
+                        break;
+                    }
+                }
+                if (staffTr == null)
+                {
+                    Transform rightHand = null;
+                    foreach (Transform t in currentPreviewModel.GetComponentsInChildren<Transform>(true))
+                    {
+                        string tn = t.name.ToLower();
+                        if (tn.Contains("righthand") || tn.Contains("hand.r") || tn.Contains("forearm.r") || tn.Contains("wrist_r"))
+                        {
+                            rightHand = t;
+                            break;
+                        }
+                    }
+                    if (rightHand != null)
+                    {
+                        PlayerMovement.BuildWizardStaff(rightHand, PlayerMovement.TeamType.Protector);
                     }
                 }
             }

@@ -647,9 +647,14 @@ public class PlayerMovement : NetworkBehaviour
                 cn.Contains("maria") || 
                 cn.Contains("warrior") || 
                 cn.Contains("akai") || 
+                cn.Contains("zarvon") || 
+                cn.Contains("mage") || 
+                cn.Contains("barbarian") || 
+                cn.Contains("staff") || 
                 cn.Contains("bow") || 
                 cn.Contains("axe") || 
                 cn.Contains("sword") || 
+                cn.Contains("shield") || 
                 cn.Contains("preview_champion"))
             {
                 child.name = "Destroying_Mesh_" + i;
@@ -756,7 +761,7 @@ public class PlayerMovement : NetworkBehaviour
         GameObject model = Instantiate(prefab, target.transform);
         model.name = isMaria ? "Character_3D_Mesh_Maria" : (isBrute ? "Character_3D_Mesh_Brute" : (isArcher ? "Character_3D_Mesh_Archer" : (isZarvon ? "Character_3D_Mesh_Zarvon" : "Character_3D_Mesh")));
         model.transform.localPosition = new Vector3(0f, -1.02f, 0f); // وضع الأقدام على الأرض تماماً دون أي فراغ أو ارتفاع
-        model.transform.localRotation = Quaternion.identity;
+        model.transform.localRotation = (prefab != null && prefab.name.Contains("Warrior_Medieval")) ? Quaternion.Euler(0f, 180f, 0f) : Quaternion.identity;
         model.transform.localScale = Vector3.one * customScale;
 
         // 5. إزالة الكوليدرات والريجيدبودي الإضافية من داخل المجسم
@@ -1266,6 +1271,13 @@ public class PlayerMovement : NetworkBehaviour
             if (r == null) continue;
             string n = r.gameObject.name.ToLower();
             if (n.Contains("staff") || n.Contains("orb") || n.Contains("crystal")) continue;
+
+            // إخفاء السيوف والدروع تماماً لساحر الأركين - زارفون ساحر يلقي التعاويذ وليس مقاتل سيوف
+            if (n.Contains("sword") || n.Contains("blade") || n.Contains("shield") || n.Contains("crest") || n.Contains("pommel") || n.Contains("crossguard") || n.Contains("grip"))
+            {
+                r.enabled = false;
+                continue;
+            }
 
             Material mat = r.material;
             if (mat == null) continue;

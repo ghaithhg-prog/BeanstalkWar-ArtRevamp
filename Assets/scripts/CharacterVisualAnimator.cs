@@ -582,7 +582,7 @@ public class CharacterVisualAnimator : MonoBehaviour
             string n = t.name.ToLower();
 
             // Hips / Pelvis
-            if (hips == null && (n.Contains("hips") || n.Contains("pelvis"))) hips = t;
+            if (hips == null && (n.Contains("hips") || n.Contains("pelvis") || n.Contains("armature") || n.Contains("rootnode"))) hips = t;
 
             // Spine / Chest / Head
             else if (spine == null && n.Contains("spine") && !n.Contains("spine1") && !n.Contains("spine2")) spine = t;
@@ -608,6 +608,7 @@ public class CharacterVisualAnimator : MonoBehaviour
             else if (rightForeArm == null && (n.Contains("rightforearm") || (n.Contains("lower_arm") && n.Contains(".r")) || n.Contains("forearm.r"))) rightForeArm = t;
         }
 
+        if (hips == null && spine != null) hips = spine;
         if (hips != null) initHipsPos = hips.localPosition;
     }
 
